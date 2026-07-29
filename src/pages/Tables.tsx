@@ -373,6 +373,22 @@ export default function Tables() {
             </style>
             <style type="text/css">
               {`
+                @media print {
+                  body * {
+                    visibility: hidden !important;
+                  }
+                  .printable-area, .printable-area * {
+                    visibility: visible !important;
+                  }
+                  .printable-area {
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 80mm !important;
+                    max-width: 80mm !important;
+                    background: white !important;
+                  }
+                }
                 .printable-area { 
                   padding: 6px !important; 
                 }

@@ -313,7 +313,7 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
         <button 
           onClick={() => setIsSidebarOpen(true)}
           className={cn(
-            "fixed top-4 left-4 z-40 p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg active:scale-95 transition-all border border-slate-700/50 flex items-center justify-center",
+            "fixed top-4 left-4 z-40 p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg active:scale-95 transition-all border border-slate-700/50 flex items-center justify-center print:hidden",
             isSidebarOpen ? "opacity-0 pointer-events-none -translate-x-12" : "opacity-100 translate-x-0"
           )}
           title="Show Sidebar"

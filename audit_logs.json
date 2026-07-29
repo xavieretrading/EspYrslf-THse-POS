@@ -1,0 +1,744 @@
+[
+  {
+    "id": "1785311564646xv33t",
+    "timestamp": "2026-07-29T07:52:44.646Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #7. Total: ₱430.00"
+  },
+  {
+    "id": "1785311533626jdymy",
+    "timestamp": "2026-07-29T07:52:13.626Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #7 on Walk-In"
+  },
+  {
+    "id": "178531151796697ndq",
+    "timestamp": "2026-07-29T07:51:57.966Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Americano"
+  },
+  {
+    "id": "1785311454050cmfhh",
+    "timestamp": "2026-07-29T07:50:54.050Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Espresso"
+  },
+  {
+    "id": "1785310816872mvz55",
+    "timestamp": "2026-07-29T07:40:16.872Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785310688746u993i",
+    "timestamp": "2026-07-29T07:38:08.746Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785310470610u35ts",
+    "timestamp": "2026-07-29T07:34:30.610Z",
+    "user": "Sir Earl ",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785309937298nm642",
+    "timestamp": "2026-07-29T07:25:37.298Z",
+    "user": "Sir Earl ",
+    "activity": "Shift Ended",
+    "details": "Shift ended with cash out amount: ₱400. Total Sales: ₱938.929"
+  },
+  {
+    "id": "1785309836230yav3e",
+    "timestamp": "2026-07-29T07:23:56.230Z",
+    "user": "Sir Earl ",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier Sir Earl  on 07/29/2026"
+  },
+  {
+    "id": "1785309583901kd2wy",
+    "timestamp": "2026-07-29T07:19:43.901Z",
+    "user": "Sir Earl ",
+    "activity": "Print Report",
+    "details": "Printed Shift Sales Report for 2026-07-01 to 2026-07-30"
+  },
+  {
+    "id": "1785309563167qdktc",
+    "timestamp": "2026-07-29T07:19:23.167Z",
+    "user": "Sir Earl ",
+    "activity": "Print Report",
+    "details": "Printed Shift Sales Report for 2026-07-01 to 2026-07-30"
+  },
+  {
+    "id": "1785309435998r9gz8",
+    "timestamp": "2026-07-29T07:17:15.998Z",
+    "user": "Sir Earl ",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #6. Total: ₱220.00"
+  },
+  {
+    "id": "1785309421736xe8yi",
+    "timestamp": "2026-07-29T07:17:01.736Z",
+    "user": "Sir Earl ",
+    "activity": "Place Order",
+    "details": "Created new order #6 on Walk-In"
+  },
+  {
+    "id": "1785308287035uyvw0",
+    "timestamp": "2026-07-29T06:58:07.035Z",
+    "user": "Sir Earl ",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #5. Total: ₱239.64"
+  },
+  {
+    "id": "1785308274561zuelh",
+    "timestamp": "2026-07-29T06:57:54.561Z",
+    "user": "Sir Earl ",
+    "activity": "Place Order",
+    "details": "Created new order #5 on Walk-In"
+  },
+  {
+    "id": "1785299602591wwmko",
+    "timestamp": "2026-07-29T04:33:22.591Z",
+    "user": "Sir Earl ",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #4. Total: ₱239.64"
+  },
+  {
+    "id": "1785299590868dfl6x",
+    "timestamp": "2026-07-29T04:33:10.868Z",
+    "user": "Sir Earl ",
+    "activity": "Place Order",
+    "details": "Created new order #4 on Walk-In"
+  },
+  {
+    "id": "1785297338478qw188",
+    "timestamp": "2026-07-29T03:55:38.478Z",
+    "user": "junrel-WAITER",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785297303101s0qv2",
+    "timestamp": "2026-07-29T03:55:03.101Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785290885050em27o",
+    "timestamp": "2026-07-29T02:08:05.050Z",
+    "user": "Sir Earl ",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #3. Total: ₱239.64"
+  },
+  {
+    "id": "1785290820581g315d",
+    "timestamp": "2026-07-29T02:07:00.581Z",
+    "user": "Sir Earl ",
+    "activity": "Place Order",
+    "details": "Created new order #3 on Walk-In"
+  },
+  {
+    "id": "1785290816453p9f4x",
+    "timestamp": "2026-07-29T02:06:56.453Z",
+    "user": "Sir Earl ",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "17852908038608ozi1",
+    "timestamp": "2026-07-29T02:06:43.860Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785290788394grasi",
+    "timestamp": "2026-07-29T02:06:28.394Z",
+    "user": "System Administrator",
+    "activity": "Create User",
+    "details": "Created user Jun-Waiter (cashier)"
+  },
+  {
+    "id": "1785290728691vitko",
+    "timestamp": "2026-07-29T02:05:28.691Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785290468104o6w8o",
+    "timestamp": "2026-07-29T02:01:08.104Z",
+    "user": "System Administrator",
+    "activity": "Create User",
+    "details": "Created user Earl Tan (cashier)"
+  },
+  {
+    "id": "178529026332257a8k",
+    "timestamp": "2026-07-29T01:57:43.322Z",
+    "user": "System Administrator",
+    "activity": "Cycle Count Submitted",
+    "details": "Submitted \"Cycle Count Audit - Jul 29, 2026\". Status: Stocks Adjusted to Hand Count"
+  },
+  {
+    "id": "1785290224282xmbfy",
+    "timestamp": "2026-07-29T01:57:04.282Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: CHOCO COFFEE"
+  },
+  {
+    "id": "17852902153967gngm",
+    "timestamp": "2026-07-29T01:56:55.397Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: mocha"
+  },
+  {
+    "id": "1785289113363s7vya",
+    "timestamp": "2026-07-29T01:38:33.363Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: CHOCO COFFEE"
+  },
+  {
+    "id": "1785289053385boeua",
+    "timestamp": "2026-07-29T01:37:33.385Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "17852880753127jpsj",
+    "timestamp": "2026-07-29T01:21:15.312Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785075209118jpjki",
+    "timestamp": "2026-07-26T14:13:29.118Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #2 on Walk-In"
+  },
+  {
+    "id": "17850747771530vr33",
+    "timestamp": "2026-07-26T14:06:17.153Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1. Total: ₱180.00"
+  },
+  {
+    "id": "17850747354838duwh",
+    "timestamp": "2026-07-26T14:05:35.483Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #1 on Walk-In"
+  },
+  {
+    "id": "1785074621691ch9th",
+    "timestamp": "2026-07-26T14:03:41.691Z",
+    "user": "System Administrator",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock OFF"
+  },
+  {
+    "id": "1785074619726bu7u6",
+    "timestamp": "2026-07-26T14:03:39.726Z",
+    "user": "System Administrator",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
+    "id": "1785074614299txujq",
+    "timestamp": "2026-07-26T14:03:34.299Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: 3"
+  },
+  {
+    "id": "1785074601003c2jxx",
+    "timestamp": "2026-07-26T14:03:21.003Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: 222"
+  },
+  {
+    "id": "1785074547976jo9yb",
+    "timestamp": "2026-07-26T14:02:27.976Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785074534110hay4w",
+    "timestamp": "2026-07-26T14:02:14.110Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785073952199ifq4b",
+    "timestamp": "2026-07-26T13:52:32.199Z",
+    "user": "Philip Macairan",
+    "activity": "Login",
+    "details": "User logged in successfully (Auto-migrate)"
+  },
+  {
+    "id": "1785073015858ddcm7",
+    "timestamp": "2026-07-26T13:36:55.858Z",
+    "user": "Philip Macairan",
+    "activity": "Login",
+    "details": "User logged in successfully (Auto-migrate)"
+  },
+  {
+    "id": "1785071309496iev27",
+    "timestamp": "2026-07-26T13:08:29.496Z",
+    "user": "Philip Macairan",
+    "activity": "Login",
+    "details": "User logged in successfully (Auto-migrate)"
+  },
+  {
+    "id": "1785070444999mm72q",
+    "timestamp": "2026-07-26T12:54:04.999Z",
+    "user": "Philip Admin",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785070073353uxi53",
+    "timestamp": "2026-07-26T12:47:53.353Z",
+    "user": "Philip Admin",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1781944664993ng2lf",
+    "timestamp": "2026-06-20T08:37:44.993Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
+  },
+  {
+    "id": "1781944652167gsbsi",
+    "timestamp": "2026-06-20T08:37:32.167Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
+  },
+  {
+    "id": "1781944631077spzai",
+    "timestamp": "2026-06-20T08:37:11.077Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
+  },
+  {
+    "id": "1781863957979numme",
+    "timestamp": "2026-06-19T10:12:37.979Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed X-Reading (Interim Snapshot) for 2026-06-19 to 2026-06-19"
+  },
+  {
+    "id": "1781863164881coeuc",
+    "timestamp": "2026-06-19T09:59:24.881Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1384. Total: ₱228.75"
+  },
+  {
+    "id": "1781860116230vnphp",
+    "timestamp": "2026-06-19T09:08:36.230Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1385. Total: ₱163.39"
+  },
+  {
+    "id": "1781860060730qe7wu",
+    "timestamp": "2026-06-19T09:07:40.731Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1385 on Walk-In"
+  },
+  {
+    "id": "1781858687576io3r6",
+    "timestamp": "2026-06-19T08:44:47.576Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1382. Total: ₱54.46"
+  },
+  {
+    "id": "17818586738859l2u8",
+    "timestamp": "2026-06-19T08:44:33.885Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1384 on Walk-In"
+  },
+  {
+    "id": "17818569323940tbqh",
+    "timestamp": "2026-06-19T08:15:32.394Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1382 on Walk-In"
+  },
+  {
+    "id": "1781856752104d24bp",
+    "timestamp": "2026-06-19T08:12:32.104Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1381. Total: ₱163.39"
+  },
+  {
+    "id": "1781856734737h3max",
+    "timestamp": "2026-06-19T08:12:14.737Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1381 on Walk-In"
+  },
+  {
+    "id": "1781855777254nrxzr",
+    "timestamp": "2026-06-19T07:56:17.254Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1378. Total: ₱163.39"
+  },
+  {
+    "id": "17818541245120cqsl",
+    "timestamp": "2026-06-19T07:28:44.512Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1378 on Walk-In"
+  },
+  {
+    "id": "1781854068527oqo0h",
+    "timestamp": "2026-06-19T07:27:48.527Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1377. Total: ₱217.86"
+  },
+  {
+    "id": "1781854032722drcvi",
+    "timestamp": "2026-06-19T07:27:12.722Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1377 on Walk-In"
+  },
+  {
+    "id": "178185162415737bpu",
+    "timestamp": "2026-06-19T06:47:04.157Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1375. Total: ₱283.21"
+  },
+  {
+    "id": "1781851515522bq06j",
+    "timestamp": "2026-06-19T06:45:15.522Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1375 on Walk-In"
+  },
+  {
+    "id": "178185145799147g58",
+    "timestamp": "2026-06-19T06:44:17.991Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1374. Total: ₱54.46"
+  },
+  {
+    "id": "17818514364008uihn",
+    "timestamp": "2026-06-19T06:43:56.400Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1374 on Walk-In"
+  },
+  {
+    "id": "1781851389102dq1kz",
+    "timestamp": "2026-06-19T06:43:09.102Z",
+    "user": "Philip Macairan",
+    "activity": "Complimentary Claim",
+    "details": "Processed 2 complimentary items. Recipient: 22, Auth: 22, Slip #: 2"
+  },
+  {
+    "id": "17818491498928ok1a",
+    "timestamp": "2026-06-19T06:05:49.892Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Y-Reading (Period) for 2026-06-01 to 2026-06-19"
+  },
+  {
+    "id": "17818491142069uorq",
+    "timestamp": "2026-06-19T06:05:14.206Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Y-Reading (Period) for 2026-06-01 to 2026-06-19"
+  },
+  {
+    "id": "1781847010697ep3vp",
+    "timestamp": "2026-06-19T05:30:10.697Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed Z-Reading (Daily) for 2026-06-10 to 2026-06-10"
+  },
+  {
+    "id": "1781680488643se9f0",
+    "timestamp": "2026-06-17T07:14:48.643Z",
+    "user": "Philip Macairan",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱43"
+  },
+  {
+    "id": "178168003824008tfn",
+    "timestamp": "2026-06-17T07:07:18.241Z",
+    "user": "Philip Macairan",
+    "activity": "Void Order",
+    "details": "Voided Order #1287"
+  },
+  {
+    "id": "1781679675273hhlwo",
+    "timestamp": "2026-06-17T07:01:15.273Z",
+    "user": "Philip Macairan",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier System Administrator on 06/16/2026"
+  },
+  {
+    "id": "1781679582912nk9wq",
+    "timestamp": "2026-06-17T06:59:42.912Z",
+    "user": "Philip Macairan",
+    "activity": "Export BIR Annexes",
+    "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
+  },
+  {
+    "id": "17816789612843bv0h",
+    "timestamp": "2026-06-17T06:49:21.284Z",
+    "user": "Philip Macairan",
+    "activity": "Export BIR Annexes",
+    "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
+  },
+  {
+    "id": "17816788963529f58e",
+    "timestamp": "2026-06-17T06:48:16.352Z",
+    "user": "Philip Macairan",
+    "activity": "Create User",
+    "details": "Created user auditor (cashier)"
+  },
+  {
+    "id": "17816784669810dlsk",
+    "timestamp": "2026-06-17T06:41:06.981Z",
+    "user": "Philip Macairan",
+    "activity": "Shift Ended",
+    "details": "Shift ended with cash out amount: ₱6. Total Sales: ₱0"
+  },
+  {
+    "id": "17816784230790n2ks",
+    "timestamp": "2026-06-17T06:40:23.079Z",
+    "user": "Philip Macairan",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1781678243967ds191",
+    "timestamp": "2026-06-17T06:37:23.967Z",
+    "user": "Philip Macairan",
+    "activity": "Shift Ended",
+    "details": "Shift ended with cash out amount: ₱600. Total Sales: ₱1068.75"
+  },
+  {
+    "id": "17816780012834xrym",
+    "timestamp": "2026-06-17T06:33:21.283Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1292. Total: ₱217.86"
+  },
+  {
+    "id": "1781677682357n803t",
+    "timestamp": "2026-06-17T06:28:02.357Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1293. Total: ₱435.71"
+  },
+  {
+    "id": "1781677625161e62zf",
+    "timestamp": "2026-06-17T06:27:05.161Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1295 on Table 3"
+  },
+  {
+    "id": "1781677594029urbsc",
+    "timestamp": "2026-06-17T06:26:34.029Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1294 on Table 4"
+  },
+  {
+    "id": "1781677580207m4wbj",
+    "timestamp": "2026-06-17T06:26:20.207Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1293 on Table 1"
+  },
+  {
+    "id": "1781677518921yjgcs",
+    "timestamp": "2026-06-17T06:25:18.921Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1292 on Table 2"
+  },
+  {
+    "id": "178167749996631gku",
+    "timestamp": "2026-06-17T06:24:59.966Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1291 on 5"
+  },
+  {
+    "id": "1781677477062w3rde",
+    "timestamp": "2026-06-17T06:24:37.062Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1290 on Table 2"
+  },
+  {
+    "id": "1781677455687v2r5w",
+    "timestamp": "2026-06-17T06:24:15.687Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1289 on Walk-In"
+  },
+  {
+    "id": "17816750110998y0w1",
+    "timestamp": "2026-06-17T05:43:31.099Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1288 on Walk-In"
+  },
+  {
+    "id": "17816749561310tbdu",
+    "timestamp": "2026-06-17T05:42:36.131Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1287. Total: ₱88.39"
+  },
+  {
+    "id": "1781674847086nj8j4",
+    "timestamp": "2026-06-17T05:40:47.086Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1287 on Walk-In"
+  },
+  {
+    "id": "1781672294649d67nf",
+    "timestamp": "2026-06-17T04:58:14.649Z",
+    "user": "Philip Macairan",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #1286. Total: ₱326.79"
+  },
+  {
+    "id": "1781672267976kdtcj",
+    "timestamp": "2026-06-17T04:57:47.976Z",
+    "user": "Philip Macairan",
+    "activity": "Place Order",
+    "details": "Created new order #1286 on Walk-In"
+  },
+  {
+    "id": "1781672074869k66f5",
+    "timestamp": "2026-06-17T04:54:34.869Z",
+    "user": "Philip Macairan",
+    "activity": "Export BIR Annexes",
+    "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
+  },
+  {
+    "id": "1781671250077idbic",
+    "timestamp": "2026-06-17T04:40:50.077Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed BIR Sales Summary Report for 2026-06-01 to 2026-06-17"
+  },
+  {
+    "id": "1781671232878i5cnk",
+    "timestamp": "2026-06-17T04:40:32.878Z",
+    "user": "Philip Macairan",
+    "activity": "Print Report",
+    "details": "Printed BIR Sales Summary Report for 2026-06-01 to 2026-06-17"
+  },
+  {
+    "id": "1781671198384btmz9",
+    "timestamp": "2026-06-17T04:39:58.384Z",
+    "user": "Philip Macairan",
+    "activity": "Login",
+    "details": "User logged in successfully (Auto-migrate)"
+  },
+  {
+    "id": "1781611039242wir3q",
+    "timestamp": "2026-06-16T11:57:19.242Z",
+    "user": "System Administrator",
+    "activity": "Complimentary Claim",
+    "details": "Processed 2 complimentary items. Recipient: eqweqw, Auth: 23, Slip #: 12312312"
+  },
+  {
+    "id": "1781608862880zoxq2",
+    "timestamp": "2026-06-16T11:21:02.880Z",
+    "user": "System Administrator",
+    "activity": "Complimentary Claim",
+    "details": "Processed 2 complimentary items. Recipient: qwe, Auth: 132, Slip #: 2"
+  },
+  {
+    "id": "17816088416395o9q6",
+    "timestamp": "2026-06-16T11:20:41.639Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱3"
+  },
+  {
+    "id": "1781533003497ud2j5",
+    "timestamp": "2026-06-15T14:16:43.497Z",
+    "user": "System Administrator",
+    "activity": "Complimentary Claim",
+    "details": "Processed 2 complimentary items. Recipient: das, Auth: dd, Slip #: 12312"
+  },
+  {
+    "id": "1781532956201qvr4h",
+    "timestamp": "2026-06-15T14:15:56.201Z",
+    "user": "System Administrator",
+    "activity": "Print Report",
+    "details": "Printed Complimentary Report for 2026-06-01 to 2026-06-15"
+  },
+  {
+    "id": "1781531886204iexye",
+    "timestamp": "2026-06-15T13:58:06.204Z",
+    "user": "System Administrator",
+    "activity": "Void Order",
+    "details": "Voided Order #1173"
+  },
+  {
+    "id": "17815317645939nu7o",
+    "timestamp": "2026-06-15T13:56:04.593Z",
+    "user": "System Administrator",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier Anna on 06/14/2026"
+  },
+  {
+    "id": "1781531218563hjcq3",
+    "timestamp": "2026-06-15T13:46:58.563Z",
+    "user": "System Administrator",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier Anna on 06/14/2026"
+  },
+  {
+    "id": "1781526343418gt0nn",
+    "timestamp": "2026-06-15T12:25:43.418Z",
+    "user": "System Administrator",
+    "activity": "Complimentary Claim",
+    "details": "Processed 1 complimentary items. Recipient: junre, Auth: mane, Slip #: 32312"
+  }
+]

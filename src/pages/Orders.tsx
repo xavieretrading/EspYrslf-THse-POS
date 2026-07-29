@@ -326,7 +326,7 @@ export default function Orders() {
   return (
     <div className="flex h-full bg-slate-50 overflow-hidden">
       {/* Left side - Order List */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden print:hidden">
         <div className="p-8 pb-4">
           <div className="flex justify-between items-end mb-6">
             <div>
@@ -450,7 +450,7 @@ export default function Orders() {
       </div>
 
       {/* Right side - Order Details */}
-      <div className="w-96 bg-white border-l border-slate-200 flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
+      <div className="w-96 bg-white border-l border-slate-200 flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10 print:hidden">
         {selectedOrder ? (
           <>
             <div className="p-6 border-b border-slate-100">

@@ -1098,7 +1098,7 @@ export default function POS() {
       )}
 
       {/* Main Content - Menu */}
-      <div className="flex-1 flex flex-col h-full border-r border-slate-200 min-w-0">
+      <div className="flex-1 flex flex-col h-full border-r border-slate-200 min-w-0 print:hidden">
         {/* Header */}
         <div className="px-3 py-1.5 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 flex-shrink-0 font-sans">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 pl-14">
@@ -1291,7 +1291,7 @@ export default function POS() {
 
       {/* Sidebar - Cart & Payment */}
       <div className={cn(
-        "fixed inset-0 lg:relative lg:flex lg:w-96 z-40 lg:z-10 transition-transform duration-300 lg:translate-x-0",
+        "fixed inset-0 lg:relative lg:flex lg:w-96 z-40 lg:z-10 transition-transform duration-300 lg:translate-x-0 print:hidden",
         isCartOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
       )}>
         {/* Mobile Backdrop */}

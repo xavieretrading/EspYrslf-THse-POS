@@ -140,7 +140,8 @@ export default function Tables() {
   if (!activeBranch) return null;
 
   return (
-    <div className="p-8 h-full flex flex-col bg-slate-50">
+    <>
+      <div className="p-8 h-full flex flex-col bg-slate-50 print:hidden">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">Table Management</h1>
         <p className="text-slate-500">Manage tables and seating capacity for {activeBranch.name}.</p>
@@ -266,7 +267,7 @@ export default function Tables() {
             )}
           </div>
         </div>
-      </div>
+      </div>      </div>
 
       {receiptData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
@@ -599,6 +600,6 @@ export default function Tables() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

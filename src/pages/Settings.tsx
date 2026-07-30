@@ -227,7 +227,8 @@ export default function Settings() {
 
   const handleSaveSysConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch('/api/settings', {
+    const url = activeBranch ? `/api/settings?branch_id=${activeBranch.id}` : '/api/settings';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sysConfig)

@@ -30,6 +30,7 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
   const location = useLocation();
   const { branches, activeBranch, setActiveBranch, isLoading } = useBranch();
   const { settings } = useSettings();
+  const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
   const [terminals, setTerminals] = React.useState<any[]>([]);
 
   React.useEffect(() => {
@@ -47,12 +48,8 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/pos', icon: ShoppingCart, label: 'POS' },
     { to: '/orders', icon: FileText, label: 'Orders' },
-    { to: '/kitchen', icon: Coffee, label: 'Espresso Bar' },
-    { to: '/tables', icon: Database, label: 'Tables' },
     { to: '/inventory', icon: Package, label: 'Inventory' },
     { to: '/branches', icon: Store, label: 'Branches' },
-    { to: '/vouchers', icon: Ticket, label: 'Vouchers' },
-    { to: '/redemption', icon: Ticket, label: 'Redemption' },
     { to: '/reports', icon: FileText, label: 'Reports' },
     { to: '/users', icon: Users, label: 'User Management' },
     { to: '/settings', icon: SettingsIcon, label: 'Settings' },
@@ -94,8 +91,8 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
           <div className="p-4 pb-2">
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
-                <img src="/logo.jpg" alt="Logo" className="w-6 h-6 rounded-full object-cover border border-slate-700 bg-white" />
-                <span className="truncate">{settings?.company_name || 'Espresso'}</span>
+                <img src={isLaundryBranch ? "/s1p and sp1n.jpg" : "/logo.jpg"} alt="Logo" className="w-6 h-6 rounded-full object-cover border border-slate-700 bg-white" />
+                <span className="truncate">{settings?.company_name || (isLaundryBranch ? 'S1p and Sp1n' : 'Espresso Yourself')}</span>
               </h1>
               <button 
                 onClick={() => setIsOpen(false)} 
@@ -107,23 +104,25 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
             </div>
           
           {/* Branch Selector */}
-          <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 mb-2">
-            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 block flex items-center gap-1 font-sans">
-              <MapPin size={9} /> Current Branch
-            </label>
-            <select 
-              className="w-full bg-transparent text-white font-medium outline-none appearance-none cursor-pointer text-xs font-sans"
-              value={activeBranch?.id || ''}
-              onChange={(e) => {
-                const b = branches.find(br => br.id === parseInt(e.target.value));
-                if (b) setActiveBranch(b);
-              }}
-            >
-              {branches.map(b => (
-                <option key={b.id} value={b.id} className="bg-slate-800 text-white">{b.name}</option>
-              ))}
-            </select>
-          </div>
+          {activeUser?.role === 'admin' && (
+            <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 mb-2">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 block flex items-center gap-1 font-sans">
+                <MapPin size={9} /> Current Branch
+              </label>
+              <select 
+                className="w-full bg-transparent text-white font-medium outline-none appearance-none cursor-pointer text-xs font-sans"
+                value={activeBranch?.id || ''}
+                onChange={(e) => {
+                  const b = branches.find(br => br.id === parseInt(e.target.value));
+                  if (b) setActiveBranch(b);
+                }}
+              >
+                {branches.map(b => (
+                  <option key={b.id} value={b.id} className="bg-slate-800 text-white">{b.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* User Info */}
           <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 flex flex-col font-sans">
@@ -205,7 +204,7 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
               </div>
             </div>
             <div className="text-[10px] text-slate-500 text-center">
-              &copy; 2026 Espresso Yourself & Tea House
+              &copy; 2026 {isLaundryBranch ? 'S1p and Sp1n Laundry Shop' : 'Espresso Yourself & Tea House'}
             </div>
           </div>
         </div>
@@ -216,9 +215,62 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
 
 function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolean, setIsSidebarOpen: (o: boolean) => void }) {
   const location = useLocation();
+  const { activeBranch, setActiveBranch, branches } = useBranch();
   const [activeUser, setActiveUser] = React.useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = React.useState(true);
-  
+
+  React.useEffect(() => {
+    const isLaundry = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
+    
+    let styleTag = document.getElementById('laundry-theme-override');
+    if (isLaundry) {
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'laundry-theme-override';
+        styleTag.innerHTML = `
+          :root {
+            --color-slate-50: #f8fafc !important;
+            --color-slate-100: #f1f5f9 !important;
+            --color-slate-200: #e2e8f0 !important;
+            --color-slate-300: #cbd5e1 !important;
+            --color-slate-400: #94a3b8 !important;
+            --color-slate-500: #64748b !important;
+            --color-slate-600: #475569 !important;
+            --color-slate-700: #334155 !important;
+            --color-slate-800: #1e293b !important;
+            --color-slate-900: #0f172a !important;
+            --color-slate-950: #020617 !important;
+          }
+          .bg-emerald-500 { background-color: #3b82f6 !important; }
+          .bg-emerald-600 { background-color: #2563eb !important; }
+          .bg-emerald-750 { background-color: #1d4ed8 !important; }
+          .bg-emerald-50 { background-color: #eff6ff !important; }
+          .bg-emerald-100 { background-color: #dbeafe !important; }
+          .bg-emerald-500\\/10 { background-color: rgba(59, 130, 246, 0.1) !important; }
+          .bg-emerald-600\\/10 { background-color: rgba(37, 99, 235, 0.1) !important; }
+          .text-emerald-400 { color: #60a5fa !important; }
+          .text-emerald-500 { color: #3b82f6 !important; }
+          .text-emerald-600 { color: #2563eb !important; }
+          .text-emerald-700 { color: #1d4ed8 !important; }
+          .border-emerald-500 { border-color: #3b82f6 !important; }
+          .border-emerald-600 { border-color: #2563eb !important; }
+          .focus\\:border-emerald-500:focus { border-color: #3b82f6 !important; }
+          .focus\\:ring-emerald-200:focus { --tw-ring-color: rgba(59, 130, 246, 0.2) !important; }
+          .hover\\:bg-emerald-50:hover { background-color: #eff6ff !important; }
+          .hover\\:bg-emerald-600:hover { background-color: #2563eb !important; }
+          .hover\\:bg-emerald-700:hover { background-color: #1d4ed8 !important; }
+          .hover\\:text-emerald-400:hover { color: #60a5fa !important; }
+          .hover\\:text-emerald-500:hover { color: #3b82f6 !important; }
+        `;
+        document.head.appendChild(styleTag);
+      }
+    } else {
+      if (styleTag) {
+        styleTag.remove();
+      }
+    }
+  }, [activeBranch]);
+
   const isStandalonePOS = location.pathname.startsWith('/standalone-pos');
   const isStandaloneKitchen = location.pathname.startsWith('/standalone-kitchen');
 
@@ -258,6 +310,12 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
               let finalUser;
               if (matchedUser) {
                   finalUser = { ...matchedUser, email };
+                  if (matchedUser.branch_id) {
+                      const userBranch = branches.find(b => b.id.toString() === matchedUser.branch_id.toString());
+                      if (userBranch) {
+                          setActiveBranch(userBranch);
+                      }
+                  }
               } else {
                   finalUser = { email, role: 'cashier', permissions: ['/pos'] };
               }
@@ -343,14 +401,14 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   return (
-    <SettingsProvider>
-      <BranchProvider>
+    <BranchProvider>
+      <SettingsProvider>
         <BrowserRouter>
           <div className="flex bg-slate-50 font-sans text-slate-900 relative">
              <AppContent isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
           </div>
         </BrowserRouter>
-      </BranchProvider>
-    </SettingsProvider>
+      </SettingsProvider>
+    </BranchProvider>
   );
 }

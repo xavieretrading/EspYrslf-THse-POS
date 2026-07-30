@@ -27,6 +27,7 @@ type Product = {
 
 export default function Dashboard() {
   const { activeBranch } = useBranch();
+  const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
   const [summary, setSummary] = useState<any>({});
   const [dailySales, setDailySales] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -113,6 +114,33 @@ export default function Dashboard() {
           })}
         </div>
       </div>
+
+      {/* Division Breakdown for Laundry hybrid branch */}
+      {isLaundryBranch && (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 font-sans">
+          <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Division Breakdown (Gross Sales)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            <div className="p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-xl flex items-center gap-3.5">
+              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 text-lg">
+                ☕
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Coffee Shop Division</p>
+                <p className="text-xl font-black text-slate-900 tracking-tight">₱{(summary.coffee_sales_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+            <div className="p-4 bg-blue-50/50 border border-blue-100/60 rounded-xl flex items-center gap-3.5">
+              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600 text-lg">
+                🧺
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Laundry Division</p>
+                <p className="text-xl font-black text-slate-900 tracking-tight">₱{(summary.laundry_sales_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Inventory & Stock summary row */}
       <div>

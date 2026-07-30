@@ -912,8 +912,146 @@ export default function Orders() {
               const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
               const isVoucherOrCompOrder = (receiptData.subtotal === 0 || !receiptData.subtotal) && rawSubtotal > 0 && (receiptData.payment_method?.toUpperCase() === 'COMPLIMENTARY' || receiptData.payment_method?.toUpperCase() === 'VOUCHER');
               const displaySubtotal = isVoucherOrCompOrder ? rawSubtotal : (receiptData.subtotal || 0);
-              const receiptCalculations = getReceiptCalculations(receiptData, settings);
-              const compTotal = receiptData.items?.filter((i: any) => i.is_complimentary || i.notes?.includes('[COMPLIMENTARY')).reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
+              const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
+
+              // Parse laundry metadata if any
+              let laundryDetails: any = null;
+              if (receiptData.notes && receiptData.notes.trim().startsWith('{')) {
+                try {
+                  const parsed = JSON.parse(receiptData.notes);
+                  if (parsed.is_laundry) {
+                    laundryDetails = parsed;
+                  }
+                } catch (e) {}
+              }
+
+              if (laundryDetails) {
+                return (
+                  <div className="relative print:relative text-black">
+                    {receiptData.status === 'voided' && (
+                      <div className="void-watermark select-none pointer-events-none">VOID</div>
+                    )}
+                    
+                    {/* Company Details */}
+                    <div className="text-center section-block">
+                      <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                      <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
+                      <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    </div>
+
+                    <div className="text-center section-block pt-1.5 pb-1">
+                      <p className="receipt-title font-bold text-[11pt] border-y border-dashed border-black py-0.5">
+                        {receiptData.status === 'voided' ? 'VOIDED LAUNDRY RECEIPT' : 'LAUNDRY RECEIPT'}
+                      </p>
+                    </div>
+
+                    <div className="section-block pt-1 font-mono text-[9.5pt]">
+                      <div className="flex justify-between row-item">
+                        <span>Receipt No:</span>
+                        <span className="font-bold">LS-{(receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Date:</span>
+                        <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Cashier:</span>
+                        <span>{receiptData.cashier_name || 'Staff'}</span>
+                      </div>
+                    </div>
+
+                    <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                      <div className="flex justify-between row-item">
+                        <span>Customer:</span>
+                        <span className="font-bold">{laundryDetails.customer_name}</span>
+                      </div>
+                      {laundryDetails.phone && (
+                        <div className="flex justify-between row-item">
+                          <span>Phone:</span>
+                          <span>{laundryDetails.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between row-item">
+                        <span>Service:</span>
+                        <span className="font-bold">{laundryDetails.service_name}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Weight:</span>
+                        <span>{laundryDetails.weight} kg</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Rate:</span>
+                        <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
+                      </div>
+                      <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
+                        <span>Subtotal</span>
+                        <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Preferences */}
+                    {laundryDetails.preferences && laundryDetails.preferences.length > 0 && (
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9pt]">
+                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Preferences</div>
+                        {laundryDetails.preferences.map((pref: string, idx: number) => (
+                          <div key={idx} className="row-item pl-2 font-semibold">• {pref}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add-ons */}
+                    {laundryDetails.addons && laundryDetails.addons.length > 0 && (
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Add-ons</div>
+                        {laundryDetails.addons.map((add: any, idx: number) => (
+                          <div key={idx} className="flex justify-between row-item pl-2">
+                            <span>{add.name}</span>
+                            <span className="font-bold">₱{add.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Calculations & Totals */}
+                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 font-mono text-[10pt] space-y-1">
+                      <div className="flex justify-between row-item font-bold text-[12pt] border-t-2 border-double border-black pt-1">
+                        <span>TOTAL</span>
+                        <span>₱{(receiptData.total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between row-item text-[9.5pt]">
+                        <span>Payment Method:</span>
+                        <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
+                      </div>
+                      {receiptData.payment_method?.toLowerCase() === 'cash' && (
+                        <>
+                          <div className="flex justify-between row-item text-[9.5pt]">
+                            <span>Cash Received:</span>
+                            <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between row-item text-[9.5pt] font-bold">
+                            <span>Change:</span>
+                            <span>₱{(receiptData.change || 0).toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Pickup Details */}
+                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 text-center font-mono text-[9.5pt] bg-slate-50/50 p-1.5 rounded-lg">
+                      <div className="font-bold text-[8.5pt] uppercase tracking-wider">Estimated Pickup</div>
+                      <div className="font-bold text-[10.5pt] mt-0.5">
+                        {laundryDetails.pickup_date ? new Date(laundryDetails.pickup_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'} at {laundryDetails.pickup_time || 'N/A'}
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="text-center pt-3 border-t border-dashed border-black mt-3 text-[9.5pt]">
+                      <p className="font-bold">Thank you for choosing</p>
+                      <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div className="relative print:relative">
@@ -925,7 +1063,7 @@ export default function Orders() {
                   {/* Company Details */}
                   <div className="text-center section-block">
                     <div className="flex justify-center mb-1 text-center">
-                      <img src="/logo.png" alt="Logo" className="receipt-logo" />
+                      {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>

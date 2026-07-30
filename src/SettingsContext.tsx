@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useBranch } from './BranchContext';
 
 export type BusinessSettings = {
   company_name: string;
@@ -25,9 +26,11 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
+  const { activeBranch } = useBranch();
 
   const fetchSettings = () => {
-    fetch('/api/settings')
+    const url = activeBranch ? `/api/settings?branch_id=${activeBranch.id}` : '/api/settings';
+    fetch(url)
       .then(res => res.json())
       .then(setSettings)
       .catch(console.error);
@@ -35,7 +38,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [activeBranch]);
 
   return (
     <SettingsContext.Provider value={{ settings, refreshSettings: fetchSettings }}>

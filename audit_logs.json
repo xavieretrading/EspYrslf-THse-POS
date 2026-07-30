@@ -1,5 +1,124 @@
 [
   {
+    "id": "17854234528852jufx",
+    "timestamp": "2026-07-30T14:57:32.885Z",
+    "user": "Sir Earl ",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier System Administrator on 07/30/2026"
+  },
+  {
+    "id": "1785423406432n147l",
+    "timestamp": "2026-07-30T14:56:46.432Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785423385537u13rr",
+    "timestamp": "2026-07-30T14:56:25.537Z",
+    "user": "System Administrator",
+    "activity": "Create User",
+    "details": "Created user earl@gmail.com1 (cashier)"
+  },
+  {
+    "id": "17854226580466uacr",
+    "timestamp": "2026-07-30T14:44:18.046Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #22. Total: ₱200.00"
+  },
+  {
+    "id": "1785422592528qv72j",
+    "timestamp": "2026-07-30T14:43:12.528Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #22 on Walk-In"
+  },
+  {
+    "id": "17854040272101jv53",
+    "timestamp": "2026-07-30T09:33:47.210Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785403683703uwdpp",
+    "timestamp": "2026-07-30T09:28:03.703Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785403436694wqegx",
+    "timestamp": "2026-07-30T09:23:56.694Z",
+    "user": "System Administrator",
+    "activity": "Shift Ended",
+    "details": "Shift ended with cash out amount: ₱2000. Total Sales: ₱1934"
+  },
+  {
+    "id": "1785402329764pthhc",
+    "timestamp": "2026-07-30T09:05:29.764Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #21. Total: ₱122.00"
+  },
+  {
+    "id": "17854023206639gnh6",
+    "timestamp": "2026-07-30T09:05:20.665Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #21 on Walk-In"
+  },
+  {
+    "id": "1785399157071m92i7",
+    "timestamp": "2026-07-30T08:12:37.071Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #13. Total: ₱122.00"
+  },
+  {
+    "id": "1785399122091ly29t",
+    "timestamp": "2026-07-30T08:12:02.091Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #13 on Walk-In"
+  },
+  {
+    "id": "1785397979881qzbjx",
+    "timestamp": "2026-07-30T07:52:59.881Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #11. Total: ₱220.00"
+  },
+  {
+    "id": "1785397971194vqwef",
+    "timestamp": "2026-07-30T07:52:51.197Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #11 on Walk-In"
+  },
+  {
+    "id": "1785390299994rx9qa",
+    "timestamp": "2026-07-30T05:44:59.994Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785386933338t41x6",
+    "timestamp": "2026-07-30T04:48:53.338Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: 2"
+  },
+  {
+    "id": "17853861178917fh2p",
+    "timestamp": "2026-07-30T04:35:17.891Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "1785311564646xv33t",
     "timestamp": "2026-07-29T07:52:44.646Z",
     "user": "System Administrator",

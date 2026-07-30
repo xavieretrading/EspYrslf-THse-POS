@@ -29,7 +29,7 @@ import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 
 type Category = { id: number; name: string };
-type Product = { id: number; name: string; stock: number; category_name: string; category_id: number; cost: number; price: number };
+type Product = { id: number; name: string; stock: number; category_name: string; category_id: number; cost: number; price: number; division?: string };
 
 type TabType = 'active_stocks' | 'warehouses' | 'in_out_reports' | 'fast_moving' | 'cycle_counts';
 
@@ -40,6 +40,8 @@ export default function Inventory() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('active_stocks');
+  const [selectedDivision, setSelectedDivision] = useState<'coffee' | 'laundry'>('coffee');
+  const isLaundryBranch = activeBranch?.name.toLowerCase().includes('laundry') || activeBranch?.name.toLowerCase().includes('s1p') || activeBranch?.name.toLowerCase().includes('spin');
   const [isTogglingStrict, setIsTogglingStrict] = useState(false);
 
   const handleToggleStrictLock = async () => {
@@ -87,6 +89,7 @@ export default function Inventory() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDivision, setNewCategoryDivision] = useState<'coffee' | 'laundry'>('coffee');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '' });
 
@@ -172,6 +175,7 @@ export default function Inventory() {
   };
 
   useEffect(() => {
+    setSelectedDivision('coffee');
     fetchData();
   }, [activeBranch]);
 
@@ -269,10 +273,11 @@ export default function Inventory() {
     const res = await fetch('/api/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCategoryName })
+      body: JSON.stringify({ name: newCategoryName, division: newCategoryDivision })
     });
     if (res.ok) {
       setNewCategoryName('');
+      setNewCategoryDivision('coffee');
       fetchData();
     } else {
       const data = await res.json();
@@ -464,7 +469,7 @@ export default function Inventory() {
   };
 
   // Filtering for stocks
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) && (!isLaundryBranch || (p.division || 'coffee') === selectedDivision));
 
   // Filtering for transaction reports
   const filteredReports = transactions.filter(tx => {
@@ -589,6 +594,32 @@ export default function Inventory() {
         {activeTab === 'active_stocks' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+              {isLaundryBranch && (
+                <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 font-sans">
+                  <button
+                    onClick={() => setSelectedDivision('coffee')}
+                    className={cn(
+                      "flex-1 py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                      selectedDivision === 'coffee'
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    ☕ Coffee Shop Supplies
+                  </button>
+                  <button
+                    onClick={() => setSelectedDivision('laundry')}
+                    className={cn(
+                      "flex-1 py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                      selectedDivision === 'laundry'
+                        ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                    )}
+                  >
+                    🧺 Laundry Supplies / Services
+                  </button>
+                </div>
+              )}
               <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                 <span className="font-bold text-xs uppercase tracking-wider text-slate-400">Products Listing</span>
                 <div className="relative w-64">
@@ -1736,18 +1767,47 @@ export default function Inventory() {
               </button>
             </div>
 
-            <form onSubmit={handleAddCategory} className="mb-6 flex gap-2">
-              <input 
-                type="text" 
-                required
-                value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none transition-all text-xs font-semibold"
-                placeholder="New category name..."
-              />
-              <button type="submit" className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs uppercase tracking-wider font-extrabold hover:bg-slate-800 transition-colors">
-                Add
-              </button>
+            <form onSubmit={handleAddCategory} className="mb-6 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  required
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none transition-all text-xs font-semibold"
+                  placeholder="New category name..."
+                />
+                <button type="submit" className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs uppercase tracking-wider font-extrabold hover:bg-slate-800 transition-colors">
+                  Add
+                </button>
+              </div>
+              {isLaundryBranch && (
+                <div className="flex items-center gap-3 mt-1.5 px-1 font-sans">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Division:</span>
+                  <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer font-bold select-none">
+                    <input 
+                      type="radio" 
+                      name="cat_division" 
+                      value="coffee"
+                      checked={newCategoryDivision === 'coffee'}
+                      onChange={() => setNewCategoryDivision('coffee')}
+                      className="accent-emerald-600"
+                    />
+                    ☕ Coffee Shop
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer font-bold select-none ml-2">
+                    <input 
+                      type="radio" 
+                      name="cat_division" 
+                      value="laundry"
+                      checked={newCategoryDivision === 'laundry'}
+                      onChange={() => setNewCategoryDivision('laundry')}
+                      className="accent-emerald-600"
+                    />
+                    🧺 Laundry
+                  </label>
+                </div>
+              )}
             </form>
 
             <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100 shadow-inner">

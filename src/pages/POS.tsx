@@ -7,6 +7,7 @@ import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
+import Swal from 'sweetalert2';
 
 const getProductImage = (name: string) => {
   const normalized = name.toLowerCase();
@@ -111,11 +112,43 @@ export default function POS() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<{ id: number, name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: number, name: string, division?: string }[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
   const [discounts, setDiscounts] = useState<Discount[]>([]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedDivision, setSelectedDivision] = useState<'coffee' | 'laundry'>('coffee');
+  const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
+
+  // Laundry POS Redesigned Form States
+  const [laundryCustomerName, setLaundryCustomerName] = useState('');
+  const [laundryPhone, setLaundryPhone] = useState('');
+  const [selectedLaundryService, setSelectedLaundryService] = useState<any>(null);
+  const [laundryWeight, setLaundryWeight] = useState('');
+  
+  // Washing Preferences
+  const [laundryPrefWarmWater, setLaundryPrefWarmWater] = useState(false);
+  const [laundryPrefColdWater, setLaundryPrefColdWater] = useState(false);
+  const [laundryPrefUnscented, setLaundryPrefUnscented] = useState(false);
+  const [laundryPrefSeparateWhite, setLaundryPrefSeparateWhite] = useState(false);
+  const [laundryPrefSeparateColored, setLaundryPrefSeparateColored] = useState(false);
+
+  // Addons
+  const [laundryAddonFabCon, setLaundryAddonFabCon] = useState(false);
+  const [laundryAddonRush, setLaundryAddonRush] = useState(false);
+
+  // Estimated Pickup
+  const [laundryPickupDate, setLaundryPickupDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [laundryPickupTime, setLaundryPickupTime] = useState('16:00');
+
+  // Payment
+  const [laundryPaymentMethod, setLaundryPaymentMethod] = useState<'cash' | 'gcash' | 'card'>('cash');
+  const [laundryCashReceived, setLaundryCashReceived] = useState('');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -268,8 +301,9 @@ export default function POS() {
           localStorage.removeItem('resto_current_shift');
           setShiftAction('start');
           setShiftAmount('');
-          setShowShiftModal(true);
-          swalAlert('Shift Closed', `Shift closed successfully!\nTotal Sales: ₱${finalShift.total_sales.toFixed(2)}`, 'success');
+          setShowShiftModal(false);
+          setShowZReading(true);
+          swalAlert('Shift Closed', `Shift closed successfully!\nTotal Sales: ₱${finalShift.total_sales.toFixed(2)}\n\nOpening Z-Reading report...`, 'success');
         } else {
           const err = await res.json();
           swalAlert('Error Ending Shift', err.error || 'Unknown error', 'error');
@@ -291,6 +325,9 @@ export default function POS() {
         checkShift(u.id, activeBranch.id);
       }
     }
+
+    setSelectedDivision('coffee');
+    setSelectedCategory('All');
 
     if (!activeBranch) return;
     Promise.all([
@@ -367,9 +404,10 @@ export default function POS() {
   }, [activeBranch, location.search]);
 
   const filteredProducts = products.filter(p => {
+    const matchesDivision = !isLaundryBranch || p.division === selectedDivision;
     const matchesCategory = selectedCategory === 'All' || p.category_name === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesDivision && matchesCategory && matchesSearch;
   });
 
   const addToCart = (product: Product) => {
@@ -511,6 +549,251 @@ export default function POS() {
   const total = cartCalculations.total;
   const change = parseFloat(amountTendered) - total;
 
+  const [customServices, setCustomServices] = useState<any[]>([]);
+  const laundryServices = [
+    ...products.filter(p => {
+      const div = p.division?.toLowerCase() || '';
+      const cat = p.category_name?.toLowerCase() || '';
+      return div === 'laundry' || cat.includes('laundry') || cat.includes('clean') || cat.includes('dry') || cat.includes('service');
+    }),
+    ...customServices
+  ];
+
+  const handleKeypadPress = (val: string) => {
+    if (val === 'C') {
+      setLaundryWeight('');
+    } else if (val === '⌫') {
+      setLaundryWeight(prev => prev.slice(0, -1));
+    } else if (val === '.') {
+      if (!laundryWeight.includes('.')) {
+        setLaundryWeight(prev => (prev === '' ? '0.' : prev + '.'));
+      }
+    } else {
+      if (laundryWeight === '0' && val === '0') return;
+      if (laundryWeight === '0' && val !== '0') {
+        setLaundryWeight(val);
+        return;
+      }
+      if (laundryWeight.replace('.', '').length >= 4) return;
+      setLaundryWeight(prev => prev + val);
+    }
+  };
+
+  const handleAddCustomServicePrompt = async () => {
+    const { value: formValues } = await Swal.fire({
+      title: 'Add Custom Service',
+      html:
+        '<div style="text-align: left; font-family: sans-serif; font-size: 13px;">' +
+        '<label style="font-weight: bold; margin-bottom: 4px; display: block;">Service Name</label>' +
+        '<input id="swal-input-name" class="swal2-input" placeholder="e.g. Dry Clean Special" style="margin-top:0; margin-bottom: 12px; width: 85%; font-size: 14px;">' +
+        '<label style="font-weight: bold; margin-bottom: 4px; display: block;">Price per KG / Rate</label>' +
+        '<input id="swal-input-price" type="number" class="swal2-input" placeholder="e.g. 150" style="margin-top:0; width: 85%; font-size: 14px;">' +
+        '</div>',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Add Service',
+      confirmButtonColor: '#3b82f6',
+      preConfirm: () => {
+        const name = (document.getElementById('swal-input-name') as HTMLInputElement).value;
+        const price = parseFloat((document.getElementById('swal-input-price') as HTMLInputElement).value);
+        if (!name.trim()) {
+          Swal.showValidationMessage('Please enter a service name');
+          return false;
+        }
+        if (isNaN(price) || price <= 0) {
+          Swal.showValidationMessage('Please enter a valid price');
+          return false;
+        }
+        return { name, price };
+      }
+    });
+
+    if (formValues) {
+      const newService = {
+        id: Date.now(),
+        name: formValues.name,
+        price: formValues.price,
+        division: 'laundry'
+      };
+      setCustomServices(prev => [...prev, newService]);
+      setSelectedLaundryService(newService);
+      swalAlert('Service Added', `"${formValues.name}" is now active at ₱${formValues.price.toFixed(2)}/kg`, 'success');
+    } else {
+      setSelectedLaundryService(null);
+    }
+  };
+
+  const resetLaundryForm = () => {
+    setLaundryCustomerName('');
+    setLaundryPhone('');
+    setSelectedLaundryService(null);
+    setLaundryWeight('');
+    setLaundryPrefWarmWater(false);
+    setLaundryPrefColdWater(false);
+    setLaundryPrefUnscented(false);
+    setLaundryPrefSeparateWhite(false);
+    setLaundryPrefSeparateColored(false);
+    setLaundryAddonFabCon(false);
+    setLaundryAddonRush(false);
+    setLaundryPaymentMethod('cash');
+    setLaundryCashReceived('');
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    setLaundryPickupDate(tomorrow.toISOString().split('T')[0]);
+    setLaundryPickupTime('16:00');
+  };
+
+  const handleCheckoutLaundry = async (payImmediately: boolean) => {
+    if (!laundryCustomerName.trim()) {
+      swalAlert('Missing Customer Information', 'Please enter customer name', 'warning');
+      return;
+    }
+    const weight = parseFloat(laundryWeight);
+    if (isNaN(weight) || weight <= 0) {
+      swalAlert('Invalid Weight', 'Please enter a valid weight in KG', 'warning');
+      return;
+    }
+    
+    const rate = selectedLaundryService ? selectedLaundryService.price : (settings?.laundry_rate_per_kg || 70);
+    const subtotalCost = weight * rate;
+    const fabConPrice = 20;
+    const rushPrice = 100;
+    const addonTotal = (laundryAddonFabCon ? fabConPrice : 0) + (laundryAddonRush ? rushPrice : 0);
+    const grandTotal = subtotalCost + addonTotal;
+
+    const cashRec = parseFloat(laundryCashReceived) || 0;
+    if (payImmediately && laundryPaymentMethod === 'cash' && cashRec < grandTotal) {
+      swalAlert('Invalid Payment', 'Cash received is less than grand total amount', 'error');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      const firstValidProduct = products.find(p => p.branch_id === activeBranch?.id) || products[0];
+
+      const itemsPayload: any[] = [
+        {
+          product_id: (selectedLaundryService && products.some(p => p.id === selectedLaundryService.id))
+            ? selectedLaundryService.id
+            : (firstValidProduct?.id || 1),
+          quantity: 1,
+          price: subtotalCost,
+          notes: `Service: ${selectedLaundryService?.name || 'Laundry Service'} | Weight: ${weight} kg, Rate: ₱${rate.toFixed(2)}/kg`
+        }
+      ];
+
+      if (laundryAddonFabCon) {
+        const p = products.find(prod => prod.name.toLowerCase().includes('conditioner') || prod.name.toLowerCase().includes('fabcon'));
+        itemsPayload.push({
+          product_id: p?.id || firstValidProduct?.id || 1,
+          quantity: 1,
+          price: fabConPrice,
+          notes: 'Laundry Add-on: Fabric Conditioner'
+        });
+      }
+      if (laundryAddonRush) {
+        const p = products.find(prod => prod.name.toLowerCase().includes('rush'));
+        itemsPayload.push({
+          product_id: p?.id || firstValidProduct?.id || 1,
+          quantity: 1,
+          price: rushPrice,
+          notes: 'Laundry Add-on: Rush Service'
+        });
+      }
+
+      const preferencesList: string[] = [];
+      if (laundryPrefWarmWater) preferencesList.push('Warm Water');
+      if (laundryPrefColdWater) preferencesList.push('Cold Water');
+      if (laundryPrefUnscented) preferencesList.push('Unscented');
+      if (laundryPrefSeparateWhite) preferencesList.push('Separate White Clothes');
+      if (laundryPrefSeparateColored) preferencesList.push('Separate Colored Clothes');
+
+      const addonsList: any[] = [];
+      if (laundryAddonFabCon) addonsList.push({ name: 'Fabric Conditioner', price: fabConPrice });
+      if (laundryAddonRush) addonsList.push({ name: 'Rush Service', price: rushPrice });
+
+      const laundryDetails = {
+        is_laundry: true,
+        company_name: settings?.company_name || 'SIP & SPIN LAUNDRY SHOP',
+        customer_name: laundryCustomerName,
+        phone: laundryPhone,
+        service_name: selectedLaundryService?.name || 'Wash, Dry & Fold',
+        weight: weight,
+        rate: rate,
+        subtotal: subtotalCost,
+        preferences: preferencesList,
+        addons: addonsList,
+        pickup_date: laundryPickupDate,
+        pickup_time: laundryPickupTime
+      };
+
+      const localUser = localStorage.getItem('resto_active_user');
+      const activeUser = localUser ? JSON.parse(localUser) : null;
+      const cashierName = activeUser?.full_name || activeUser?.username || 'Staff';
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          branch_id: activeBranch?.id,
+          table_id: null,
+          order_type: 'takeout',
+          items: itemsPayload,
+          notes: JSON.stringify(laundryDetails)
+        })
+      });
+
+      const orderResult = await res.json();
+      if (!res.ok || !orderResult.success) {
+        swalAlert('Failed to create order', orderResult.error || 'Server error', 'error');
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      const orderId = orderResult.id;
+
+      if (payImmediately) {
+        const payRes = await fetch(`/api/orders/${orderId}/pay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            discount_id: null,
+            discount_amount: 0,
+            tax_amount: 0,
+            service_charge: 0,
+            total: grandTotal,
+            payment_method: laundryPaymentMethod,
+            amount_tendered: laundryPaymentMethod === 'cash' ? cashRec : grandTotal,
+            change: laundryPaymentMethod === 'cash' ? (cashRec - grandTotal) : 0,
+            reference_number: ''
+          })
+        });
+
+        if (payRes.ok) {
+          const { receipt } = await payRes.json();
+          setReceiptData({
+            ...receipt,
+            cashier_name: cashierName
+          });
+          resetLaundryForm();
+          swalAlert('Payment Successful', 'Receipt is ready to print!', 'success');
+        } else {
+          const err = await payRes.json();
+          swalAlert('Payment Failed', err.error || 'Failed to settle laundry payment', 'error');
+        }
+      } else {
+        resetLaundryForm();
+        swalAlert('Order Saved', 'Laundry service ticket recorded successfully!', 'success');
+      }
+
+    } catch (e: any) {
+      console.error(e);
+      swalAlert('Error', e.message || 'Operation failed', 'error');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (isProcessingPayment) return;
     // We now allow dine-in without a table (e.g. for walk-in dine-in customers not assigned to a specific table)
@@ -626,6 +909,7 @@ export default function POS() {
   const [ordersStatusFilter, setOrdersStatusFilter] = useState<'all' | 'open' | 'paid'>('all');
   const [selectedModalOrder, setSelectedModalOrder] = useState<any>(null);
   const [zReadingData, setZReadingData] = useState<any>(null);
+  const [zReadingFilter, setZReadingFilter] = useState<'all' | 'coffee' | 'laundry'>('all');
 
   // Voucher Redemption Modal states
   const [showRedemptionModal, setShowRedemptionModal] = useState(false);
@@ -1098,7 +1382,384 @@ export default function POS() {
       )}
 
       {/* Main Content - Menu */}
-      <div className="flex-1 flex flex-col h-full border-r border-slate-200 min-w-0 print:hidden">
+      {selectedDivision === 'laundry' ? (
+        <div className="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden font-sans print:hidden">
+          {/* Header */}
+          <div className="px-6 py-4 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 flex-shrink-0">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-black text-slate-800 tracking-tight">🧺 Laundry Order Entry</h1>
+              <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+                <button
+                  onClick={() => setSelectedDivision('coffee')}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-white transition-all shadow-xs"
+                >
+                  ☕ Switch to Coffee POS
+                </button>
+              </div>
+            </div>
+            {/* Action buttons or info */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setShiftAction(currentShift ? 'end' : 'start');
+                  setShiftAmount('');
+                  setShowShiftModal(true);
+                }}
+                className={cn(
+                  "px-4 py-2 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm",
+                  currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
+              </button>
+            </div>
+          </div>
+
+          {/* Form Content Wrapper */}
+          <div className="flex-1 overflow-hidden p-3 bg-slate-100">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+              
+              {/* LEFT COLUMN: Customer, Service & Weight Keypad */}
+              <div className="space-y-3 flex flex-col h-full">
+                
+                {/* Customer Details Card */}
+                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
+                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    👤 Customer Information
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Customer Name</label>
+                      <input
+                        type="text"
+                        value={laundryCustomerName}
+                        onChange={e => setLaundryCustomerName(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold"
+                        placeholder="Customer Name..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Phone Number</label>
+                      <input
+                        type="text"
+                        value={laundryPhone}
+                        onChange={e => setLaundryPhone(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold"
+                        placeholder="Phone Number..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Laundry Service Card */}
+                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
+                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    👔 Laundry Service Selector
+                  </h2>
+                  <div>
+                    <select
+                      value={selectedLaundryService?.id || ''}
+                      onChange={(e) => {
+                        if (e.target.value === 'add-custom') {
+                          handleAddCustomServicePrompt();
+                        } else {
+                          const s = laundryServices.find(srv => srv.id.toString() === e.target.value);
+                          setSelectedLaundryService(s || null);
+                        }
+                      }}
+                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold cursor-pointer"
+                    >
+                      <option value="">-- Choose Laundry Service --</option>
+                      {laundryServices.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} - ₱{s.price.toFixed(2)}/kg
+                        </option>
+                      ))}
+                      <option value="add-custom" className="text-blue-600 font-bold">+ Add Custom Service...</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Weight Keypad Card */}
+                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                      ⚖️ Weight Entry (KG)
+                    </h2>
+                    
+                    {/* Digital Scale Display */}
+                    <div className="bg-slate-900 text-blue-400 p-2.5 px-4 rounded-xl flex justify-between items-center font-mono shadow-inner">
+                      <div>
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Rate / KG</span>
+                        <span className="text-xs font-bold">
+                          ₱{selectedLaundryService ? selectedLaundryService.price.toFixed(2) : (settings?.laundry_rate_per_kg || 70).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Current Weight</span>
+                        <span className="text-xl font-black tracking-tight">{laundryWeight || '0.0'} <span className="text-xs">KG</span></span>
+                      </div>
+                    </div>
+
+                    {/* Numeric Keypad grid */}
+                    <div className="grid grid-cols-3 gap-1.5 mt-2.5">
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => handleKeypadPress(num.toString())}
+                          className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
+                        >
+                          {num}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => handleKeypadPress('C')}
+                        className="bg-red-50 hover:bg-red-100 active:scale-[0.97] text-red-600 transition-all font-black text-sm rounded-lg flex items-center justify-center py-2"
+                      >
+                        C
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleKeypadPress('0')}
+                        className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
+                      >
+                        0
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleKeypadPress('.')}
+                        className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
+                      >
+                        .
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Wide Backspace button */}
+                  <button
+                    type="button"
+                    onClick={() => handleKeypadPress('⌫')}
+                    className="w-full mt-2 py-1.5 bg-slate-200 hover:bg-slate-300 active:scale-[0.98] text-slate-700 transition-all font-black text-xs rounded-lg flex items-center justify-center gap-1.5"
+                  >
+                    <span>⌫ Backspace</span>
+                  </button>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN: Preferences, Add-ons, Pickup, Payment & Summary */}
+              <div className="space-y-3 flex flex-col h-full">
+
+                {/* Washing Preferences & Add-ons Card */}
+                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Preferences column */}
+                    <div>
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        ⚙️ Preferences
+                      </h2>
+                      <div className="space-y-1.5">
+                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
+                          <input type="checkbox" checked={laundryPrefWarmWater} onChange={e => setLaundryPrefWarmWater(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                          Warm Water
+                        </label>
+                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
+                          <input type="checkbox" checked={laundryPrefColdWater} onChange={e => setLaundryPrefColdWater(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                          Cold Water
+                        </label>
+                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
+                          <input type="checkbox" checked={laundryPrefUnscented} onChange={e => setLaundryPrefUnscented(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                          Unscented
+                        </label>
+                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
+                          <input type="checkbox" checked={laundryPrefSeparateWhite} onChange={e => setLaundryPrefSeparateWhite(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                          Separate White
+                        </label>
+                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
+                          <input type="checkbox" checked={laundryPrefSeparateColored} onChange={e => setLaundryPrefSeparateColored(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                          Separate Colored
+                        </label>
+                      </div>
+                    </div>
+                    
+                    {/* Add-ons column */}
+                    <div>
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                        ➕ Add-ons
+                      </h2>
+                      <div className="space-y-1.5">
+                        <label className={cn("flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonFabCon ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" checked={laundryAddonFabCon} onChange={e => setLaundryAddonFabCon(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                            <span>Fab Con</span>
+                          </div>
+                          <span className="text-blue-600 text-[9px] font-black">+₱20</span>
+                        </label>
+                        <label className={cn("flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonRush ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
+                          <div className="flex items-center gap-2">
+                            <input type="checkbox" checked={laundryAddonRush} onChange={e => setLaundryAddonRush(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
+                            <span>Rush Service</span>
+                          </div>
+                          <span className="text-blue-600 text-[9px] font-black">+₱100</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pickup, Settlement & Checkout Card */}
+                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col justify-between overflow-hidden">
+                  <div className="space-y-2">
+                    
+                    {/* Pickup Details */}
+                    <div>
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                        📅 Pickup Details
+                      </h2>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="date"
+                          value={laundryPickupDate}
+                          onChange={e => setLaundryPickupDate(e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
+                        />
+                        <input
+                          type="time"
+                          value={laundryPickupTime}
+                          onChange={e => setLaundryPickupTime(e.target.value)}
+                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div>
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                        💳 Payment Settlement
+                      </h2>
+                      <div className="flex gap-2">
+                        {(['cash', 'gcash', 'card'] as const).map(method => (
+                          <button
+                            key={method}
+                            type="button"
+                            onClick={() => setLaundryPaymentMethod(method)}
+                            className={cn(
+                              "flex-1 py-1 rounded-lg font-black text-[10px] uppercase tracking-wide border transition-all active:scale-[0.97]",
+                              laundryPaymentMethod === method
+                                ? "bg-blue-600 text-white border-blue-700"
+                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            {method === 'card' ? '💳 Card' : method === 'gcash' ? '📱 GCash' : '💵 Cash'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cash Change Panel */}
+                    {laundryPaymentMethod === 'cash' && (
+                      <div className="bg-slate-50 p-2 border border-slate-200 rounded-xl grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Cash Tendered</label>
+                          <input
+                            type="text"
+                            value={laundryCashReceived}
+                            onChange={e => setLaundryCashReceived(e.target.value)}
+                            className="w-full px-2 py-0.5 bg-white border border-slate-200 rounded-lg outline-none text-xs font-black text-slate-800"
+                            placeholder="₱0.00"
+                          />
+                          {/* Quick cash helper buttons */}
+                          <div className="flex gap-1 mt-1">
+                            {[100, 500, 1000].map(cashVal => (
+                              <button
+                                key={cashVal}
+                                type="button"
+                                onClick={() => {
+                                  setLaundryCashReceived((prev) => {
+                                    const current = parseFloat(prev) || 0;
+                                    return (current + cashVal).toString();
+                                  });
+                                }}
+                                className="flex-1 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 rounded text-[8px] font-extrabold text-slate-500"
+                              >
+                                +{cashVal}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col justify-center text-right pr-2">
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Change Due</span>
+                          <span className={cn(
+                            "text-sm font-black font-mono",
+                            (parseFloat(laundryCashReceived) || 0) >= (parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)
+                              ? "text-emerald-600"
+                              : "text-slate-400"
+                          )}>
+                            ₱{Math.max(0, (parseFloat(laundryCashReceived) || 0) - ((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0))).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Calculations & Checkout action buttons */}
+                  <div className="mt-2.5 pt-2 border-t border-slate-100">
+                    <div className="bg-slate-900 text-white p-2.5 rounded-xl mb-2.5">
+                      <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
+                        <span>Subtotal ({laundryWeight || '0'} kg)</span>
+                        <span>₱{((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70)).toFixed(2)}</span>
+                      </div>
+                      {(laundryAddonFabCon || laundryAddonRush) && (
+                        <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
+                          <span>Add-ons</span>
+                          <span>₱{((laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center border-t border-slate-800 pt-1 mt-1">
+                        <span className="text-[9px] font-black uppercase text-slate-350">Grand Total</span>
+                        <span className="text-sm font-black text-blue-400 font-mono">
+                          ₱{((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={resetLaundryForm}
+                        className="py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-600 transition-all font-black text-[10px] uppercase tracking-wide rounded-lg text-center"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCheckoutLaundry(false)}
+                        className="py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-white transition-all font-black text-[10px] uppercase tracking-wide rounded-lg text-center"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCheckoutLaundry(true)}
+                        className="py-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white transition-all font-black text-[10px] uppercase tracking-wide rounded-lg flex items-center justify-center gap-1 shadow-xs text-center"
+                      >
+                        <Printer size={12} />
+                        Pay & Print
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex-1 flex flex-col h-full border-r border-slate-200 min-w-0 print:hidden">
         {/* Header */}
         <div className="px-3 py-1.5 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 flex-shrink-0 font-sans">
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 pl-14">
@@ -1130,20 +1791,6 @@ export default function POS() {
                 {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
               </button>
             </div>
-            <button
-              onClick={handleOpenRedemptionModal}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap min-h-[32px]"
-            >
-              <Ticket size={14} />
-              <span>REDEEM</span>
-            </button>
-            <button
-              onClick={() => setShowOrdersModal(true)}
-              className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-sm whitespace-nowrap min-h-[32px]"
-            >
-              <Eye size={14} />
-              <span>ORDERS</span>
-            </button>
           </div>
           <div className="flex items-center gap-1.5">
             {currentUser?.role !== 'waiter' && (
@@ -1193,6 +1840,40 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Division Selector Toggle for Laundry hybrid branch */}
+        {isLaundryBranch && (
+          <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 flex-shrink-0 font-sans">
+            <button
+              onClick={() => {
+                setSelectedDivision('coffee');
+                setSelectedCategory('All');
+              }}
+              className={cn(
+                "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                selectedDivision === 'coffee'
+                  ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              )}
+            >
+              ☕ Coffee Shop
+            </button>
+            <button
+              onClick={() => {
+                setSelectedDivision('laundry');
+                setSelectedCategory('All');
+              }}
+              className={cn(
+                "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                selectedDivision === 'laundry'
+                  ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              )}
+            >
+              🧺 Laundry Service
+            </button>
+          </div>
+        )}
+
         {/* Categories */}
         <div className="p-1.5 px-3 flex gap-1.5 overflow-x-auto bg-white border-b border-slate-100 no-scrollbar flex-shrink-0 font-sans">
           <button
@@ -1206,7 +1887,7 @@ export default function POS() {
           >
             All Items
           </button>
-          {categories.map(c => (
+          {categories.filter(c => !isLaundryBranch || (c.division || 'coffee') === selectedDivision).map(c => (
             <button
               key={c.id}
               onClick={() => setSelectedCategory(c.name)}
@@ -2012,6 +2693,8 @@ export default function POS() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {receiptData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
@@ -2229,28 +2912,150 @@ export default function POS() {
               `}
             </style>
 
-            {/* Copy Type Selector */}
-            <div className="flex gap-1 mb-3 p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-inner print:hidden">
-              {(['all', 'customer', 'accounting', 'store'] as const).map(type => (
-                <button
-                  key={type}
-                  onClick={() => setActiveCopyType(type)}
-                  className={cn(
-                    "flex-1 py-1 rounded-md text-[9px] font-black uppercase transition-all",
-                    activeCopyType === type
-                      ? "bg-white text-slate-800 shadow border border-slate-200/50"
-                      : "text-slate-500 hover:text-slate-700"
-                  )}
-                >
-                  {type === 'all' ? 'All Copies' : `${type}`}
-                </button>
-              ))}
-            </div>
-
-            {['customer', 'accounting', 'store'].filter(type => activeCopyType === 'all' || activeCopyType === type).map((type, index) => {
+            {['customer'].map((type, index) => {
               const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
               const isVoucherOrCompOrder = (receiptData.subtotal === 0 || !receiptData.subtotal) && rawSubtotal > 0 && (receiptData.payment_method?.toUpperCase() === 'COMPLIMENTARY' || receiptData.payment_method?.toUpperCase() === 'VOUCHER');
               const displaySubtotal = isVoucherOrCompOrder ? rawSubtotal : (receiptData.subtotal || 0);
+
+              // Parse laundry metadata if any
+              let laundryDetails: any = null;
+              if (receiptData.notes && receiptData.notes.trim().startsWith('{')) {
+                try {
+                  const parsed = JSON.parse(receiptData.notes);
+                  if (parsed.is_laundry) {
+                    laundryDetails = parsed;
+                  }
+                } catch (e) {}
+              }
+
+              if (laundryDetails) {
+                return (
+                  <div key={type} className={cn("relative print:relative text-black", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
+                    {receiptData.status === 'voided' && (
+                      <div className="void-watermark select-none pointer-events-none">VOID</div>
+                    )}
+                    
+                    {/* Company Details */}
+                    <div className="text-center section-block">
+                      <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                      <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
+                      <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    </div>
+
+                    <div className="text-center section-block pt-1.5 pb-1">
+                      <p className="receipt-title font-bold text-[11pt] border-y border-dashed border-black py-0.5">
+                        {receiptData.status === 'voided' ? 'VOIDED LAUNDRY RECEIPT' : 'LAUNDRY RECEIPT'}
+                      </p>
+                    </div>
+
+                    <div className="section-block pt-1 font-mono text-[9.5pt]">
+                      <div className="flex justify-between row-item">
+                        <span>Receipt No:</span>
+                        <span className="font-bold">LS-{(receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Date:</span>
+                        <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Cashier:</span>
+                        <span>{receiptData.cashier_name || 'Staff'}</span>
+                      </div>
+                    </div>
+
+                    <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                      <div className="flex justify-between row-item">
+                        <span>Customer:</span>
+                        <span className="font-bold">{laundryDetails.customer_name}</span>
+                      </div>
+                      {laundryDetails.phone && (
+                        <div className="flex justify-between row-item">
+                          <span>Phone:</span>
+                          <span>{laundryDetails.phone}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between row-item">
+                        <span>Service:</span>
+                        <span className="font-bold">{laundryDetails.service_name}</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Weight:</span>
+                        <span>{laundryDetails.weight} kg</span>
+                      </div>
+                      <div className="flex justify-between row-item">
+                        <span>Rate:</span>
+                        <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
+                      </div>
+                      <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
+                        <span>Subtotal</span>
+                        <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {/* Preferences */}
+                    {laundryDetails.preferences && laundryDetails.preferences.length > 0 && (
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9pt]">
+                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Preferences</div>
+                        {laundryDetails.preferences.map((pref: string, idx: number) => (
+                          <div key={idx} className="row-item pl-2 font-semibold">• {pref}</div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add-ons */}
+                    {laundryDetails.addons && laundryDetails.addons.length > 0 && (
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Add-ons</div>
+                        {laundryDetails.addons.map((add: any, idx: number) => (
+                          <div key={idx} className="flex justify-between row-item pl-2">
+                            <span>{add.name}</span>
+                            <span className="font-bold">₱{add.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Calculations & Totals */}
+                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 font-mono text-[10pt] space-y-1">
+                      <div className="flex justify-between row-item font-bold text-[12pt] border-t-2 border-double border-black pt-1">
+                        <span>TOTAL</span>
+                        <span>₱{(receiptData.total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between row-item text-[9.5pt]">
+                        <span>Payment Method:</span>
+                        <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
+                      </div>
+                      {receiptData.payment_method?.toLowerCase() === 'cash' && (
+                        <>
+                          <div className="flex justify-between row-item text-[9.5pt]">
+                            <span>Cash Received:</span>
+                            <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between row-item text-[9.5pt] font-bold">
+                            <span>Change:</span>
+                            <span>₱{(receiptData.change || 0).toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Pickup Details */}
+                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 text-center font-mono text-[9.5pt] bg-slate-50/50 p-1.5 rounded-lg">
+                      <div className="font-bold text-[8.5pt] uppercase tracking-wider">Estimated Pickup</div>
+                      <div className="font-bold text-[10.5pt] mt-0.5">
+                        {laundryDetails.pickup_date ? new Date(laundryDetails.pickup_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'} at {laundryDetails.pickup_time || 'N/A'}
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="text-center pt-3 border-t border-dashed border-black mt-3 text-[9.5pt]">
+                      <p className="font-bold">Thank you for choosing</p>
+                      <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                    </div>
+
+                  </div>
+                );
+              }
 
               return (
                 <div key={type} className={cn("relative print:relative", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
@@ -2264,7 +3069,7 @@ export default function POS() {
                   {/* Company Details */}
                   <div className="text-center section-block">
                     <div className="flex justify-center mb-1 text-center">
-                      <img src="/logo.png" alt="Logo" className="receipt-logo" />
+                      {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
@@ -2524,10 +3329,51 @@ export default function POS() {
               `}
             </style>
 
+            {isLaundryBranch && (
+              <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl mb-4 print:hidden text-xs font-sans">
+                <button
+                  type="button"
+                  onClick={() => setZReadingFilter('all')}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg font-bold transition-all",
+                    zReadingFilter === 'all' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  Combined
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZReadingFilter('coffee')}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg font-bold transition-all",
+                    zReadingFilter === 'coffee' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  Coffee Shop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setZReadingFilter('laundry')}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg font-bold transition-all",
+                    zReadingFilter === 'laundry' ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  Laundry
+                </button>
+              </div>
+            )}
+
             <div className="text-center mb-4 print:mb-2 text-slate-800">
-              <p className="mb-2 font-black text-lg receipt-title">X-READING / Z-READING</p>
+              <p className="mb-2 font-black text-lg receipt-title">
+                {zReadingFilter === 'coffee' ? 'COFFEE SHOP SALES REPORT' :
+                 zReadingFilter === 'laundry' ? 'LAUNDRY SHOP SALES REPORT' :
+                 'X-READING / Z-READING'}
+              </p>
               <br className="print:hidden" />
-              <p className="font-black company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
+              <p className="font-black company-name">
+                {zReadingFilter === 'laundry' ? 'SIP & SPIN LAUNDRY SHOP' : (settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE')}
+              </p>
               <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
               <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
               <p className="mt-2 font-black">***** END OF DAY SHIFT *****</p>
@@ -2560,37 +3406,56 @@ export default function POS() {
             <div className="space-y-0.5 mt-2">
               <div className="flex justify-between">
                 <span>Gross Sales:</span>
-                <span>₱{(zReadingData?.summary?.gross_sales || 0).toFixed(2)}</span>
+                <span>₱{(
+                  zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) :
+                  zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
+                  (zReadingData?.summary?.gross_sales || 0)
+                ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Regular Discount:</span>
-                <span>₱{(zReadingData?.summary?.total_discounts || 0).toFixed(2)}</span>
+                <span>₱{(
+                  zReadingFilter === 'laundry' ? 0 :
+                  (zReadingData?.summary?.total_discounts || 0)
+                ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Service Charge:</span>
-                <span>₱{(zReadingData?.summary?.total_service_charge || 0).toFixed(2)}</span>
+                <span>₱{(
+                  zReadingFilter === 'laundry' ? 0 :
+                  (zReadingData?.summary?.total_service_charge || 0)
+                ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-black mt-1">
                 <span>Net Sales:</span>
-                <span>₱{(zReadingData?.summary?.total_sales || 0).toFixed(2)}</span>
+                <span>₱{(
+                  zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) - (zReadingData?.summary?.total_discounts || 0) :
+                  zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
+                  (zReadingData?.summary?.total_sales || 0)
+                ).toFixed(2)}</span>
               </div>
-              <div className="border-t border-dashed border-black my-2"></div>
-              <div className="flex justify-between">
-                <span>VATable Sales:</span>
-                <span>₱{(zReadingData?.summary?.vatable_sales || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>VAT Amount:</span>
-                <span>₱{(zReadingData?.summary?.total_vat || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>VAT Exempt Sales:</span>
-                <span>₱{(zReadingData?.summary?.vat_exempt_sales || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Zero Rated Sales:</span>
-                <span>0.00</span>
-              </div>
+              
+              {zReadingFilter === 'all' && (
+                <>
+                  <div className="border-t border-dashed border-black my-2"></div>
+                  <div className="flex justify-between">
+                    <span>VATable Sales:</span>
+                    <span>₱{(zReadingData?.summary?.vatable_sales || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>VAT Amount:</span>
+                    <span>₱{(zReadingData?.summary?.total_vat || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>VAT Exempt Sales:</span>
+                    <span>₱{(zReadingData?.summary?.vat_exempt_sales || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Zero Rated Sales:</span>
+                    <span>0.00</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="border-t border-dashed border-black my-2 mt-4"></div>

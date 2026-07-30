@@ -33,6 +33,7 @@ const REPORT_CATEGORIES: { id: ReportType; label: string; icon: any }[] = [
 export default function Reports() {
   const { activeBranch } = useBranch();
   const { settings } = useSettings();
+  const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
   const [reportType, setReportType] = useState<ReportType>('Z');
   const getManilaDate = () => {
     return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -563,6 +564,18 @@ export default function Reports() {
             <span>Gross Sales</span>
             <span>₱{(summary?.gross_sales || 0).toFixed(2)}</span>
           </div>
+          {isLaundryBranch && (
+            <div className="pl-4 border-l-2 border-emerald-500 my-1 py-0.5 space-y-1 text-xs text-slate-500 print:text-black font-sans">
+              <div className="flex justify-between items-center">
+                <span>☕ Coffee Shop Gross</span>
+                <span>₱{(summary?.coffee_sales_total || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span>🧺 Laundry Gross</span>
+                <span>₱{(summary?.laundry_sales_total || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center py-1 text-red-600 print:text-black">
             <span>- Total Discounts</span>
             <span>(₱{(summary?.total_discounts || 0).toFixed(2)})</span>

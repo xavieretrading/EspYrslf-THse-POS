@@ -279,8 +279,8 @@ app.get('/api/categories', async (req, res) => {
 });
 
 app.post('/api/categories', async (req, res) => {
-  const { name } = req.body;
-  const { data, error } = await supabase.from('categories_espresso').insert([{ name }]).select().single();
+  const { name, division } = req.body;
+  const { data, error } = await supabase.from('categories_espresso').insert([{ name, division: division || 'coffee' }]).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ id: data.id, success: true });
 });
@@ -302,13 +302,13 @@ app.delete('/api/categories/:id', async (req, res) => {
 // Products
 app.get('/api/products', async (req, res) => {
   const { branch_id } = req.query;
-  let query = supabase.from('products_espresso').select('*, categories:categories_espresso(name)').eq('is_active', 1);
+  let query = supabase.from('products_espresso').select('*, categories:categories_espresso(name, division)').eq('is_active', 1);
   if (branch_id) query = query.eq('branch_id', branch_id);
   
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   
-  const products = data.map((p: any) => ({ ...p, category_name: p.categories?.name }));
+  const products = data.map((p: any) => ({ ...p, category_name: p.categories?.name, division: p.categories?.division || 'coffee' }));
   res.json(products);
 });
 
@@ -957,9 +957,9 @@ app.delete('/api/discounts/:id', async (req, res) => {
 
 // Orders
 app.post('/api/orders', async (req, res) => {
-  const { branch_id, table_id, order_type, items } = req.body;
+  const { branch_id, table_id, order_type, items, notes } = req.body;
   
-  const orderPayload: any = { branch_id, table_id: table_id || null, status: 'open' };
+  const orderPayload: any = { branch_id, table_id: table_id || null, status: 'open', notes: notes || null };
   if (order_type) orderPayload.order_type = order_type;
   
   let { data: orderData, error: orderError } = await supabase
@@ -1801,13 +1801,13 @@ app.put('/api/kds/:id/status', async (req, res) => {
 // Inventory
 app.get('/api/inventory', async (req, res) => {
   const { branch_id } = req.query;
-  let query = supabase.from('products_espresso').select('*, categories:categories_espresso(name)').eq('is_active', 1);
+  let query = supabase.from('products_espresso').select('*, categories:categories_espresso(name, division)').eq('is_active', 1);
   if (branch_id) query = query.eq('branch_id', branch_id);
   
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   
-  const products = data.map((p: any) => ({ ...p, category_name: p.categories?.name }));
+  const products = data.map((p: any) => ({ ...p, category_name: p.categories?.name, division: p.categories?.division || 'coffee' }));
   res.json(products);
 });
 
@@ -2394,7 +2394,7 @@ app.get('/api/reports/sales', async (req, res) => {
   let query = supabase.from('orders_espresso').select(`
     *, 
     discounts:discounts_espresso (id, name), 
-    order_items:order_items_espresso (*, products:products_espresso (id, name, price))
+    order_items:order_items_espresso (*, products:products_espresso (id, name, price, categories:categories_espresso(id, name, division)))
   `).in('status', ['paid', 'voided']);
   
   if (branch_id) query = query.eq('branch_id', branch_id);
@@ -2506,6 +2506,7 @@ app.get('/api/reports/sales', async (req, res) => {
         quantity: oi.quantity,
         id: oi.id,
         points_used: points,
+        division: product?.categories?.division || 'coffee',
         ...comp
       };
     });
@@ -2531,6 +2532,9 @@ app.get('/api/reports/sales', async (req, res) => {
   let vat_exempt_sales = 0;
   let vatable_sales = 0;
   
+  let coffee_sales_total = 0;
+  let laundry_sales_total = 0;
+  
   const discountStats: Record<string, { amount: number, count: number }> = {};
   const paymentStats: Record<string, { amount: number, count: number }> = {};
   
@@ -2542,6 +2546,16 @@ app.get('/api/reports/sales', async (req, res) => {
     total_discounts += o.discount_amount || 0;
     total_vat += o.tax_amount || 0;
     total_service_charge += o.service_charge || 0;
+
+    const oItems = o.order_items || [];
+    oItems.forEach((oi: any) => {
+      const itemTotal = (oi.price || 0) * (oi.quantity || 1);
+      if (oi.division === 'laundry') {
+        laundry_sales_total += itemTotal;
+      } else {
+        coffee_sales_total += itemTotal;
+      }
+    });
     
     if (o.tax_amount === 0 && o.discount_amount > 0) {
       vat_exempt_sales += (o.subtotal || 0);
@@ -2653,6 +2667,7 @@ app.get('/api/reports/sales', async (req, res) => {
     summary: {
       min_or, max_or, total_sales, gross_sales, total_discounts, total_vat, total_service_charge,
       vat_exempt_sales, vatable_sales, total_transactions: paidOrders.length,
+      coffee_sales_total, laundry_sales_total,
       // Voided summaries
       total_voided_transactions: voidedOrders.length,
       total_voided_amount,
@@ -3155,12 +3170,46 @@ async function syncSettingsFromSupabase() {
 
 app.get('/api/settings', async (req, res) => {
   try {
-    const { data: dbBranches, error } = await supabase
+    const { branch_id } = req.query;
+    
+    if (branch_id) {
+      const bId = parseInt(branch_id as string, 10);
+      const { data: branchData, error } = await supabase
+        .from('branches_espresso')
+        .select('*')
+        .eq('id', bId)
+        .single();
+        
+      if (!error && branchData) {
+        try {
+          if (branchData.address && branchData.address.trim().startsWith('{')) {
+            const dbSettings = JSON.parse(branchData.address);
+            return res.json(dbSettings);
+          } else {
+            return res.json({
+              company_name: branchData.name,
+              address: branchData.address || '',
+              tin: '899-352-898-00000',
+              service_charge_percentage: 0
+            });
+          }
+        } catch (parseError) {
+          return res.json({
+            company_name: branchData.name,
+            address: branchData.address || '',
+            tin: '899-352-898-00000',
+            service_charge_percentage: 0
+          });
+        }
+      }
+    }
+
+    const { data: dbBranches, error: globalError } = await supabase
       .from('branches_espresso')
       .select('*')
       .eq('name', '__SYSTEM_CONFIG__');
       
-    if (!error && dbBranches && dbBranches.length > 0 && dbBranches[0].address) {
+    if (!globalError && dbBranches && dbBranches.length > 0 && dbBranches[0].address) {
       try {
         const dbSettings = JSON.parse(dbBranches[0].address);
         fs.writeFileSync(SETTINGS_FILE, JSON.stringify(dbSettings, null, 2), 'utf8');
@@ -3184,6 +3233,22 @@ app.get('/api/settings', async (req, res) => {
 app.post('/api/settings', async (req, res) => {
   try {
     const config = req.body;
+    const { branch_id } = req.query;
+
+    if (branch_id) {
+      const bId = parseInt(branch_id as string, 10);
+      const { error: updateError } = await supabase
+        .from('branches_espresso')
+        .update({ address: JSON.stringify(config) })
+        .eq('id', bId);
+
+      if (updateError) {
+        console.error(`Failed to update config for branch ${bId}:`, updateError.message);
+        return res.status(500).json({ error: updateError.message });
+      }
+      return res.json({ success: true });
+    }
+
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(config, null, 2), 'utf8');
     
     try {

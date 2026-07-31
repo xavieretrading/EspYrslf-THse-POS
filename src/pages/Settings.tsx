@@ -262,14 +262,12 @@ export default function Settings() {
   }, [activeTab]);
 
   const sections = [
-    { id: 'menu', title: 'Menu Management', icon: LayoutGrid, description: 'Add, edit, or remove categories and products.', color: 'text-blue-500', bg: 'bg-blue-100' },
-    { id: 'tables', title: 'Table Setup', icon: Database, description: 'Configure restaurant layout and table numbers.', color: 'text-emerald-500', bg: 'bg-emerald-100' },
-    { id: 'discounts', title: 'Discounts & Promos', icon: Tag, description: 'Manage BIR mandated discounts (Senior, PWD) and custom promos.', color: 'text-amber-500', bg: 'bg-amber-100' },
-    { id: 'users', title: 'User Roles', icon: Users, description: 'Manage staff accounts, credentials, and access levels.', color: 'text-purple-500', bg: 'bg-purple-100' },
-    { id: 'terminals', title: 'POS Terminals', icon: LayoutGrid, description: 'Manage multiple POS terminals across branches.', color: 'text-indigo-500', bg: 'bg-indigo-100' },
-    { id: 'system', title: 'System Config', icon: SettingsIcon, description: 'Update receipt details, tax rates, and hardware settings.', color: 'text-slate-500', bg: 'bg-slate-100' },
-    { id: 'audit', title: 'Activity Logs', icon: ClipboardList, description: 'View system audit trail and user activities.', color: 'text-rose-500', bg: 'bg-rose-100' },
-    { id: 'archive', title: 'Orders Archive', icon: Archive, description: 'View completed and archived items from the kitchen.', color: 'text-emerald-500', bg: 'bg-emerald-100' }
+    { id: 'discounts', title: 'Discounts & Promos', icon: Tag, description: 'Manage custom discounts & promos.', color: 'text-amber-500', bg: 'bg-amber-50 border border-amber-100' },
+    { id: 'users', title: 'User Roles', icon: Users, description: 'Manage accounts & access levels.', color: 'text-purple-500', bg: 'bg-purple-50 border border-purple-100' },
+    { id: 'terminals', title: 'POS Terminals', icon: LayoutGrid, description: 'Manage branch POS terminals.', color: 'text-indigo-500', bg: 'bg-indigo-50 border border-indigo-100' },
+    { id: 'system', title: 'System Config', icon: SettingsIcon, description: 'Update receipt & hardware details.', color: 'text-slate-500', bg: 'bg-slate-100' },
+    { id: 'audit', title: 'Activity Logs', icon: ClipboardList, description: 'View system audit trails.', color: 'text-rose-500', bg: 'bg-rose-100' },
+    { id: 'archive', title: 'Orders Archive', icon: Archive, description: 'View archived kitchen orders.', color: 'text-emerald-500', bg: 'bg-emerald-100' }
   ];
 
   return (
@@ -288,7 +286,7 @@ export default function Settings() {
 
       {!activeTab ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
@@ -301,14 +299,14 @@ export default function Settings() {
                       setActiveTab(section.id);
                     }
                   }}
-                  className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all text-left flex flex-col gap-4 group"
+                  className="bg-white p-4 rounded-xl shadow-xs border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all text-left flex items-center gap-3.5 group cursor-pointer"
                 >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${section.bg} ${section.color} group-hover:scale-110 transition-transform`}>
-                    <Icon size={24} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.bg} ${section.color} shrink-0 group-hover:scale-105 transition-transform`}>
+                    <Icon size={18} />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 mb-2">{section.title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{section.description}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-black uppercase text-slate-800 tracking-wider mb-0.5">{section.title}</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase truncate leading-none">{section.description}</p>
                   </div>
                 </button>
               );

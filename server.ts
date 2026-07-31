@@ -255,20 +255,45 @@ app.put('/api/branches/:id', async (req, res) => {
 
 app.delete('/api/branches/:id', async (req, res) => {
   const id = req.params.id;
-  
-  // Clean up relations first sequentially
-  const { data: orders } = await supabase.from('orders_espresso').select('id').eq('branch_id', id);
-  if (orders && orders.length > 0) {
-    const orderIds = orders.map((o: any) => o.id);
-    await supabase.from('order_items_espresso').delete().in('order_id', orderIds);
+  try {
+    // 1. Clean up KDS/Orders
+    const { data: orders } = await supabase.from('orders_espresso').select('id').eq('branch_id', id);
+    if (orders && orders.length > 0) {
+      const orderIds = orders.map((o: any) => o.id);
+      await supabase.from('order_items_espresso').delete().in('order_id', orderIds);
+    }
+    await supabase.from('orders_espresso').delete().eq('branch_id', id);
+
+    // 2. Clean up Inventory Transactions
+    const { data: prods } = await supabase.from('products_espresso').select('id').eq('branch_id', id);
+    if (prods && prods.length > 0) {
+      const prodIds = prods.map((p: any) => p.id);
+      await supabase.from('inventory_transactions_espresso').delete().in('product_id', prodIds);
+    }
+
+    // 3. Clean up dependent tables
+    await supabase.from('products_espresso').delete().eq('branch_id', id);
+    await supabase.from('categories_espresso').delete().eq('branch_id', id);
+    await supabase.from('tables_espresso').delete().eq('branch_id', id);
+    await supabase.from('shifts_espresso').delete().eq('branch_id', id);
+    await supabase.from('terminals_espresso').delete().eq('branch_id', id);
+    await supabase.from('voucher_items_espresso').delete().eq('branch_id', id);
+    await supabase.from('business_settings_espresso').delete().eq('branch_id', id);
+    await supabase.from('discounts_espresso').delete().eq('branch_id', id);
+    await supabase.from('grand_accumulating_total_espresso').delete().eq('branch_id', id);
+    await supabase.from('z_readings_espresso').delete().eq('branch_id', id);
+
+    // 4. Update users branch_id to null instead of deleting them to prevent lockouts
+    await supabase.from('users_espresso').update({ branch_id: null }).eq('branch_id', id);
+
+    // 5. Finally delete the branch
+    const { error } = await supabase.from('branches_espresso').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
   }
-  await supabase.from('orders_espresso').delete().eq('branch_id', id);
-  await supabase.from('tables_espresso').delete().eq('branch_id', id);
-  await supabase.from('products_espresso').delete().eq('branch_id', id);
-  
-  const { error } = await supabase.from('branches_espresso').delete().eq('id', id);
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true });
 });
 
 // Categories
@@ -314,8 +339,15 @@ app.get('/api/products', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
   const { branch_id, category_id, name, price, cost, stock } = req.body;
+  
+  let division = 'coffee';
+  if (category_id) {
+    const { data: cat } = await supabase.from('categories_espresso').select('division').eq('id', category_id).single();
+    if (cat) division = cat.division || 'coffee';
+  }
+
   const { data, error } = await supabase.from('products_espresso').insert([{
-    branch_id, category_id, name, price, cost: cost || 0, stock: stock || 0, is_active: 1
+    branch_id, category_id, name, price, cost: cost || 0, stock: stock || 0, is_active: 1, division
   }]).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ id: data.id, success: true });
@@ -327,7 +359,11 @@ app.put('/api/products/:id', async (req, res) => {
   if (name !== undefined) updates.name = name;
   if (price !== undefined) updates.price = price;
   if (cost !== undefined) updates.cost = cost;
-  if (category_id !== undefined) updates.category_id = category_id;
+  if (category_id !== undefined) {
+    updates.category_id = category_id;
+    const { data: cat } = await supabase.from('categories_espresso').select('division').eq('id', category_id).single();
+    if (cat) updates.division = cat.division || 'coffee';
+  }
   if (stock !== undefined) updates.stock = stock;
   
   const { error } = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
@@ -1871,10 +1907,18 @@ function saveWarehouseDb(db: any) {
 // Get all inventory transaction logs combined from Supabase
 app.get('/api/inventory/transactions', async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { branch_id } = req.query;
+    
+    let query = supabase
       .from('inventory_transactions_espresso')
-      .select('*, products:products_espresso(name)')
+      .select('*, products:products_espresso!inner(name, branch_id)')
       .order('created_at', { ascending: false });
+
+    if (branch_id) {
+      query = query.eq('products.branch_id', branch_id);
+    }
+
+    const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
     res.json(data || []);
   } catch (e: any) {
@@ -2385,6 +2429,58 @@ app.post('/api/order-items/:id/reject', async (req, res) => {
   const { error } = await supabase.from('order_items_espresso').update({ status: 'rejected' }).eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
+});
+
+// Branch-wide Sales Overview for Admin Dashboard
+app.get('/api/reports/branches-sales', async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    const { data: branches, error: branchError } = await supabase.from('branches_espresso').select('*');
+    if (branchError) return res.status(500).json({ error: branchError.message });
+    
+    const { data: orders, error: orderError } = await supabase.from('orders_espresso').select('branch_id, total, status, updated_at').eq('status', 'paid');
+    if (orderError) return res.status(500).json({ error: orderError.message });
+
+    const manilaOffset = 8 * 60 * 60 * 1000;
+    const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+
+    const branchSalesMap = new Map();
+    branches.forEach(b => {
+      branchSalesMap.set(b.id, {
+        id: b.id,
+        name: b.name,
+        todaySales: 0,
+        totalSales: 0,
+        orderCount: 0
+      });
+    });
+
+    orders.forEach(o => {
+      const branchData = branchSalesMap.get(o.branch_id);
+      if (branchData) {
+        const orderDate = new Date(new Date(o.updated_at).getTime() + manilaOffset).toISOString().split('T')[0];
+        
+        if (start_date && end_date) {
+          if (orderDate >= start_date && orderDate <= end_date) {
+            branchData.totalSales += o.total || 0;
+            branchData.orderCount += 1;
+          }
+        } else {
+          branchData.totalSales += o.total || 0;
+          branchData.orderCount += 1;
+        }
+
+        if (orderDate === todayStr) {
+          branchData.todaySales += o.total || 0;
+        }
+      }
+    });
+
+    const result = Array.from(branchSalesMap.values());
+    res.json(result);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // Reports (BIR & Sales)

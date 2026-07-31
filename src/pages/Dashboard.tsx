@@ -10,7 +10,10 @@ import {
   Boxes, 
   Wallet,
   ArrowRight,
-  Info
+  Info,
+  Building2,
+  TrendingDown,
+  Layers
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useBranch } from '../BranchContext';
@@ -26,19 +29,58 @@ type Product = {
 };
 
 export default function Dashboard() {
-  const { activeBranch } = useBranch();
+  const { activeBranch, setActiveBranch, branches } = useBranch();
   const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
   const [summary, setSummary] = useState<any>({});
   const [dailySales, setDailySales] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [branchesSales, setBranchesSales] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Date filters states
+  const [dateFilterType, setDateFilterType] = useState<'today' | 'week' | 'month' | 'custom'>('month');
+  const [startDateInput, setStartDateInput] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  });
+  const [endDateInput, setEndDateInput] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+
+  const getDateRangeParams = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (dateFilterType === 'today') {
+      return { start: todayStr, end: todayStr };
+    } else if (dateFilterType === 'week') {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      return { start: d.toISOString().split('T')[0], end: todayStr };
+    } else if (dateFilterType === 'month') {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      return { start: d.toISOString().split('T')[0], end: todayStr };
+    } else {
+      return { start: startDateInput, end: endDateInput };
+    }
+  };
+
+  useEffect(() => {
+    const { start, end } = getDateRangeParams();
+    fetch(`/api/reports/branches-sales?start_date=${start}&end_date=${end}`)
+      .then(res => res.json())
+      .then(data => setBranchesSales(data || []))
+      .catch(err => console.error("Error fetching branches sales:", err));
+  }, [activeBranch, dateFilterType, startDateInput, endDateInput]);
 
   useEffect(() => {
     if (!activeBranch) return;
     setIsLoading(true);
     
+    const { start, end } = getDateRangeParams();
+    
     // Fetch sales reports
-    fetch(`/api/reports/sales?branch_id=${activeBranch.id}`)
+    fetch(`/api/reports/sales?branch_id=${activeBranch.id}&start_date=${start}&end_date=${end}`)
       .then(res => res.json())
       .then(data => {
         setSummary(data.summary || {});
@@ -54,7 +96,7 @@ export default function Dashboard() {
       })
       .catch(err => console.error("Error fetching inventory:", err))
       .finally(() => setIsLoading(false));
-  }, [activeBranch]);
+  }, [activeBranch, dateFilterType, startDateInput, endDateInput]);
 
   // Inventory computations
   const totalStockItems = products.length;
@@ -66,224 +108,332 @@ export default function Dashboard() {
   const lowStockCount = lowStockProducts.length;
   const outOfStockCount = products.filter(p => (p.stock || 0) <= 0).length;
 
-  const salesStats = [
-    { title: 'Total Revenue', value: `₱${(summary.total_sales || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-50 border border-emerald-100' },
-    { title: 'Gross Sales', value: `₱${(summary.gross_sales || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: TrendingUp, color: 'text-blue-500', bg: 'bg-blue-550/10 bg-blue-50 border border-blue-100' },
-    { title: 'Discounts Granted', value: `₱${(summary.total_discounts || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: ShoppingBag, color: 'text-amber-500', bg: 'bg-amber-50 border border-amber-100' },
-    { title: 'Customer Tickets', value: summary.total_transactions || 0, icon: Users, color: 'text-purple-500', bg: 'bg-purple-50 border border-purple-100' },
-  ];
-
-  const inventoryStats = [
-    { title: 'Total Registered Items', value: totalStockItems, subtitle: `${totalStockQty} total units physical`, icon: Package, color: 'text-sky-600', bg: 'bg-sky-50 border border-sky-100' },
-    { title: 'Capital Value of Stock', value: `₱${totalInventoryValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, subtitle: 'Based on unit cost price', icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50/50 border border-emerald-100/60' },
-    { title: 'Critical Stock Alerts', value: lowStockCount, subtitle: `${outOfStockCount} items completely out`, icon: AlertTriangle, color: lowStockCount > 0 ? 'text-rose-500 font-extrabold animate-pulse' : 'text-slate-400', bg: lowStockCount > 0 ? 'bg-rose-50 border border-rose-200' : 'bg-slate-50 border border-slate-100' },
-    { title: 'On-Hand Stock Units', value: totalStockQty, subtitle: 'Aggregate POS stock level', icon: Boxes, color: 'text-indigo-500', bg: 'bg-indigo-50 border border-indigo-100' },
-  ];
+  // Sorting branches by sales (Big Sales vs Small Sales)
+  const sortedBranchesSales = [...branchesSales]
+    .filter(b => b.name !== '__SYSTEM_CONFIG__')
+    .sort((a, b) => b.totalSales - a.totalSales);
 
   return (
-    <div className="p-4 md:p-8 space-y-8 font-sans bg-slate-50 min-h-full">
-      <div className="pl-12 lg:pl-0 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="h-[calc(100vh-16px)] md:h-screen w-full p-4 flex flex-col font-sans bg-slate-50 overflow-hidden">
+      {/* Header Section */}
+      <div className="pl-12 lg:pl-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3 mb-3 flex-shrink-0">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Executive Dashboard</h1>
-          <p className="text-sm md:text-base text-slate-500 font-semibold tracking-tight">Unified Sales Summary & Real-time Material Inventory Status</p>
+          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+            <Building2 className="text-slate-700" size={24} /> Executive Platform Dashboard
+          </h1>
+          <p className="text-xs text-slate-500 font-semibold">Real-time Multi-Branch Sales Aggregation & Branch Diagnostics</p>
         </div>
+        
+        {/* Branch Selector Dropdown */}
         {activeBranch && (
-          <div className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider self-start shadow-sm border border-slate-850">
-            Branch: {activeBranch.name}
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Branch Detail View:</span>
+            <select
+              value={activeBranch.id}
+              onChange={(e) => {
+                const selected = branches.find(b => b.id === parseInt(e.target.value));
+                if (selected) setActiveBranch(selected);
+              }}
+              className="bg-white border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-black uppercase text-slate-800 tracking-wider shadow-xs outline-none cursor-pointer hover:bg-slate-50"
+            >
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
           </div>
         )}
       </div>
 
-      {/* Sales Summary row */}
-      <div>
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Finance & Revenue Insights</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {salesStats.map((stat, i) => {
-            const Icon = stat.icon;
-            return (
-              <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-150 flex items-center gap-4 hover:shadow-md transition-all">
-                <div className={`p-3.5 rounded-xl ${stat.bg} shrink-0`}>
-                  <Icon className={stat.color} size={22} />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">{stat.title}</p>
-                  <p className="text-xl font-black text-slate-900 tracking-tight">{stat.value}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Division Breakdown for Laundry hybrid branch */}
-      {isLaundryBranch && (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-150 font-sans">
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">Division Breakdown (Gross Sales)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="p-4 bg-emerald-50/50 border border-emerald-100/60 rounded-xl flex items-center gap-3.5">
-              <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600 text-lg">
-                ☕
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Coffee Shop Division</p>
-                <p className="text-xl font-black text-slate-900 tracking-tight">₱{(summary.coffee_sales_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              </div>
-            </div>
-            <div className="p-4 bg-blue-50/50 border border-blue-100/60 rounded-xl flex items-center gap-3.5">
-              <div className="p-3 bg-blue-500/10 rounded-xl text-blue-600 text-lg">
-                🧺
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Laundry Division</p>
-                <p className="text-xl font-black text-slate-900 tracking-tight">₱{(summary.laundry_sales_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Inventory & Stock summary row */}
-      <div>
-        <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">POS Stock & Material Asset Analytics</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {inventoryStats.map((stat, i) => {
-            const Icon = stat.icon;
-            return (
-              <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-150 flex items-center gap-4 hover:shadow-md transition-all">
-                <div className={`p-3.5 rounded-xl ${stat.bg} shrink-0`}>
-                  <Icon className={stat.color} size={22} />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-0.5">{stat.title}</p>
-                  <p className="text-xl font-black text-slate-900 tracking-tight">{stat.value}</p>
-                  <p className="text-[10px] font-bold text-slate-400 mt-0.5">{stat.subtitle}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main performance grids */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left column: Sales trend chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-150 flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-base font-black text-slate-900">Revenue Generation Trend</h3>
-              <p className="text-xs text-slate-500 font-semibold">Historical daily performance log over modern cycles</p>
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2.5 py-1 rounded border border-slate-150">Last 30 Days</span>
-          </div>
-
-          <div className="h-80 flex-1 min-h-[320px]">
-            {dailySales.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailySales}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={(value) => `₱${value}`} />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)' }}
-                  />
-                  <Bar dataKey="total" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={45} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 italic text-sm">
-                No performance data exists for active cycles
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right column: Out of stock / Low stock warnings list */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-150 flex flex-col h-[420px] lg:h-auto">
-          <div className="flex justify-between items-center mb-4 border-b border-slate-105 pb-3">
-            <div>
-              <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
-                <AlertTriangle className={cn("text-slate-400 shrink-0", lowStockCount > 0 && "text-rose-500")} size={18} />
-                Critical Low Stock Warn
-              </h3>
-              <p className="text-[11px] text-slate-500 font-semibold">Items requiring manual urgent reordering</p>
-            </div>
-            <span className={cn(
-              "text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full text-center",
-              lowStockCount > 0 ? "bg-rose-50 text-rose-700 border border-rose-100" : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-            )}>
-              {lowStockCount} Flagged
-            </span>
-          </div>
-
-          {/* Warning summary box */}
-          {lowStockCount > 0 && (
-            <div className="mb-4 bg-amber-50/50 border border-amber-200/60 p-3.5 rounded-2xl flex items-start gap-2.5">
-              <Info size={16} className="text-amber-600 shrink-0 mt-0.5" />
-              <p className="text-[11px] text-amber-800 leading-relaxed font-semibold">
-                There are <span className="font-extrabold text-amber-950">{lowStockCount} items</span> on low stock status (count limit is 10). Out-of-stock items will lock and reject sales if strict lock setting is switched on on the system.
-              </p>
-            </div>
-          )}
-
-          {/* List area with custom scrollbars */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-            {lowStockProducts.slice(0, 6).map(p => (
-              <div 
-                key={p.id} 
+      {/* Date Range Selector Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 border border-slate-200 rounded-2xl shadow-xs mb-3 flex-shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Sales Period:</span>
+          <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            {(['today', 'week', 'month', 'custom'] as const).map(type => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setDateFilterType(type)}
                 className={cn(
-                  "p-3 rounded-2xl border transition-all flex justify-between items-center",
-                  p.stock <= 0 
-                    ? "bg-rose-50/40 border-rose-150 hover:bg-rose-50" 
-                    : "bg-slate-50/40 border-slate-150 hover:bg-slate-50"
+                  "px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-[0.98]",
+                  dateFilterType === type 
+                    ? "bg-slate-900 text-white shadow-xs" 
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
                 )}
               >
-                <div className="min-w-0 pr-2">
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest block leading-none mb-1">{p.category_name}</span>
-                  <p className="font-bold text-sm text-slate-800 truncate leading-tight">{p.name}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className={cn(
-                    "font-bold text-xs px-2.5 py-1 rounded-full inline-block shadow-sm leading-none",
-                    p.stock <= 0 
-                      ? "bg-rose-100/90 text-rose-800 font-black border border-rose-200" 
-                      : p.stock <= 5 
-                        ? "bg-amber-100 text-amber-800 border border-amber-200"
-                        : "bg-slate-100 text-slate-700 border border-slate-200"
-                  )}>
-                    {p.stock <= 0 ? 'Out of Stock' : `${p.stock} units`}
-                  </span>
-                </div>
-              </div>
+                {type === 'today' ? 'Today' : type === 'week' ? 'This Week' : type === 'month' ? 'This Month' : 'Custom'}
+              </button>
             ))}
+          </div>
+        </div>
 
-            {lowStockProducts.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center py-12">
-                <div className="w-12 h-12 rounded-full border border-dashed border-slate-200 flex items-center justify-center mb-2.5 bg-slate-50 text-emerald-500">
-                  ✓
+        {/* Custom date range inputs */}
+        {dateFilterType === 'custom' && (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">From:</span>
+              <input 
+                type="date"
+                value={startDateInput}
+                onChange={e => setStartDateInput(e.target.value)}
+                className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">To:</span>
+              <input 
+                type="date"
+                value={endDateInput}
+                onChange={e => setEndDateInput(e.target.value)}
+                className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Grid Content */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0 overflow-hidden">
+        
+        {/* Left Columns Container (2/3 width) */}
+        <div className="lg:col-span-2 flex flex-col gap-4 min-h-0 overflow-hidden">
+          
+          {/* Branch comparative Sales List (Big Sales vs Small Sales) */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col min-h-0 flex-1">
+            <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2 flex-shrink-0">
+              <div>
+                <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  📊 Multi-Branch Performance Comparison
+                </h2>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Ranking: Highest Sales (Big) to Lowest Sales (Small)</p>
+              </div>
+              <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">Live aggregated</span>
+            </div>
+
+            {/* Table Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <table className="w-full text-left text-xs font-semibold text-slate-600">
+                <thead className="sticky top-0 bg-white border-b border-slate-100 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <tr>
+                    <th className="py-2">Branch Name</th>
+                    <th className="py-2 text-right">Today Sales</th>
+                    <th className="py-2 text-right">Total Revenue</th>
+                    <th className="py-2 text-right">Tickets</th>
+                    <th className="py-2 text-center">Status</th>
+                    <th className="py-2 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {sortedBranchesSales.map((b, idx) => {
+                    const isTop = idx === 0 && b.totalSales > 0;
+                    const isLowest = idx === sortedBranchesSales.length - 1 && sortedBranchesSales.length > 1;
+                    const isActive = b.id === activeBranch?.id;
+                    return (
+                      <tr 
+                        key={b.id} 
+                        className={cn(
+                          "hover:bg-slate-50/80 transition-colors",
+                          isActive && "bg-slate-100/50"
+                        )}
+                      >
+                        <td className="py-2.5 font-bold text-slate-800 flex items-center gap-1.5 min-w-[150px]">
+                          <span>{b.name}</span>
+                          {isActive && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>}
+                        </td>
+                        <td className="py-2.5 text-right font-black text-slate-900">₱{b.todaySales.toFixed(2)}</td>
+                        <td className="py-2.5 text-right font-black text-slate-900">₱{b.totalSales.toFixed(2)}</td>
+                        <td className="py-2.5 text-right font-bold text-slate-500">{b.orderCount}</td>
+                        <td className="py-2.5 text-center min-w-[100px]">
+                          {isTop ? (
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full inline-flex items-center gap-0.5 border border-emerald-200">
+                              🏆 Big Sales
+                            </span>
+                          ) : isLowest ? (
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full inline-flex items-center gap-0.5 border border-rose-200">
+                              ⚠️ Small Sales
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full inline-flex items-center gap-0.5 border border-slate-200">
+                              Active
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 text-center">
+                          <button
+                            onClick={() => {
+                              const found = branches.find(br => br.id === b.id);
+                              if (found) setActiveBranch(found);
+                            }}
+                            disabled={isActive}
+                            className={cn(
+                              "px-2 py-1 text-[10px] font-black uppercase rounded-lg border transition-all active:scale-[0.96] tracking-wider",
+                              isActive
+                                ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            Analyze
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {sortedBranchesSales.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 italic">No branch transactions found yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Active Branch Revenue trend chart (Compact Height) */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col h-[200px] flex-shrink-0">
+            <div className="flex justify-between items-center mb-2 flex-shrink-0">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                📈 {activeBranch?.name || 'Branch'} Daily Revenue Trend
+              </h3>
+              <span className="text-[9px] font-black uppercase text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">Last 30 Days</span>
+            </div>
+
+            <div className="flex-1 min-h-0">
+              {dailySales.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dailySales} margin={{ top: 5, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 9 }} tickFormatter={(value) => `₱${value}`} />
+                    <Tooltip 
+                      cursor={{ fill: '#f8fafc' }}
+                      contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '11px' }}
+                    />
+                    <Bar dataKey="total" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={30} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 italic text-xs">
+                  No transaction data exists for the selected branch.
                 </div>
-                <p className="font-black text-xs uppercase tracking-wider text-slate-700">All Items Safe</p>
-                <p className="text-[10px] text-slate-500">Every product is above the low stock limits.</p>
+              )}
+            </div>
+          </div>
+          
+        </div>
+
+        {/* Right Column Container (1/3 width) */}
+        <div className="flex flex-col gap-4 min-h-0 overflow-hidden">
+          
+          {/* Active Branch Summary Cards & Inline Division details */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col flex-shrink-0">
+            <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-3">
+              💰 {activeBranch?.name || 'Branch'} Financials
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-emerald-50/50 border border-emerald-100/60 p-2.5 rounded-xl flex flex-col">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Revenue</span>
+                <span className="text-sm font-black text-emerald-600 truncate mt-0.5">₱{(summary.total_sales || 0).toFixed(2)}</span>
+              </div>
+              <div className="bg-blue-50/50 border border-blue-100/60 p-2.5 rounded-xl flex flex-col">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Gross Sales</span>
+                <span className="text-sm font-black text-blue-600 truncate mt-0.5">₱{(summary.gross_sales || 0).toFixed(2)}</span>
+              </div>
+              <div className="bg-amber-50 border border-amber-100 p-2.5 rounded-xl flex flex-col">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Discounts</span>
+                <span className="text-sm font-black text-amber-600 truncate mt-0.5">₱{(summary.total_discounts || 0).toFixed(2)}</span>
+              </div>
+              <div className="bg-purple-50 border border-purple-100 p-2.5 rounded-xl flex flex-col">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Tickets</span>
+                <span className="text-sm font-black text-purple-600 truncate mt-0.5">{summary.total_transactions || 0}</span>
+              </div>
+            </div>
+
+            {/* Hybrid Branch Division sales info inside card */}
+            {isLaundryBranch && (
+              <div className="border-t border-slate-100 pt-3 mt-3 flex flex-col gap-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Division Sales</p>
+                <div className="flex justify-between items-center bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-600">☕ Coffee Shop</span>
+                  <span className="text-xs font-black text-slate-800">₱{(summary.coffee_sales_total || 0).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-600">🧺 Laundry</span>
+                  <span className="text-xs font-black text-slate-800">₱{(summary.laundry_sales_total || 0).toFixed(2)}</span>
+                </div>
               </div>
             )}
           </div>
 
-          {lowStockProducts.length > 6 && (
-            <div className="mt-4 pt-3 border-t border-slate-100">
-              <Link
-                to="/inventory"
-                className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black uppercase tracking-wider rounded-xl transition-colors"
-              >
-                View all {lowStockCount} alerts in Inventory
-                <ArrowRight size={14} />
-              </Link>
+          {/* Low Stock Alerts for Active Branch */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col min-h-0 flex-1">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3 flex-shrink-0">
+              <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <AlertTriangle className={cn("text-slate-450", lowStockCount > 0 && "text-rose-500")} size={16} />
+                Stock Warnings
+              </h3>
+              <span className={cn(
+                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-center leading-none border",
+                lowStockCount > 0 ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+              )}>
+                {lowStockCount} Alerts
+              </span>
             </div>
-          )}
+
+            {/* Warning notes */}
+            {lowStockCount > 0 && (
+              <div className="mb-3 bg-amber-50/50 border border-amber-200/50 p-2.5 rounded-xl flex items-start gap-2 flex-shrink-0">
+                <Info size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[9px] text-amber-800 leading-normal font-semibold">
+                  Items requiring urgent inventory replenishment to prevent POS lockouts.
+                </p>
+              </div>
+            )}
+
+            {/* List container */}
+            <div className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+              {lowStockProducts.map(p => (
+                <div 
+                  key={p.id} 
+                  className={cn(
+                    "p-2 rounded-xl border transition-all flex justify-between items-center text-[11px]",
+                    p.stock <= 0 
+                      ? "bg-rose-50/40 border-rose-100 hover:bg-rose-50" 
+                      : "bg-slate-50/40 border-slate-150 hover:bg-slate-50"
+                  )}
+                >
+                  <div className="min-w-0 pr-2">
+                    <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider block leading-none mb-0.5">{p.category_name}</span>
+                    <p className="font-bold text-slate-800 truncate leading-tight">{p.name}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={cn(
+                      "font-bold text-[10px] px-2 py-0.5 rounded-full inline-block shadow-xs border leading-none",
+                      p.stock <= 0 
+                        ? "bg-rose-100/90 text-rose-800 border-rose-200 font-black" 
+                        : "bg-amber-100 text-amber-800 border-amber-200"
+                    )}>
+                      {p.stock <= 0 ? 'Out' : `${p.stock} units`}
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+              {lowStockProducts.length === 0 && (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center py-6">
+                  <div className="w-10 h-10 rounded-full border border-dashed border-slate-200 flex items-center justify-center mb-2 bg-slate-50 text-emerald-500 font-black">
+                    ✓
+                  </div>
+                  <p className="font-black text-[10px] uppercase tracking-wider text-slate-700">Stock Levels Safe</p>
+                  <p className="text-[9px] text-slate-500">All products are stocked above alert limits.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
 
       </div>
     </div>
   );
 }
-

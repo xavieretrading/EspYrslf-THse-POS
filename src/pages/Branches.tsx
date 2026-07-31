@@ -91,13 +91,15 @@ export default function Branches() {
                     : "bg-slate-50 border-slate-200 hover:border-emerald-500"
                 )}
               >
-                <button 
-                  onClick={() => handleDelete(branch.id)}
-                  className="absolute top-4 right-4 p-2 bg-white text-red-500 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                  title="Delete Branch"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {activeBranch?.id !== branch.id && (
+                  <button 
+                    onClick={() => handleDelete(branch.id)}
+                    className="absolute top-4 right-4 p-2 bg-white text-red-500 rounded-lg shadow-sm hover:bg-red-50 border border-slate-100 transition-all cursor-pointer z-10"
+                    title="Delete Branch"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center",

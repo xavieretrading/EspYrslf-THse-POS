@@ -1,5 +1,75 @@
 [
   {
+    "id": "1785473992080iiuzi",
+    "timestamp": "2026-07-31T04:59:52.080Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "17854707807291g7ea",
+    "timestamp": "2026-07-31T04:06:20.729Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785430781889j3ohf",
+    "timestamp": "2026-07-30T16:59:41.889Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: 2"
+  },
+  {
+    "id": "1785430750738bs99t",
+    "timestamp": "2026-07-30T16:59:10.738Z",
+    "user": "System Administrator",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
+    "id": "17854301000623exeg",
+    "timestamp": "2026-07-30T16:48:20.062Z",
+    "user": "System Administrator",
+    "activity": "Cycle Count Submitted",
+    "details": "Submitted \"Cycle Count Audit - Jul 31, 2026\". Status: Stocks Adjusted to Hand Count"
+  },
+  {
+    "id": "1785429991253djaxr",
+    "timestamp": "2026-07-30T16:46:31.253Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Amerikano"
+  },
+  {
+    "id": "17854291785412m82f",
+    "timestamp": "2026-07-30T16:32:58.541Z",
+    "user": "System Administrator",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
+    "id": "17854291780091dosn",
+    "timestamp": "2026-07-30T16:32:58.009Z",
+    "user": "System Administrator",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
+    "id": "1785428898863lfrsq",
+    "timestamp": "2026-07-30T16:28:18.863Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱200"
+  },
+  {
+    "id": "1785425833200ik837",
+    "timestamp": "2026-07-30T15:37:13.200Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "17854234528852jufx",
     "timestamp": "2026-07-30T14:57:32.885Z",
     "user": "Sir Earl ",

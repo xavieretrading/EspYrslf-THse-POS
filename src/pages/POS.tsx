@@ -134,8 +134,9 @@ export default function POS() {
   const [laundryPrefSeparateColored, setLaundryPrefSeparateColored] = useState(false);
 
   // Addons
-  const [laundryAddonFabCon, setLaundryAddonFabCon] = useState(false);
   const [laundryAddonRush, setLaundryAddonRush] = useState(false);
+  const [laundrySelectedAddons, setLaundrySelectedAddons] = useState<Record<number, boolean>>({});
+  const [laundryPrefCustom, setLaundryPrefCustom] = useState('');
 
   // Estimated Pickup
   const [laundryPickupDate, setLaundryPickupDate] = useState(() => {
@@ -554,10 +555,27 @@ export default function POS() {
     ...products.filter(p => {
       const div = p.division?.toLowerCase() || '';
       const cat = p.category_name?.toLowerCase() || '';
-      return div === 'laundry' || cat.includes('laundry') || cat.includes('clean') || cat.includes('dry') || cat.includes('service');
+      return (div === 'laundry' || cat.includes('laundry') || cat.includes('clean') || cat.includes('dry') || cat.includes('service'))
+        && cat !== 'detergents & additives';
     }),
     ...customServices
   ];
+
+  const dynamicAddonTotal = (laundryAddonRush ? 100 : 0) + Object.keys(laundrySelectedAddons).reduce((sum, idStr) => {
+    const id = parseInt(idStr);
+    if (laundrySelectedAddons[id]) {
+      const addon = products.find(p => p.id === id);
+      return sum + (addon ? addon.price : 0);
+    }
+    return sum;
+  }, 0);
+
+  const isLaundryPerKg = selectedLaundryService?.name?.toLowerCase().includes('per kg') || selectedLaundryService?.name?.toLowerCase().includes('per kilo') || selectedLaundryService?.name?.toLowerCase().includes('ironing service');
+  const laundrySubtotal = isLaundryPerKg 
+    ? ((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70))
+    : (selectedLaundryService ? selectedLaundryService.price : 0);
+
+  const laundryGrandTotal = laundrySubtotal + dynamicAddonTotal;
 
   const handleKeypadPress = (val: string) => {
     if (val === 'C') {
@@ -633,7 +651,8 @@ export default function POS() {
     setLaundryPrefUnscented(false);
     setLaundryPrefSeparateWhite(false);
     setLaundryPrefSeparateColored(false);
-    setLaundryAddonFabCon(false);
+    setLaundryPrefCustom('');
+    setLaundrySelectedAddons({});
     setLaundryAddonRush(false);
     setLaundryPaymentMethod('cash');
     setLaundryCashReceived('');
@@ -655,10 +674,27 @@ export default function POS() {
     }
     
     const rate = selectedLaundryService ? selectedLaundryService.price : (settings?.laundry_rate_per_kg || 70);
-    const subtotalCost = weight * rate;
-    const fabConPrice = 20;
+    const isPerKg = selectedLaundryService?.name?.toLowerCase().includes('per kg') || selectedLaundryService?.name?.toLowerCase().includes('per kilo') || selectedLaundryService?.name?.toLowerCase().includes('ironing service');
+    const subtotalCost = isPerKg ? (weight * rate) : rate;
+    
     const rushPrice = 100;
-    const addonTotal = (laundryAddonFabCon ? fabConPrice : 0) + (laundryAddonRush ? rushPrice : 0);
+    
+    // Sum dynamic detergents/additives pricing
+    const detergentAddons = products.filter(p => p.category_name === 'Detergents & Additives');
+    const selectedAddonProducts: any[] = [];
+    let addonTotal = laundryAddonRush ? rushPrice : 0;
+    
+    Object.keys(laundrySelectedAddons).forEach(idStr => {
+      const id = parseInt(idStr);
+      if (laundrySelectedAddons[id]) {
+        const addon = products.find(p => p.id === id);
+        if (addon) {
+          addonTotal += addon.price;
+          selectedAddonProducts.push(addon);
+        }
+      }
+    });
+
     const grandTotal = subtotalCost + addonTotal;
 
     const cashRec = parseFloat(laundryCashReceived) || 0;
@@ -678,19 +714,10 @@ export default function POS() {
             : (firstValidProduct?.id || 1),
           quantity: 1,
           price: subtotalCost,
-          notes: `Service: ${selectedLaundryService?.name || 'Laundry Service'} | Weight: ${weight} kg, Rate: ₱${rate.toFixed(2)}/kg`
+          notes: `Service: ${selectedLaundryService?.name || 'Laundry Service'} | Weight/Qty: ${weight} kg/units, Rate: ₱${rate.toFixed(2)}`
         }
       ];
 
-      if (laundryAddonFabCon) {
-        const p = products.find(prod => prod.name.toLowerCase().includes('conditioner') || prod.name.toLowerCase().includes('fabcon'));
-        itemsPayload.push({
-          product_id: p?.id || firstValidProduct?.id || 1,
-          quantity: 1,
-          price: fabConPrice,
-          notes: 'Laundry Add-on: Fabric Conditioner'
-        });
-      }
       if (laundryAddonRush) {
         const p = products.find(prod => prod.name.toLowerCase().includes('rush'));
         itemsPayload.push({
@@ -701,16 +728,29 @@ export default function POS() {
         });
       }
 
+      // Add selected detergents to order payload
+      selectedAddonProducts.forEach(addon => {
+        itemsPayload.push({
+          product_id: addon.id,
+          quantity: 1,
+          price: addon.price,
+          notes: `Laundry Add-on: ${addon.name}`
+        });
+      });
+
       const preferencesList: string[] = [];
       if (laundryPrefWarmWater) preferencesList.push('Warm Water');
       if (laundryPrefColdWater) preferencesList.push('Cold Water');
       if (laundryPrefUnscented) preferencesList.push('Unscented');
       if (laundryPrefSeparateWhite) preferencesList.push('Separate White Clothes');
       if (laundryPrefSeparateColored) preferencesList.push('Separate Colored Clothes');
+      if (laundryPrefCustom.trim()) preferencesList.push(laundryPrefCustom.trim());
 
       const addonsList: any[] = [];
-      if (laundryAddonFabCon) addonsList.push({ name: 'Fabric Conditioner', price: fabConPrice });
       if (laundryAddonRush) addonsList.push({ name: 'Rush Service', price: rushPrice });
+      selectedAddonProducts.forEach(addon => {
+        addonsList.push({ name: addon.name, price: addon.price });
+      });
 
       const laundryDetails = {
         is_laundry: true,
@@ -1470,14 +1510,24 @@ export default function POS() {
                       className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold cursor-pointer"
                     >
                       <option value="">-- Choose Laundry Service --</option>
-                      {laundryServices.map(s => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} - ₱{s.price.toFixed(2)}/kg
-                        </option>
-                      ))}
+                      {laundryServices.map(s => {
+                        const isPerKg = s.name.toLowerCase().includes('per kg') || s.name.toLowerCase().includes('per kilo') || s.name.toLowerCase().includes('ironing service');
+                        const isPromo = s.name.toLowerCase().includes('promo') || s.category_name?.toLowerCase().includes('promo');
+                        return (
+                          <option key={s.id} value={s.id}>
+                            {isPromo ? '🎁 [PROMO] ' : ''}{s.name} - ₱{s.price.toFixed(2)}{isPerKg ? '/kg' : ''}
+                          </option>
+                        );
+                      })}
                       <option value="add-custom" className="text-blue-600 font-bold">+ Add Custom Service...</option>
                     </select>
                   </div>
+                  {/* Promo Badge details if selected */}
+                  {selectedLaundryService && (selectedLaundryService.name.toLowerCase().includes('promo') || selectedLaundryService.category_name?.toLowerCase().includes('promo')) && (
+                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white p-2 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-xs tracking-wider animate-pulse">
+                      <span>🎁 Active Promo Package Selected!</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Weight Keypad Card */}
@@ -1582,6 +1632,18 @@ export default function POS() {
                           Separate Colored
                         </label>
                       </div>
+                      
+                      {/* Manual Custom preference / instructions */}
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-100">
+                        <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1 block">Custom Instructions</span>
+                        <input 
+                          type="text"
+                          value={laundryPrefCustom}
+                          onChange={e => setLaundryPrefCustom(e.target.value)}
+                          placeholder="e.g. Extra detergent, delicate wash"
+                          className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-bold text-slate-700 outline-none focus:border-blue-500 placeholder-slate-400"
+                        />
+                      </div>
                     </div>
                     
                     {/* Add-ons column */}
@@ -1589,21 +1651,42 @@ export default function POS() {
                       <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                         ➕ Add-ons
                       </h2>
-                      <div className="space-y-1.5">
-                        <label className={cn("flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonFabCon ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" checked={laundryAddonFabCon} onChange={e => setLaundryAddonFabCon(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                            <span>Fab Con</span>
-                          </div>
-                          <span className="text-blue-600 text-[9px] font-black">+₱20</span>
-                        </label>
+                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar">
+                        {/* Rush Service option */}
                         <label className={cn("flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonRush ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
                           <div className="flex items-center gap-2">
                             <input type="checkbox" checked={laundryAddonRush} onChange={e => setLaundryAddonRush(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                            <span>Rush Service</span>
+                            <span>⚡ Rush Service</span>
                           </div>
-                          <span className="text-blue-600 text-[9px] font-black">+₱100</span>
+                          <span className="text-blue-600 text-[9px] font-black">+₱100.00</span>
                         </label>
+
+                        {/* Dynamic Detergent Additives */}
+                        {products
+                          .filter(p => p.category_name === 'Detergents & Additives')
+                          .map(addon => {
+                            const isChecked = !!laundrySelectedAddons[addon.id];
+                            return (
+                              <label 
+                                key={addon.id} 
+                                className={cn(
+                                  "flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", 
+                                  isChecked ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200"
+                                )}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isChecked} 
+                                    onChange={e => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: e.target.checked }))} 
+                                    className="accent-blue-600 w-3.5 h-3.5" 
+                                  />
+                                  <span className="truncate max-w-[130px]" title={addon.name}>{addon.name}</span>
+                                </div>
+                                <span className="text-blue-600 text-[9px] font-black">+₱{addon.price.toFixed(2)}</span>
+                              </label>
+                            );
+                          })}
                       </div>
                     </div>
                   </div>
@@ -1693,11 +1776,11 @@ export default function POS() {
                           <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Change Due</span>
                           <span className={cn(
                             "text-sm font-black font-mono",
-                            (parseFloat(laundryCashReceived) || 0) >= (parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)
+                            (parseFloat(laundryCashReceived) || 0) >= laundryGrandTotal
                               ? "text-emerald-600"
                               : "text-slate-400"
                           )}>
-                            ₱{Math.max(0, (parseFloat(laundryCashReceived) || 0) - ((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0))).toFixed(2)}
+                            ₱{Math.max(0, (parseFloat(laundryCashReceived) || 0) - laundryGrandTotal).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -1709,18 +1792,18 @@ export default function POS() {
                     <div className="bg-slate-900 text-white p-2.5 rounded-xl mb-2.5">
                       <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
                         <span>Subtotal ({laundryWeight || '0'} kg)</span>
-                        <span>₱{((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70)).toFixed(2)}</span>
+                        <span>₱{laundrySubtotal.toFixed(2)}</span>
                       </div>
-                      {(laundryAddonFabCon || laundryAddonRush) && (
+                      {dynamicAddonTotal > 0 && (
                         <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
                           <span>Add-ons</span>
-                          <span>₱{((laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)).toFixed(2)}</span>
+                          <span>₱{dynamicAddonTotal.toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center border-t border-slate-800 pt-1 mt-1">
                         <span className="text-[9px] font-black uppercase text-slate-350">Grand Total</span>
                         <span className="text-sm font-black text-blue-400 font-mono">
-                          ₱{((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70) + (laundryAddonFabCon ? 20 : 0) + (laundryAddonRush ? 100 : 0)).toFixed(2)}
+                          ₱{laundryGrandTotal.toFixed(2)}
                         </span>
                       </div>
                     </div>

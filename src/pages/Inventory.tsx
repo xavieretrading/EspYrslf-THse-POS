@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  PackagePlus, 
-  PackageMinus, 
-  RefreshCw, 
-  AlertCircle, 
-  Edit, 
-  Trash2, 
-  Plus, 
-  X, 
-  List, 
-  MapPin, 
-  ArrowLeftRight, 
-  TrendingUp, 
-  ClipboardCheck, 
-  Filter, 
-  Search, 
-  Calendar, 
-  Check, 
+import {
+  PackagePlus,
+  PackageMinus,
+  RefreshCw,
+  AlertCircle,
+  Edit,
+  Trash2,
+  Plus,
+  X,
+  List,
+  MapPin,
+  ArrowLeftRight,
+  TrendingUp,
+  ClipboardCheck,
+  Filter,
+  Search,
+  Calendar,
+  Check,
   AlertTriangle,
   FileText,
   ChevronRight,
@@ -93,26 +93,7 @@ export default function Inventory() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '' });
 
-  // === NEW STATES FOR WAREHOUSE FEATURE ===
-  const [warehouses, setWarehouses] = useState<any[]>([]);
-  const [warehouseStocks, setWarehouseStocks] = useState<Record<string, number>>({});
-  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>('wh-1');
-  const [showAddWarehouseModal, setShowAddWarehouseModal] = useState(false);
-  const [newWarehouseName, setNewWarehouseName] = useState('');
-  const [newWarehouseDesc, setNewWarehouseDesc] = useState('');
-
-  // Warehouse Transfer States
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [transferProductId, setTransferProductId] = useState<string>('');
-  const [transferFromWhId, setTransferFromWhId] = useState<string>('');
-  const [transferToWhId, setTransferToWhId] = useState<string>('');
-  const [transferQty, setTransferQty] = useState<string>('');
-  const [transferRemarks, setTransferRemarks] = useState<string>('');
-  const [transfers, setTransfers] = useState<any[]>([]);
-
-  // Manual stock update modal for Warehouses
-  const [updatingWhProduct, setUpdatingWhProduct] = useState<Product | null>(null);
-  const [updatingWhStockVal, setUpdatingWhStockVal] = useState<string>('');
+  // Warehouse and Transfers states removed
 
   // === NEW STATES FOR IN & OUT REPORTS ===
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -139,31 +120,25 @@ export default function Inventory() {
       ]);
       if (invRes.ok) {
         const data = await invRes.json();
-        const uniqueProducts = data.filter((p: Product, i: number, self: Product[]) => 
+        const uniqueProducts = data.filter((p: Product, i: number, self: Product[]) =>
           self.findIndex(t => t.id === p.id) === i
         );
         setProducts(uniqueProducts);
       }
       if (catRes.ok) {
         const catData = await catRes.json();
-        const uniqueCats = (catData || []).filter((cat: Category, index: number, self: Category[]) => 
+        const uniqueCats = (catData || []).filter((cat: Category, index: number, self: Category[]) =>
           self.findIndex(t => t.name === cat.name) === index
         );
         setCategories(uniqueCats);
       }
 
-      // Fetch warehouse details
-      const [whRes, whStockRes, trRes, txRes, ccRes] = await Promise.all([
-        fetch('/api/warehouses'),
-        fetch('/api/warehouse/stocks'),
-        fetch('/api/warehouse/transfers'),
-        fetch('/api/inventory/transactions'),
+      // Fetch details
+      const [txRes, ccRes] = await Promise.all([
+        fetch(`/api/inventory/transactions?branch_id=${activeBranch.id}`),
         fetch('/api/cycle-counts')
       ]);
 
-      if (whRes.ok) setWarehouses(await whRes.json());
-      if (whStockRes.ok) setWarehouseStocks(await whStockRes.json());
-      if (trRes.ok) setTransfers(await trRes.json());
       if (txRes.ok) setTransactions(await txRes.json());
       if (ccRes.ok) setCycleCounts(await ccRes.json());
 
@@ -198,7 +173,7 @@ export default function Inventory() {
     if (res.ok) {
       const user = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
       logActivity(user.full_name || user.username || 'Staff', 'Inventory Update', `${transactionType.toUpperCase()}: ${selectedProduct.name} x ${quantity}. Remarks: ${remarks || 'None'}`);
-      
+
       setSelectedProduct(null);
       setQuantity('');
       setRemarks('');
@@ -210,10 +185,13 @@ export default function Inventory() {
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeBranch) return;
-    
+
     const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/products';
     const method = editingProduct ? 'PUT' : 'POST';
-    
+
+    const selectedCat = categories.find(c => c.id === parseInt(formData.category_id));
+    const isService = selectedDivision === 'laundry' && selectedCat?.name !== 'Detergents & Additives';
+
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -221,9 +199,9 @@ export default function Inventory() {
         branch_id: activeBranch.id,
         name: formData.name,
         price: parseFloat(formData.price),
-        cost: parseFloat(formData.cost),
+        cost: isService ? 0 : parseFloat(formData.cost || '0'),
         category_id: parseInt(formData.category_id),
-        stock: parseInt(formData.stock || '0')
+        stock: isService ? 9999 : parseInt(formData.stock || '0')
       })
     });
 
@@ -250,7 +228,14 @@ export default function Inventory() {
 
   const openAddModal = () => {
     setEditingProduct(null);
-    setFormData({ name: '', cost: '', price: '', category_id: categories[0]?.id.toString() || '', stock: '0' });
+    const firstCatOfDivision = categories.find(c => c.division === selectedDivision);
+    setFormData({
+      name: '',
+      cost: '',
+      price: '',
+      category_id: firstCatOfDivision?.id.toString() || categories[0]?.id.toString() || '',
+      stock: '0'
+    });
     setIsProductModalOpen(true);
   };
 
@@ -297,96 +282,7 @@ export default function Inventory() {
     }
   };
 
-  // === WAREHOUSE LOGIC HANDLERS ===
-  const handleAddWarehouse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newWarehouseName.trim()) return;
-
-    const res = await fetch('/api/warehouses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newWarehouseName, description: newWarehouseDesc })
-    });
-
-    if (res.ok) {
-      setNewWarehouseName('');
-      setNewWarehouseDesc('');
-      setShowAddWarehouseModal(false);
-      fetchData();
-    } else {
-      swalAlert('Error', 'Failed to add warehouse', 'error');
-    }
-  };
-
-  const handleUpdateWarehouseStock = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!updatingWhProduct || !selectedWarehouseId) return;
-
-    const stockVal = parseInt(updatingWhStockVal, 10);
-    if (isNaN(stockVal)) return;
-
-    const res = await fetch('/api/warehouse/stocks/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        warehouse_id: selectedWarehouseId,
-        product_id: updatingWhProduct.id,
-        stock: stockVal
-      })
-    });
-
-    if (res.ok) {
-      setUpdatingWhProduct(null);
-      setUpdatingWhStockVal('');
-      fetchData();
-    } else {
-      swalAlert('Error', 'Failed to update warehouse stock', 'error');
-    }
-  };
-
-  const handleWarehouseTransfer = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!transferProductId || !transferFromWhId || !transferToWhId || !transferQty) return;
-
-    if (transferFromWhId === transferToWhId) {
-      swalAlert('Invalid Transfer', 'Source and destination warehouses cannot be the exact same physical warehouse!', 'warning');
-      return;
-    }
-
-    const matchedProduct = products.find(p => p.id === parseInt(transferProductId, 10));
-    const matchedFrom = warehouses.find(w => w.id === transferFromWhId);
-    const matchedTo = warehouses.find(w => w.id === transferToWhId);
-    const userObj = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
-
-    const res = await fetch('/api/warehouse/transfer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        product_id: matchedProduct?.id,
-        product_name: matchedProduct?.name,
-        from_warehouse_id: transferFromWhId,
-        from_warehouse_name: matchedFrom?.name,
-        to_warehouse_id: transferToWhId,
-        to_warehouse_name: matchedTo?.name,
-        quantity: parseInt(transferQty, 10),
-        remarks: transferRemarks,
-        user: userObj.full_name || userObj.username || 'Staff'
-      })
-    });
-
-    if (res.ok) {
-      setTransferProductId('');
-      setTransferFromWhId('');
-      setTransferToWhId('');
-      setTransferQty('');
-      setTransferRemarks('');
-      setShowTransferModal(false);
-      fetchData();
-    } else {
-      const errData = await res.json();
-      swalAlert('Transfer Failed', errData.error || 'Failed to complete warehouse transfer', 'error');
-    }
-  };
+  // Warehouse logic handlers removed
 
   // === CYCLE COUNT LOGIC HANDLERS ===
   const startNewCycleCount = () => {
@@ -433,8 +329,8 @@ export default function Inventory() {
 
     if (res.ok) {
       logActivity(
-        activeUser.full_name || activeUser.username || 'Auditor', 
-        'Cycle Count Submitted', 
+        activeUser.full_name || activeUser.username || 'Auditor',
+        'Cycle Count Submitted',
         `Submitted "${cycleCountTitle}". Status: ${cycleCountCommit ? 'Stocks Adjusted to Hand Count' : 'Calculated Audit Record Only'}`
       );
       setIsCreatingCycleCount(false);
@@ -449,7 +345,7 @@ export default function Inventory() {
     // Group all outward transactions from inventory_transactions
     // Filter transactions by type: 'out'
     const countsMap: Record<number, { product: Product; count: number }> = {};
-    
+
     products.forEach(p => {
       countsMap[p.id] = { product: p, count: 0 };
     });
@@ -470,6 +366,9 @@ export default function Inventory() {
 
   // Filtering for stocks
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) && (!isLaundryBranch || (p.division || 'coffee') === selectedDivision));
+
+  const selectedCat = categories.find(c => c.id === parseInt(formData.category_id));
+  const isServiceCategory = selectedDivision === 'laundry' && selectedCat?.name !== 'Detergents & Additives';
 
   // Filtering for transaction reports
   const filteredReports = transactions.filter(tx => {
@@ -516,14 +415,14 @@ export default function Inventory() {
             </button>
           </div>
 
-          <button 
+          <button
             id="btn_manage_categories"
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-50 transition-colors font-semibold text-xs uppercase tracking-wider shadow-sm"
           >
             Manage Categories
           </button>
-          <button 
+          <button
             id="btn_add_product"
             onClick={openAddModal}
             className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl transition-colors font-semibold text-xs uppercase tracking-wider shadow-sm"
@@ -535,51 +434,42 @@ export default function Inventory() {
 
       {/* Tabs list bar */}
       <div className="flex flex-wrap border-b border-slate-200 mb-6 gap-2">
-        <button 
+        <button
           id="tab_active_stocks"
-          onClick={() => { setActiveTab('active_stocks'); setIsCreatingCycleCount(false); }} 
+          onClick={() => { setActiveTab('active_stocks'); setIsCreatingCycleCount(false); }}
           className={cn(
-            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5", 
+            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5",
             activeTab === 'active_stocks' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
           )}
         >
           <List size={16} /> Active Stocks
         </button>
-        <button 
-          id="tab_warehouses"
-          onClick={() => { setActiveTab('warehouses'); setIsCreatingCycleCount(false); }} 
-          className={cn(
-            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5", 
-            activeTab === 'warehouses' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
-          )}
-        >
-          <MapPin size={16} /> Warehouse & Transfers
-        </button>
-        <button 
+        {/* Warehouse and Transfers tab button removed */}
+        <button
           id="tab_in_out_reports"
-          onClick={() => { setActiveTab('in_out_reports'); setIsCreatingCycleCount(false); }} 
+          onClick={() => { setActiveTab('in_out_reports'); setIsCreatingCycleCount(false); }}
           className={cn(
-            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5", 
+            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5",
             activeTab === 'in_out_reports' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
           )}
         >
           <RefreshCw size={16} /> In & Out Reports
         </button>
-        <button 
+        <button
           id="tab_fast_moving"
-          onClick={() => { setActiveTab('fast_moving'); setIsCreatingCycleCount(false); }} 
+          onClick={() => { setActiveTab('fast_moving'); setIsCreatingCycleCount(false); }}
           className={cn(
-            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5", 
+            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5",
             activeTab === 'fast_moving' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
           )}
         >
           <TrendingUp size={16} /> Fast Moving Items
         </button>
-        <button 
+        <button
           id="tab_cycle_counts"
-          onClick={() => { setActiveTab('cycle_counts'); }} 
+          onClick={() => { setActiveTab('cycle_counts'); }}
           className={cn(
-            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5", 
+            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5",
             activeTab === 'cycle_counts' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
           )}
         >
@@ -624,9 +514,9 @@ export default function Inventory() {
                 <span className="font-bold text-xs uppercase tracking-wider text-slate-400">Products Listing</span>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="Search active inventory..." 
+                  <input
+                    type="text"
+                    placeholder="Search active inventory..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none text-sm"
@@ -662,14 +552,14 @@ export default function Inventory() {
                         </td>
                         <td className="p-4">
                           <div className="flex gap-1 justify-center">
-                            <button 
+                            <button
                               onClick={() => openEditModal(product)}
                               className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                               title="Edit Product Details"
                             >
                               <Edit size={16} />
                             </button>
-                            <button 
+                            <button
                               onClick={() => handleDeleteProduct(product.id)}
                               className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               title="Delete Product"
@@ -695,7 +585,7 @@ export default function Inventory() {
             {/* Quick Transaction Panel */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 flex flex-col h-fit">
               <h2 className="text-lg font-black text-slate-900 border-b border-slate-100 pb-3 mb-4 uppercase tracking-wider text-xs text-slate-500">Record Stock Transaction</h2>
-              
+
               {selectedProduct ? (
                 <form onSubmit={handleTransaction} className="space-y-4">
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-150 relative">
@@ -728,8 +618,8 @@ export default function Inventory() {
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">
                       {transactionType === 'adjustment' ? 'New absolute stock target level' : 'Quantity'}
                     </label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       required
                       min="0"
                       value={quantity}
@@ -740,7 +630,7 @@ export default function Inventory() {
 
                   <div>
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 block">Remarks / Notes</label>
-                    <textarea 
+                    <textarea
                       required
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
@@ -757,7 +647,7 @@ export default function Inventory() {
                 <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-12">
                   <AlertCircle size={40} className="mb-3 opacity-30" />
                   <p className="text-center text-xs font-semibold leading-relaxed">
-                    Click a product can stock count<br/>
+                    Click a product can stock count<br />
                     to record database ledger transact.
                   </p>
                 </div>
@@ -767,209 +657,12 @@ export default function Inventory() {
         )}
 
         {/* ----------------- TAB: WAREHOUSES & TRANSFERS ----------------- */}
-        {activeTab === 'warehouses' && (
-          <div className="space-y-6">
-            
-            {/* Top metrics bar */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white p-5 rounded-3xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Active Warehouses</span>
-                  <span className="text-2xl font-black text-slate-800">{warehouses.length}</span>
-                </div>
-                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-2xl">
-                  <MapPin size={24} />
-                </div>
-              </div>
-              <div className="bg-white p-5 rounded-3xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Transfers Filed</span>
-                  <span className="text-2xl font-black text-slate-800">{transfers.length} Logs</span>
-                </div>
-                <div className="p-3 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl">
-                  <ArrowLeftRight size={24} />
-                </div>
-              </div>
-              <div className="bg-white p-5 rounded-3xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Allocated Warehouse Stock</span>
-                  <span className="text-2xl font-black text-slate-800">
-                    {(Object.values(warehouseStocks) as any[]).reduce((acc: number, current: any) => acc + (current || 0), 0)} Units
-                  </span>
-                </div>
-                <div className="p-3 bg-slate-100 text-slate-600 rounded-2xl">
-                  <RefreshCw size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Left Warehouses Side Grid */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="flex justify-between items-center pb-2">
-                  <h3 className="font-extrabold text-xs uppercase tracking-wider text-slate-400">Select Warehouse</h3>
-                  <button 
-                    id="btn_add_warehouse"
-                    onClick={() => setShowAddWarehouseModal(true)}
-                    className="p-1 bg-slate-900 text-white rounded hover:bg-slate-800 transition-colors"
-                    title="Add Warehouse Location"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {warehouses.map(wh => (
-                    <button
-                      key={wh.id}
-                      onClick={() => setSelectedWarehouseId(wh.id)}
-                      className={cn(
-                        "w-full text-left p-4 rounded-2xl border transition-all flex flex-col gap-1 relative overflow-hidden",
-                        selectedWarehouseId === wh.id 
-                          ? "bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-900/10" 
-                          : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                      )}
-                    >
-                      <span className="font-bold text-sm">{wh.name}</span>
-                      <span className={cn(
-                        "text-xs truncate max-w-[200px]",
-                        selectedWarehouseId === wh.id ? "text-slate-300" : "text-slate-500"
-                      )}>{wh.description || 'No description'}</span>
-                      {selectedWarehouseId === wh.id && (
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-emerald-400" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  id="btn_launch_transfer"
-                  onClick={() => {
-                    if (warehouses.length < 2) {
-                      swalAlert('Cannot Initiate Transfer', 'You must have at least two warehouses registered to initialize transfers!', 'warning');
-                      return;
-                    }
-                    setTransferFromWhId(selectedWarehouseId || warehouses[0]?.id || '');
-                    setTransferToWhId(warehouses.find(w => w.id !== selectedWarehouseId)?.id || '');
-                    if (products.length > 0) setTransferProductId(products[0]?.id.toString());
-                    setShowTransferModal(true);
-                  }}
-                  className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/15"
-                >
-                  <ArrowLeftRight size={14} /> Transfer warehouse stock
-                </button>
-              </div>
-
-              {/* Right Stocks in Selected Warehouse Table */}
-              <div className="lg:col-span-3 space-y-6">
-                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                  <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Current Warehouse Content</span>
-                      <h4 className="text-base font-black text-slate-800">
-                        {warehouses.find(w => w.id === selectedWarehouseId)?.name || 'Central Warehouse'} Stock
-                      </h4>
-                    </div>
-                  </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead className="bg-slate-50 border-b border-slate-100">
-                        <tr>
-                          <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Product Name</th>
-                          <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
-                          <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Cost Value</th>
-                          <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Physical Warehouse Stock</th>
-                          <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Update</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {products.map(p => {
-                          const stockKey = `${selectedWarehouseId}_${p.id}`;
-                          const whStock = warehouseStocks[stockKey] || 0;
-                          return (
-                            <tr key={p.id} className="hover:bg-slate-50/20 transition-all">
-                              <td className="p-4 font-bold text-slate-800 text-sm">{p.name}</td>
-                              <td className="p-4 text-slate-500 text-sm">{p.category_name}</td>
-                              <td className="p-4 text-right text-slate-500 font-mono text-sm">₱{p.cost?.toFixed(2)}</td>
-                              <td className="p-4 text-right">
-                                <span className={cn(
-                                  "px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wide",
-                                  whStock === 0 ? "bg-slate-100 text-slate-400" : "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                )}>
-                                  {whStock} Units
-                                </span>
-                              </td>
-                              <td className="p-4 text-center">
-                                <button 
-                                  onClick={() => {
-                                    setUpdatingWhProduct(p);
-                                    setUpdatingWhStockVal(whStock.toString());
-                                  }}
-                                  className="text-xs font-bold uppercase tracking-wider text-indigo-600 hover:text-indigo-800 px-3 py-1 border border-indigo-200 hover:border-indigo-400 bg-indigo-50/20 rounded-lg transition-colors"
-                                >
-                                  Modify
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Warehouse Transfer Log history */}
-                <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-                  <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Movement Audit Trail</span>
-                    <h4 className="text-sm font-extrabold text-slate-800">Warehouse-to-Warehouse Transfer History</h4>
-                  </div>
-                  <div className="overflow-x-auto max-h-72">
-                    <table className="w-full text-left border-collapse">
-                      <thead className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
-                        <tr>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Date</th>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">Product</th>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">From Location</th>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider">To Location</th>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider text-right">Quantity</th>
-                          <th className="p-3 text-xs font-extrabold text-slate-400 uppercase tracking-wider text-center">Handled By</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 text-xs">
-                        {transfers.map(tr => (
-                          <tr key={tr.id} className="hover:bg-slate-50/20 transition-colors">
-                            <td className="p-3 text-slate-500 font-mono">
-                              {new Date(tr.created_at).toLocaleDateString('en-US', { hour: 'numeric', minute: 'numeric' })}
-                            </td>
-                            <td className="p-3 font-bold text-slate-800">{tr.product_name}</td>
-                            <td className="p-3 text-slate-600 font-medium">{tr.from_warehouse_name}</td>
-                            <td className="p-3 text-slate-600 font-medium">{tr.to_warehouse_name}</td>
-                            <td className="p-3 text-right font-bold text-indigo-600 font-mono">{tr.quantity} units</td>
-                            <td className="p-3 text-center text-slate-500 font-semibold">{tr.user}</td>
-                          </tr>
-                        ))}
-                        {transfers.length === 0 && (
-                          <tr>
-                            <td colSpan={6} className="p-8 text-center text-slate-400 font-medium italic">
-                              No transfers recorded in ledger.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Warehouse and Transfers tab render block removed */}
 
         {/* ----------------- TAB: IN & OUT REPORTS ----------------- */}
         {activeTab === 'in_out_reports' && (
           <div className="space-y-6">
-            
+
             {/* IN vs OUT analytics helper metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-white p-5 rounded-3xl border border-slate-200">
@@ -1003,8 +696,8 @@ export default function Inventory() {
                   onClick={() => setReportsFilterType('all')}
                   className={cn(
                     "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
-                    reportsFilterType === 'all' 
-                      ? "bg-slate-900 border-slate-900 text-white" 
+                    reportsFilterType === 'all'
+                      ? "bg-slate-900 border-slate-900 text-white"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   )}
                 >
@@ -1014,8 +707,8 @@ export default function Inventory() {
                   onClick={() => setReportsFilterType('in')}
                   className={cn(
                     "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
-                    reportsFilterType === 'in' 
-                      ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/10" 
+                    reportsFilterType === 'in'
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-sm shadow-emerald-600/10"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   )}
                 >
@@ -1025,8 +718,8 @@ export default function Inventory() {
                   onClick={() => setReportsFilterType('out')}
                   className={cn(
                     "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
-                    reportsFilterType === 'out' 
-                      ? "bg-rose-600 border-rose-600 text-white shadow-sm shadow-rose-600/10" 
+                    reportsFilterType === 'out'
+                      ? "bg-rose-600 border-rose-600 text-white shadow-sm shadow-rose-600/10"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   )}
                 >
@@ -1036,8 +729,8 @@ export default function Inventory() {
                   onClick={() => setReportsFilterType('adjustment')}
                   className={cn(
                     "px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border",
-                    reportsFilterType === 'adjustment' 
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-600/10" 
+                    reportsFilterType === 'adjustment'
+                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-600/10"
                       : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   )}
                 >
@@ -1077,12 +770,12 @@ export default function Inventory() {
                       return (
                         <tr key={tx.id || idx} className="hover:bg-slate-50/30 transition-colors">
                           <td className="p-4 text-slate-500 font-mono text-xs">
-                            {tx.created_at ? new Date(tx.created_at).toLocaleString('en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric', 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
+                            {tx.created_at ? new Date(tx.created_at).toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
                             }) : 'N/A'}
                           </td>
                           <td className="p-4 font-mono text-slate-400 text-xs">#{tx.product_id || 'N/A'}</td>
@@ -1091,8 +784,8 @@ export default function Inventory() {
                             <span className={cn(
                               "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
                               tx.type === 'in' ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                              tx.type === 'out' ? "bg-rose-50 border-rose-200 text-rose-700" :
-                              "bg-indigo-50 border-indigo-200 text-indigo-700"
+                                tx.type === 'out' ? "bg-rose-50 border-rose-200 text-rose-700" :
+                                  "bg-indigo-50 border-indigo-200 text-indigo-700"
                             )}>
                               {tx.type}
                             </span>
@@ -1126,23 +819,8 @@ export default function Inventory() {
         {/* ----------------- TAB: FAST MOVING ITEMS ----------------- */}
         {activeTab === 'fast_moving' && (
           <div className="space-y-6">
-            
-            {/* Summary card context */}
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 bg-slate-900 text-white relative overflow-hidden">
-              <div className="z-10 relative max-w-xl">
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1">Sales & Moving Metrics</span>
-                <h3 className="text-xl font-extrabold mb-2">Fast Moving Items Analytics</h3>
-                <p className="text-slate-300 text-xs leading-relaxed">
-                  Products sorted by dynamic stock-out count velocity based on live client redemptions, table order checkouts, and staff outward adjustments. Check out your inventory turn rates below to decide ordering times.
-                </p>
-              </div>
-              <div className="absolute right-8 top-1/2 -translate-y-1/2 opacity-10 text-white z-0 hidden md:block">
-                <TrendingUp size={160} />
-              </div>
-            </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              
+
               {/* Top 3 highlight Bento cards */}
               {getFastMovingItems().slice(0, 3).map((item, index) => {
                 const ranks = ['1st', '2nd', '3rd'];
@@ -1215,8 +893,8 @@ export default function Inventory() {
                           <span className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
                             item.count >= 15 ? "bg-red-150 text-rose-800 bg-rose-50 border border-rose-200" :
-                            item.count >= 5 ? "bg-yellow-100 text-yellow-800" :
-                            "bg-slate-100 text-slate-500"
+                              item.count >= 5 ? "bg-yellow-100 text-yellow-800" :
+                                "bg-slate-100 text-slate-500"
                           )}>
                             {item.count >= 15 ? 'Hot Velocity 🔥' : item.count >= 5 ? 'Steady Demand ⚡' : 'Slower Shelf 📋'}
                           </span>
@@ -1233,7 +911,7 @@ export default function Inventory() {
         {/* ----------------- TAB: CYCLE COUNTS ----------------- */}
         {activeTab === 'cycle_counts' && (
           <div className="space-y-6">
-            
+
             {/* If user is interacting inside physical count worksheet sheet */}
             {isCreatingCycleCount ? (
               <form onSubmit={handleSubmitCycleCount} className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
@@ -1386,7 +1064,7 @@ export default function Inventory() {
               </form>
             ) : (
               <div className="space-y-6">
-                
+
                 {/* Audit trigger section */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
@@ -1426,12 +1104,12 @@ export default function Inventory() {
                         {cycleCounts.map((cc) => (
                           <tr key={cc.id} className="hover:bg-slate-50/20">
                             <td className="p-4 text-slate-500 font-mono text-xs">
-                              {new Date(cc.created_at).toLocaleString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric', 
-                                year: 'numeric', 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
+                              {new Date(cc.created_at).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
                               })}
                             </td>
                             <td className="p-4 font-bold text-slate-950 text-sm">{cc.title}</td>
@@ -1472,214 +1150,7 @@ export default function Inventory() {
         )}
       </div>
 
-      {/* ================= MODAL: ADD WAREHOUSE ================= */}
-      {showAddWarehouseModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="font-black text-slate-900 border-none uppercase tracking-wide text-sm">Add Warehouse Location</h3>
-              <button onClick={() => setShowAddWarehouseModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddWarehouse} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Warehouse Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newWarehouseName}
-                  onChange={(e) => setNewWarehouseName(e.target.value)}
-                  placeholder="e.g. Cold storage warehouse 2"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-400 outline-none text-sm font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Description / Notes</label>
-                <textarea
-                  value={newWarehouseDesc}
-                  onChange={(e) => setNewWarehouseDesc(e.target.value)}
-                  placeholder="e.g. Sub-zero cooling room, back-kitchen zone..."
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-400 outline-none h-20 text-xs resize-none"
-                ></textarea>
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddWarehouseModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs uppercase"
-                >
-                  Register location
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: STOCK WAREHOUSE UPDATOR ================= */}
-      {updatingWhProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-slate-100 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="font-black text-slate-900 uppercase tracking-wide text-xs">Set Physical Count</h3>
-              <button onClick={() => setUpdatingWhProduct(null)} className="text-slate-400 hover:text-slate-600 p-1">
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateWarehouseStock} className="space-y-4">
-              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Update location stock value</span>
-                <span className="font-extrabold text-slate-850 text-sm mt-0.5 block">{updatingWhProduct.name}</span>
-                <span className="text-[10px] font-bold text-slate-500 mt-1 block">
-                  Location: {warehouses.find(w => w.id === selectedWarehouseId)?.name}
-                </span>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Physical Warehouse Qty</label>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={updatingWhStockVal}
-                  onChange={(e) => setUpdatingWhStockVal(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-indigo-500 outline-none text-sm font-semibold"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setUpdatingWhProduct(null)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase"
-                >
-                  Set Stock Value
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL: WAREHOUSE TRANSFER ================= */}
-      {showTransferModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-100 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="font-black text-slate-900 uppercase tracking-wide text-sm">Transfer Inventory Stock</h3>
-              <button onClick={() => setShowTransferModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleWarehouseTransfer} className="space-y-4">
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Transfer Product</label>
-                <select
-                  required
-                  value={transferProductId}
-                  onChange={(e) => setTransferProductId(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-400 outline-none text-sm font-semibold"
-                >
-                  {products.map(p => {
-                    const currentStock = warehouseStocks[`${transferFromWhId}_${p.id}`] || 0;
-                    return (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (Available: {currentStock} at source)
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Sender Location</label>
-                  <select
-                    required
-                    value={transferFromWhId}
-                    onChange={(e) => setTransferFromWhId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-450 outline-none text-xs font-semibold"
-                  >
-                    {warehouses.map(w => (
-                      <option key={w.id} value={w.id}>{w.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Recipient Location</label>
-                  <select
-                    required
-                    value={transferToWhId}
-                    onChange={(e) => setTransferToWhId(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-450 outline-none text-xs font-semibold"
-                  >
-                    {warehouses.map(w => (
-                      <option key={w.id} value={w.id}>{w.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Transfer Quantity Units</label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  value={transferQty}
-                  onChange={(e) => setTransferQty(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-400 outline-none text-sm font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 block">Transfer Remarks / Notes</label>
-                <textarea
-                  value={transferRemarks}
-                  onChange={(e) => setTransferRemarks(e.target.value)}
-                  placeholder="e.g. Restocked bar cooler annex due to high beverage demand..."
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-slate-400 outline-none h-16 text-xs resize-none"
-                ></textarea>
-              </div>
-
-              <div className="flex gap-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowTransferModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs uppercase shadow-md shadow-indigo-600/10"
-                >
-                  Execute Transfer
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Warehouse modals removed */}
 
       {/* ================= MODAL: VIEW DETAILED CYCLE COUNT ================= */}
       {selectedCycleCountDetail && (
@@ -1769,8 +1240,8 @@ export default function Inventory() {
 
             <form onSubmit={handleAddCategory} className="mb-6 flex flex-col gap-2">
               <div className="flex gap-2">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={newCategoryName}
                   onChange={e => setNewCategoryName(e.target.value)}
@@ -1785,9 +1256,9 @@ export default function Inventory() {
                 <div className="flex items-center gap-3 mt-1.5 px-1 font-sans">
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Division:</span>
                   <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer font-bold select-none">
-                    <input 
-                      type="radio" 
-                      name="cat_division" 
+                    <input
+                      type="radio"
+                      name="cat_division"
                       value="coffee"
                       checked={newCategoryDivision === 'coffee'}
                       onChange={() => setNewCategoryDivision('coffee')}
@@ -1796,9 +1267,9 @@ export default function Inventory() {
                     ☕ Coffee Shop
                   </label>
                   <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer font-bold select-none ml-2">
-                    <input 
-                      type="radio" 
-                      name="cat_division" 
+                    <input
+                      type="radio"
+                      name="cat_division"
                       value="laundry"
                       checked={newCategoryDivision === 'laundry'}
                       onChange={() => setNewCategoryDivision('laundry')}
@@ -1814,7 +1285,7 @@ export default function Inventory() {
               {categories.map(cat => (
                 <div key={cat.id} className="p-3.5 flex justify-between items-center hover:bg-slate-50/50">
                   <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">{cat.name}</span>
-                  <button 
+                  <button
                     onClick={() => handleDeleteCategory(cat.id)}
                     className="p-1 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-[10px] font-bold uppercase"
                   >
@@ -1834,81 +1305,102 @@ export default function Inventory() {
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-slate-100">
-            <h2 className="text-xl font-bold text-slate-900 mb-6 uppercase tracking-wider">{editingProduct ? 'Edit Product details' : 'Add New Product'}</h2>
-            
+            <h2 className="text-xl font-bold text-slate-900 mb-2 uppercase tracking-wider">{editingProduct ? 'Edit Product details' : 'Add New Product'}</h2>
+            <div className="mb-6 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100">
+              {selectedDivision === 'coffee' ? '☕ Café / Coffee Supply Item' : '🧺 Laundry Shop Service / Supply'}
+            </div>
+
             <form onSubmit={handleSaveProduct} className="space-y-4">
               <div>
                 <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Product Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
-                  placeholder="e.g. Traditional Adobo"
+                  placeholder="Product Name"
                 />
               </div>
-              
+
               <div>
                 <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Category</label>
-                <select 
+                <select
                   required
                   value={formData.category_id}
-                  onChange={e => setFormData({...formData, category_id: e.target.value})}
+                  onChange={e => setFormData({ ...formData, category_id: e.target.value })}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
                 >
                   <option value="" disabled>Select category...</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
+                  {categories
+                    .filter(c => c.division === selectedDivision)
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
                 </select>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              {isServiceCategory ? (
                 <div>
-                  <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Cost Price (₱)</label>
-                  <input 
-                    type="number" 
-                    required step="0.01" min="0"
-                    value={formData.cost}
-                    onChange={e => setFormData({...formData, cost: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Selling Price (₱)</label>
-                  <input 
-                    type="number" 
+                  <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Selling Price / Rate (₱)</label>
+                  <input
+                    type="number"
                     required step="0.01" min="0"
                     value={formData.price}
-                    onChange={e => setFormData({...formData, price: e.target.value})}
+                    onChange={e => setFormData({ ...formData, price: e.target.value })}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                    placeholder="e.g. 49.00"
                   />
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Cost Price (₱)</label>
+                      <input
+                        type="number"
+                        required step="0.01" min="0"
+                        value={formData.cost}
+                        onChange={e => setFormData({ ...formData, cost: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Selling Price (₱)</label>
+                      <input
+                        type="number"
+                        required step="0.01" min="0"
+                        value={formData.price}
+                        onChange={e => setFormData({ ...formData, price: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                      />
+                    </div>
+                  </div>
 
-              <div>
-                <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Stock Quantity</label>
-                <input 
-                  type="number" 
-                  required min="0"
-                  value={formData.stock}
-                  onChange={e => setFormData({...formData, stock: e.target.value})}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
-                  placeholder="e.g. 20"
-                />
-              </div>
+                  <div>
+                    <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Stock Quantity</label>
+                    <input
+                      type="number"
+                      required min="0"
+                      value={formData.stock}
+                      onChange={e => setFormData({ ...formData, stock: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                      placeholder="e.g. 20"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="flex gap-3 pt-6 mt-6 border-t border-slate-100">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsProductModalOpen(false)}
                   className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs uppercase shadow-md transition-all active:scale-[0.98]"
                 >
                   Save Product

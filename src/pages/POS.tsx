@@ -681,6 +681,9 @@ export default function POS() {
 
   const laundrySubtotal = laundryServicesList.reduce((sum, item) => sum + item.subtotal, 0);
   const laundryTotalWeight = laundryServicesList.reduce((sum, item) => sum + item.weight, 0);
+  const activeAddonsCount = Object.values(laundrySelectedAddons).filter((q: any) => q > 0).length;
+  const totalCartItemsCount = laundryServicesList.length + (laundryAddonRush ? 1 : 0) + activeAddonsCount;
+  const hasLaundryItems = totalCartItemsCount > 0;
 
   const currentSelectionSubtotal = (() => {
     if (!selectedLaundryService) return 0;
@@ -1913,15 +1916,19 @@ export default function POS() {
               {/* COLUMN 1: Selected Services List (Cart) */}
               <div className="flex flex-col h-full lg:col-span-1">
                 <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex flex-col h-full">
-                  <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center justify-between border-b border-slate-100 pb-1.5">
-                    <span className="flex items-center gap-1.5 font-sans">
-                      Selected Services
-                      <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{laundryServicesList.length}</span>
+                  <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center justify-between border-b border-slate-100 pb-1.5 font-sans">
+                    <span className="flex items-center gap-1.5">
+                      Selected Items
+                      <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{totalCartItemsCount}</span>
                     </span>
-                    {laundryServicesList.length > 0 && (
+                    {hasLaundryItems && (
                       <button
                         type="button"
-                        onClick={() => setLaundryServicesList([])}
+                        onClick={() => {
+                          setLaundryServicesList([]);
+                          setLaundrySelectedAddons({});
+                          setLaundryAddonRush(false);
+                        }}
                         className="text-rose-600 hover:text-rose-700 flex items-center gap-1 text-[9px] font-black uppercase tracking-wider transition-colors"
                       >
                         <Trash2 size={12} /> Remove All
@@ -1931,43 +1938,113 @@ export default function POS() {
 
                   {/* List Container */}
                   <div className="flex-1 overflow-y-auto mb-3 space-y-2 pr-1 custom-scrollbar">
-                    {laundryServicesList.length > 0 ? (
-                      laundryServicesList.map((item, idx) => {
-                        const isBedsheet = item.name.toLowerCase().includes('sheet') || item.name.toLowerCase().includes('bed') || item.name.toLowerCase().includes('comforter') || item.name.toLowerCase().includes('curtain');
-                        return (
-                          <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all gap-2 shadow-xs">
+                    {hasLaundryItems ? (
+                      <>
+                        {/* Main Services List */}
+                        {laundryServicesList.map((item, idx) => {
+                          const isBedsheet = item.name.toLowerCase().includes('sheet') || item.name.toLowerCase().includes('bed') || item.name.toLowerCase().includes('comforter') || item.name.toLowerCase().includes('curtain');
+                          return (
+                            <div key={`service-${idx}`} className="flex items-center justify-between p-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all gap-2 shadow-xs">
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-600">
+                                  {isBedsheet ? <Gift size={16} /> : <Package size={16} />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-extrabold text-slate-800 text-[11px] truncate leading-tight">{item.name.replace('/kg', '').replace('/kilo', '')}</p>
+                                  <p className="text-[9px] text-slate-400 font-bold mt-0.5 font-sans">
+                                    ₱{item.price.toFixed(2)} / {item.isPerKg ? 'kg' : 'pcs'}
+                                    {item.isPromo5Plus2 && item.freeKilos > 0 && (
+                                      <span className="text-emerald-600 font-black ml-1">({item.freeKilos.toFixed(1)}kg Free)</span>
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0 font-sans font-black text-xs text-slate-800 min-w-[50px] pr-1">
+                                {item.isPerKg ? `${item.weight.toFixed(1)} kg` : `${item.weight.toFixed(0)} pcs`}
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span className="font-mono font-bold text-xs text-slate-900 pr-1">₱{item.subtotal.toFixed(0)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLaundryServicesList(laundryServicesList.filter((_, i) => i !== idx))}
+                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                >
+                                  <Trash2 size={13} className="text-rose-500" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* Rush Service Addon Row */}
+                        {laundryAddonRush && (
+                          <div className="flex items-center justify-between p-2.5 bg-amber-50/40 hover:bg-amber-50 border border-amber-250 rounded-2xl transition-all gap-2 shadow-xs">
                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-600">
-                                {isBedsheet ? <Gift size={16} /> : <Package size={16} />}
+                              <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0 text-amber-600">
+                                <Clock size={16} />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="font-extrabold text-slate-800 text-[11px] truncate leading-tight">{item.name.replace('/kg', '').replace('/kilo', '')}</p>
-                                <p className="text-[9px] text-slate-400 font-bold mt-0.5">
-                                  ₱{item.price.toFixed(2)} / {item.isPerKg ? 'kg' : 'pcs'}
-                                  {item.isPromo5Plus2 && item.freeKilos > 0 && (
-                                    <span className="text-emerald-600 font-black ml-1">({item.freeKilos.toFixed(1)}kg Free)</span>
-                                  )}
-                                </p>
+                                <p className="font-extrabold text-slate-800 text-[11px] truncate leading-tight">⚡ Rush Service</p>
+                                <p className="text-[9px] text-slate-450 font-bold mt-0.5 font-sans">Turnaround speed upgrade</p>
                               </div>
                             </div>
-                            <div className="text-right shrink-0 font-sans font-black text-xs text-slate-800 min-w-[50px] pr-1">
-                              {item.isPerKg ? `${item.weight.toFixed(1)} kg` : `${item.weight.toFixed(0)} pcs`}
+                            <div className="text-right shrink-0 font-sans font-black text-xs text-slate-805 min-w-[50px] pr-1">
+                              1 x
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                              <span className="font-mono font-bold text-xs text-slate-900 pr-1">₱{item.subtotal.toFixed(0)}</span>
+                              <span className="font-mono font-bold text-xs text-slate-900 pr-1">₱100</span>
                               <button
                                 type="button"
-                                onClick={() => setLaundryServicesList(laundryServicesList.filter((_, i) => i !== idx))}
-                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                onClick={() => setLaundryAddonRush(false)}
+                                className="p-1 text-slate-400 hover:text-rose-650 hover:bg-rose-50 rounded-lg transition-colors"
                               >
                                 <Trash2 size={13} className="text-rose-500" />
                               </button>
                             </div>
                           </div>
-                        );
-                      })
+                        )}
+
+                        {/* Detergents / Softeners Addons List */}
+                        {products
+                          .filter(p => {
+                            const cat = (p.category_name || '').toLowerCase();
+                            const isAddon = cat === 'detergents & additives' || cat === 'add on' || cat === 'add-on' || cat === 'supplies' || cat === 'detergents' || cat === 'additives';
+                            const qty = laundrySelectedAddons[p.id] || 0;
+                            return isAddon && qty > 0;
+                          })
+                          .map(addon => {
+                            const qty = laundrySelectedAddons[addon.id] || 0;
+                            const sub = addon.price * qty;
+                            return (
+                              <div key={`addon-list-${addon.id}`} className="flex items-center justify-between p-2.5 bg-blue-50/20 hover:bg-blue-50/30 border border-blue-200 rounded-2xl transition-all gap-2 shadow-xs">
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-500">
+                                    <Package size={16} />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-extrabold text-slate-800 text-[11px] truncate leading-tight">{addon.name}</p>
+                                    <p className="text-[9px] text-slate-400 font-bold mt-0.5 font-sans">₱{addon.price.toFixed(2)} / sachet</p>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0 font-sans font-black text-xs text-slate-800 min-w-[50px] pr-1">
+                                  {qty} pcs
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="font-mono font-bold text-xs text-slate-900 pr-1">₱{sub.toFixed(0)}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: 0 }))}
+                                    className="p-1 text-slate-400 hover:text-rose-655 hover:bg-rose-50 rounded-lg transition-colors"
+                                  >
+                                    <Trash2 size={13} className="text-rose-500" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-full min-h-[220px] text-slate-400 p-6 text-center">
+                      <div className="flex flex-col items-center justify-center h-full min-h-[220px] text-slate-400 p-6 text-center font-sans">
                         <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
                           <Package size={20} className="text-slate-400" />
                         </div>
@@ -1981,26 +2058,30 @@ export default function POS() {
                   <div className="pt-3 border-t border-slate-100 space-y-2.5 font-sans mt-auto flex-shrink-0">
                     <div className="flex justify-between items-center text-[10px] font-black text-slate-500 uppercase tracking-wider">
                       <span>Total Items</span>
-                      <span className="text-slate-800 font-extrabold text-xs">{laundryServicesList.length}</span>
+                      <span className="text-slate-800 font-extrabold text-xs">{totalCartItemsCount}</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                      <span>Subtotal</span>
-                      <span className="text-slate-900 font-black text-sm font-mono">₱{laundrySubtotal.toFixed(2)}</span>
+                      <span>Grand Total</span>
+                      <span className="text-slate-900 font-black text-sm font-mono font-sans">₱{laundryGrandTotal.toFixed(2)}</span>
                     </div>
 
                     {/* Bottom Buttons */}
                     <div className="flex gap-2 pt-1">
                       <button
                         type="button"
-                        onClick={() => setLaundryServicesList([])}
-                        className="w-[38%] py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5"
+                        onClick={() => {
+                          setLaundryServicesList([]);
+                          setLaundrySelectedAddons({});
+                          setLaundryAddonRush(false);
+                        }}
+                        className="w-[38%] py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 font-sans"
                       >
                         <Trash2 size={12} /> Clear All
                       </button>
                       <button
                         type="button"
                         onClick={addLaundryServiceToList}
-                        className="w-[62%] py-2 bg-white hover:bg-blue-50 border-2 border-blue-500 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
+                        className="w-[62%] py-2 bg-white hover:bg-blue-50 border-2 border-blue-500 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] font-sans"
                       >
                         <Plus size={12} /> Add Service
                       </button>

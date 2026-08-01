@@ -140,7 +140,7 @@ export default function Dashboard() {
       <div className="pl-12 lg:pl-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-3 mb-3 flex-shrink-0">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-            <Building2 className="text-slate-700" size={24} /> Executive Platform Dashboard
+            Executive Platform Dashboard
           </h1>
           <p className="text-xs text-slate-500 font-semibold">Real-time Multi-Branch Sales Aggregation & Branch Diagnostics</p>
         </div>
@@ -228,7 +228,6 @@ export default function Dashboard() {
                 </h2>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Ranking: Highest Sales (Big) to Lowest Sales (Small)</p>
               </div>
-              <span className="text-[9px] font-black uppercase text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">Live aggregated</span>
             </div>
 
             {/* Table Area */}

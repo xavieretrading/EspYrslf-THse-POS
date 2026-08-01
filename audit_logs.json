@@ -1,5 +1,19 @@
 [
   {
+    "id": "1785568363939y4muu",
+    "timestamp": "2026-08-01T07:12:43.939Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #33. Total: ₱1.00"
+  },
+  {
+    "id": "1785568247635to2kd",
+    "timestamp": "2026-08-01T07:10:47.636Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #33 on Walk-In"
+  },
+  {
     "id": "1785565926082qud65",
     "timestamp": "2026-08-01T06:32:06.082Z",
     "user": "System Administrator",

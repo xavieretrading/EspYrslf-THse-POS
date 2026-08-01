@@ -3,5 +3,26 @@
   "address": "Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City",
   "tin": "899-352-898-00000",
   "service_charge_percentage": 0,
-  "strict_item_locked": true
+  "strict_item_locked": true,
+  "last_receipt_number": 813,
+  "receipt_mappings": {
+    "1": 801,
+    "3": 802,
+    "6": 803,
+    "7": 804,
+    "8": 805,
+    "9": 806,
+    "12": 807,
+    "13": 808,
+    "14": 809,
+    "15": 810,
+    "16": 811,
+    "17": 812,
+    "18": 813,
+    "25": 796,
+    "26": 797,
+    "27": 798,
+    "28": 799,
+    "29": 800
+  }
 }

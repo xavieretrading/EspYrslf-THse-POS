@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import qz from 'qz-tray';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
-import { Search, Calendar as CalendarIcon, Filter, ExternalLink, Printer, StopCircle, RefreshCw, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus } from 'lucide-react';
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
@@ -33,6 +34,8 @@ type Order = {
   table_name?: string;
   order_type?: string;
   payment_method?: string;
+  notes?: string;
+  order_number?: number;
   items: OrderItem[];
 };
 
@@ -96,13 +99,72 @@ export function getReceiptCalculations(receipt: any, settings?: any) {
 }
 
 export default function Orders() {
+  const localUser = localStorage.getItem('resto_active_user');
+  const currentUser = localUser ? JSON.parse(localUser) : null;
+
   const navigate = useNavigate();
   const { activeBranch } = useBranch();
   const { settings } = useSettings();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<'today' | 'week' | 'month' | 'custom'>('today');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'complimentary' | 'vouchers' | 'normal'>('all');
+  const [divisionFilter, setDivisionFilter] = useState<'all' | 'coffee' | 'laundry'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'paid'>('all');
+  const [claimFilter, setClaimFilter] = useState<'all' | 'unclaimed' | 'claimed'>('all');
+
+  // Printer settings
+  const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || 'POSPrinter POS-80C');
+  const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
+  const [qzConnected, setQzConnected] = useState(false);
+  const [qzError, setQzError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!useQzTray) {
+      if (qz.websocket.isActive()) {
+        qz.websocket.disconnect().catch(err => console.error("QZ Disconnect error:", err));
+      }
+      setQzConnected(false);
+      return;
+    }
+
+    const connectQz = async () => {
+      try {
+        // Setup signature and certificate promises to enable silent, permission-free printing
+        qz.security.setCertificatePromise((resolve, reject) => {
+          fetch('/api/qz/certificate')
+            .then(res => res.text())
+            .then(resolve)
+            .catch(reject);
+        });
+
+        qz.security.setSignaturePromise((toSign) => {
+          return (resolve, reject) => {
+            fetch('/api/qz/sign', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ request: toSign })
+            })
+              .then(res => res.text())
+              .then(resolve)
+              .catch(reject);
+          };
+        });
+
+        if (!qz.websocket.isActive()) {
+          await qz.websocket.connect();
+        }
+        setQzConnected(true);
+        setQzError(null);
+      } catch (err: any) {
+        console.error("QZ connection failed:", err);
+        setQzConnected(false);
+        setQzError(err.message || "Could not connect to QZ Tray. Make sure it is running.");
+      }
+    };
+
+    connectQz();
+  }, [useQzTray]);
+
+  const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
 
   // Custom Date
   const [startDate, setStartDate] = useState('');
@@ -140,19 +202,41 @@ export default function Orders() {
         // Status Filter
         if (statusFilter !== 'all' && order.status !== statusFilter) return false;
 
-        // Type Filter
-        if (typeFilter === 'complimentary') {
-          return order.items.some(i => i.is_complimentary);
+        // Claim Filter (Unclaimed / Claimed)
+        if (claimFilter !== 'all') {
+          let isLaundry = false;
+          let isClaimed = false;
+          if (order.notes && order.notes.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(order.notes);
+              if (parsed.is_laundry) {
+                isLaundry = true;
+                isClaimed = !!parsed.is_claimed;
+              }
+            } catch (e) { }
+          }
+
+          if (claimFilter === 'unclaimed') {
+            if (!isLaundry || isClaimed) return false;
+          } else if (claimFilter === 'claimed') {
+            if (!isLaundry || !isClaimed) return false;
+          }
         }
-        if (typeFilter === 'vouchers') {
-          const isVoucherPayment = order.payment_method?.toLowerCase() === 'voucher';
-          const hasVoucherItem = order.items.some(i => i.notes?.includes('(Voucher)'));
-          return isVoucherPayment || hasVoucherItem;
-        }
-        if (typeFilter === 'normal') {
-          const isVoucher = (order.payment_method?.toLowerCase() === 'voucher') || order.items.some(i => i.notes?.includes('(Voucher)'));
-          const isComplimentary = order.items.some(i => i.is_complimentary);
-          return !isVoucher && !isComplimentary;
+
+        // Division Filter
+        if (divisionFilter !== 'all') {
+          let isLaundry = false;
+          if (order.notes && order.notes.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(order.notes);
+              if (parsed.is_laundry) {
+                isLaundry = true;
+              }
+            } catch (e) { }
+          }
+
+          if (divisionFilter === 'laundry' && !isLaundry) return false;
+          if (divisionFilter === 'coffee' && isLaundry) return false;
         }
 
         return true;
@@ -168,7 +252,7 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, [activeBranch, filter, startDate, endDate, typeFilter, statusFilter]);
+  }, [activeBranch, filter, startDate, endDate, divisionFilter, statusFilter, claimFilter]);
 
   const handleChangeTable = async (newTableId: number) => {
     if (!selectedOrder) return;
@@ -188,7 +272,51 @@ export default function Orders() {
     }
   };
 
+  const handleToggleClaimStatus = async (order: Order, parsedNotes: any) => {
+    const newClaimed = !parsedNotes.is_claimed;
+    const actionText = newClaimed ? 'mark this order as claimed (picked up)?' : 'revert this order to unclaimed (still in shop)?';
+    const isConfirm = await swalConfirm(`Are you sure you want to ${actionText}`);
+    if (!isConfirm) return;
+
+    const updatedNotesObj = {
+      ...parsedNotes,
+      is_claimed: newClaimed,
+      claimed_at: newClaimed ? new Date().toISOString() : null
+    };
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}/notes`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: JSON.stringify(updatedNotesObj) })
+      });
+
+      if (res.ok) {
+        // Refresh local orders list
+        fetchOrders();
+        // Update selected order details on screen
+        setSelectedOrder(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            notes: JSON.stringify(updatedNotesObj)
+          };
+        });
+        swalAlert('Success', `Order marked as ${newClaimed ? 'claimed' : 'unclaimed'}!`, 'success');
+      } else {
+        swalAlert('Error', 'Failed to update claim status.', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      swalAlert('Error', 'Error updating claim status.', 'error');
+    }
+  };
+
   const handleVoid = async (id: number) => {
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+      swalAlert('Permission Denied', 'Only administrators or managers are allowed to void orders.', 'error');
+      return;
+    }
     const isConfirm = await swalConfirm('Are you sure you want to VOID this order? This action cannot be undone.');
     if (!isConfirm) return;
 
@@ -199,9 +327,7 @@ export default function Orders() {
     });
 
     if (res.ok) {
-      const localUser = localStorage.getItem('resto_active_user');
-      const activeUser = localUser ? JSON.parse(localUser) : null;
-      logActivity(activeUser?.full_name || activeUser?.username || 'Unknown', 'Void Order', `Voided Order #${id}`);
+      logActivity(currentUser?.full_name || currentUser?.username || 'Unknown', 'Void Order', `Voided Order #${id}`);
 
       swalAlert('Success', "Order successfully voided!", 'success');
       fetchOrders();
@@ -212,6 +338,10 @@ export default function Orders() {
   };
 
   const handleRefund = async (id: number) => {
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+      swalAlert('Permission Denied', 'Only administrators or managers are allowed to refund orders.', 'error');
+      return;
+    }
     const isConfirm = await swalConfirm('Are you sure you want to REFUND this paid order? Inventory will be returned.');
     if (!isConfirm) return;
 
@@ -222,9 +352,7 @@ export default function Orders() {
     });
 
     if (res.ok) {
-      const localUser = localStorage.getItem('resto_active_user');
-      const activeUser = localUser ? JSON.parse(localUser) : null;
-      logActivity(activeUser?.full_name || activeUser?.username || 'Unknown', 'Refund Order', `Refunded Order #${id}`);
+      logActivity(currentUser?.full_name || currentUser?.username || 'Unknown', 'Refund Order', `Refunded Order #${id}`);
 
       swalAlert('Success', "Order successfully refunded!", 'success');
       fetchOrders();
@@ -319,8 +447,172 @@ export default function Orders() {
         fetchOrders();
       } catch (err) { }
     }
-    window.print();
-    setReceiptData(null);
+
+    if (useQzTray) {
+      try {
+        if (!qz.websocket.isActive()) {
+          await qz.websocket.connect();
+        }
+        const config = qz.configs.create(qzPrinterName);
+        const element = document.querySelector('.receipt-ticket-content');
+        if (!element) {
+          swalAlert('Print Error', 'Could not locate the receipt layout on screen.', 'error');
+          return;
+        }
+
+        const printStyles = `
+          html, body { 
+            margin: 0; 
+            padding: 0;
+            background-color: white !important;
+            color: black !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+          }
+          .receipt-ticket-content { 
+            width: 80mm !important; 
+            max-width: 80mm !important; 
+            margin: 0 auto !important; 
+            padding: 6px !important; 
+            background: white !important;
+            box-sizing: border-box !important;
+          }
+          .receipt-ticket-content * {
+            font-size: 9.5pt !important; 
+            line-height: 1.2 !important; 
+            color: black !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: 400 !important;
+          }
+          .receipt-ticket-content p, .receipt-ticket-content div, .receipt-ticket-content span {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .receipt-ticket-content .row-item {
+            margin-top: 2.5px !important;
+            margin-bottom: 2.5px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+          }
+          .receipt-ticket-content .section-block {
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
+          }
+          .receipt-ticket-content .section-header {
+            font-size: 10.5pt !important;
+            font-weight: 700 !important;
+            border-top: 1px dashed black !important;
+            border-bottom: 1px dashed black !important;
+            padding-top: 3px !important;
+            padding-bottom: 3px !important;
+            margin-top: 6px !important;
+            margin-bottom: 6px !important;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          .receipt-ticket-content .receipt-logo {
+            max-width: 280px !important;
+            max-height: 85px !important;
+            height: auto !important;
+            display: block !important;
+            margin: 0 auto 4px auto !important;
+            object-fit: contain !important;
+          }
+          .receipt-ticket-content .company-name {
+            font-size: 11.5pt !important;
+            font-weight: 700 !important;
+            display: block;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 2px !important;
+          }
+          .receipt-ticket-content .receipt-title {
+            font-size: 10.5pt !important;
+            font-weight: 700 !important;
+            display: block;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 2px !important;
+          }
+          .receipt-ticket-content .print-total,
+          .receipt-ticket-content .print-total * {
+            font-size: 13pt !important;
+            font-weight: 700 !important;
+            line-height: 1.4 !important;
+          }
+          .receipt-ticket-content .print-change,
+          .receipt-ticket-content .print-change * {
+            font-size: 11.5pt !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+          }
+          .receipt-ticket-content .font-bold,
+          .receipt-ticket-content .font-black,
+          .receipt-ticket-content .font-semibold,
+          .receipt-ticket-content .print-bold-text {
+            font-weight: 700 !important;
+          }
+          .text-center {
+            text-align: center !important;
+          }
+          .text-right {
+            text-align: right !important;
+          }
+          .border-t {
+            border-top: 1px dashed black !important;
+          }
+          .border-b {
+            border-bottom: 1px solid black !important;
+          }
+          .border-y {
+            border-top: 1px dashed black !important;
+            border-bottom: 1px dashed black !important;
+          }
+          .italic {
+            font-style: italic !important;
+          }
+          .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        `;
+
+        const printData = [
+          {
+            type: 'html',
+            format: 'plain',
+            data: `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <style>${printStyles}</style>
+                </head>
+                <body>
+                  <div class="receipt-ticket-content">
+                    ${element.innerHTML}
+                  </div>
+                </body>
+              </html>
+            `
+          }
+        ];
+
+        await qz.print(config, printData);
+        swalAlert('Success', 'Receipt printed successfully via QZ Tray.', 'success');
+        setReceiptData(null);
+      } catch (err: any) {
+        console.error("QZ print failed:", err);
+        swalAlert('Print Error', err.message || 'Failed to print via QZ Tray. Make sure it is running and your printer name is correct.', 'error');
+      }
+    } else {
+      window.print();
+      setReceiptData(null);
+    }
   };
 
   return (
@@ -344,10 +636,9 @@ export default function Orders() {
             </div>
 
             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-              <button onClick={() => setTypeFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", typeFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Types</button>
-              <button onClick={() => setTypeFilter('normal')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", typeFilter === 'normal' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Normal</button>
-              <button onClick={() => setTypeFilter('complimentary')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", typeFilter === 'complimentary' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Complimentary</button>
-              <button onClick={() => setTypeFilter('vouchers')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", typeFilter === 'vouchers' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Vouchers</button>
+              <button onClick={() => setDivisionFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Orders</button>
+              <button onClick={() => setDivisionFilter('coffee')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'coffee' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Cafe Only</button>
+              <button onClick={() => setDivisionFilter('laundry')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'laundry' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Laundry Only</button>
             </div>
 
             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
@@ -355,6 +646,14 @@ export default function Orders() {
               <button onClick={() => setStatusFilter('open')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", statusFilter === 'open' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Open Bill</button>
               <button onClick={() => setStatusFilter('paid')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", statusFilter === 'paid' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Paid</button>
             </div>
+
+            {isLaundryBranch && (
+              <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <button onClick={() => setClaimFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", claimFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Claim Status</button>
+                <button onClick={() => setClaimFilter('unclaimed')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", claimFilter === 'unclaimed' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Unclaimed</button>
+                <button onClick={() => setClaimFilter('claimed')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", claimFilter === 'claimed' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Claimed</button>
+              </div>
+            )}
           </div>
 
           {filter === 'custom' && (
@@ -386,7 +685,7 @@ export default function Orders() {
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <div className="flex flex-col">
-                      <span className="font-bold text-base text-slate-900">Order #{order.id.toString().padStart(6, '0')}</span>
+                      <span className="font-bold text-base text-slate-900">Order #{(order.order_number || order.id).toString().padStart(6, '0')}</span>
                       {order.receipt_number !== undefined && order.receipt_number !== null ? (
                         <span className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">Invoice #{order.receipt_number.toString().padStart(6, '0')}</span>
                       ) : (
@@ -402,6 +701,45 @@ export default function Orders() {
                     )}>
                       {order.status}
                     </span>
+                    {(() => {
+                      let isLaundry = false;
+                      if (order.notes && order.notes.trim().startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(order.notes);
+                          if (parsed.is_laundry) isLaundry = true;
+                        } catch (e) { }
+                      }
+                      return (
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
+                          isLaundry
+                            ? "bg-purple-50 border-purple-200 text-purple-700"
+                            : "bg-amber-50 border-amber-200 text-amber-805 font-semibold"
+                        )}>
+                          {isLaundry ? "Laundry" : "Cafe"}
+                        </span>
+                      );
+                    })()}
+                    {(() => {
+                      if (order.notes && order.notes.trim().startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(order.notes);
+                          if (parsed.is_laundry) {
+                            return (
+                              <span className={cn(
+                                "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
+                                parsed.is_claimed
+                                  ? "bg-teal-50 border-teal-200 text-teal-700"
+                                  : "bg-amber-50 border-amber-200 text-amber-700"
+                              )}>
+                                {parsed.is_claimed ? "Claimed" : "Unclaimed"}
+                              </span>
+                            );
+                          }
+                        } catch (e) { }
+                      }
+                      return null;
+                    })()}
                     {order.items.some(i => i.is_complimentary) && (
                       <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase">
                         Complimentary
@@ -422,9 +760,26 @@ export default function Orders() {
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-500 flex items-center gap-4">
-                    <span>{new Date(order.created_at).toLocaleString()}</span>
-                    {order.payment_method && <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>{order.payment_method.toUpperCase()}</span>}
+                  <div className="text-sm text-slate-500 flex items-center gap-2 mt-1">
+                    <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>•</span>
+                    <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)} Items</span>
+                    {(() => {
+                      if (order.notes && order.notes.trim().startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(order.notes);
+                          if (parsed.is_laundry && parsed.customer_name) {
+                            return (
+                              <>
+                                <span>•</span>
+                                <span className="font-semibold text-slate-700">{parsed.customer_name}</span>
+                              </>
+                            );
+                          }
+                        } catch (e) { }
+                      }
+                      return null;
+                    })()}
                   </div>
                 </div>
                 <div className="text-right">
@@ -455,7 +810,7 @@ export default function Orders() {
           <>
             <div className="p-6 border-b border-slate-100">
               <div className="mb-2">
-                <h2 className="text-xl font-bold text-slate-900">Order #{selectedOrder.id.toString().padStart(6, '0')}</h2>
+                <h2 className="text-xl font-bold text-slate-900">Order #{(selectedOrder.order_number || selectedOrder.id).toString().padStart(6, '0')}</h2>
                 {selectedOrder.receipt_number !== undefined && selectedOrder.receipt_number !== null ? (
                   <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest mt-1">Invoice #{selectedOrder.receipt_number.toString().padStart(6, '0')}</p>
                 ) : (
@@ -463,6 +818,91 @@ export default function Orders() {
                 )}
               </div>
               <p className="text-sm text-slate-500 mb-4">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+
+              {(() => {
+                if (selectedOrder.notes && selectedOrder.notes.trim().startsWith('{')) {
+                  try {
+                    const parsed = JSON.parse(selectedOrder.notes);
+                    if (parsed.is_laundry) {
+                      const createdDate = new Date(selectedOrder.created_at);
+                      const daysElapsed = Math.floor((new Date().getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+                      const isClaimed = !!parsed.is_claimed;
+
+                      let storageStatusText = "";
+                      let storageStatusColorClass = "";
+                      let storageFee = 0;
+
+                      if (isClaimed) {
+                        storageStatusText = `Claimed on ${parsed.claimed_at ? new Date(parsed.claimed_at).toLocaleDateString() : 'N/A'}`;
+                        storageStatusColorClass = "bg-teal-50 text-teal-700 border-teal-200";
+                      } else {
+                        if (daysElapsed >= 60) {
+                          storageStatusText = `Subject to disposal (Unclaimed for ${daysElapsed} days)`;
+                          storageStatusColorClass = "bg-rose-100 text-rose-800 border-rose-300 font-extrabold";
+                          storageFee = (daysElapsed - 30) * 500;
+                        } else if (daysElapsed > 30) {
+                          storageFee = (daysElapsed - 30) * 500;
+                          storageStatusText = `Storage Fee: ₱${storageFee} (${daysElapsed - 30} days overdue)`;
+                          storageStatusColorClass = "bg-amber-100 text-amber-800 border-amber-300 font-bold";
+                        } else {
+                          storageStatusText = `Free Storage (${30 - daysElapsed} days left)`;
+                          storageStatusColorClass = "bg-blue-50 text-blue-700 border-blue-200";
+                        }
+                      }
+
+                      return (
+                        <div className="mb-4 p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Laundry Ticket Details</span>
+                            <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-bold border", storageStatusColorClass)}>
+                              {isClaimed ? "Claimed" : "Unclaimed"}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <p className="text-slate-400">Customer</p>
+                              <p className="font-bold text-slate-800">{parsed.customer_name || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Phone</p>
+                              <p className="font-bold text-slate-800">{parsed.phone || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400">Target Pickup</p>
+                              <p className="font-semibold text-slate-800">{parsed.pickup_date || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-400 font-semibold text-slate-600">Storage Period</p>
+                              <p className="font-semibold text-slate-800">{daysElapsed} days in shop</p>
+                            </div>
+                          </div>
+
+                          <div className={cn("p-2 rounded-xl text-center text-xs font-semibold border mt-2", storageStatusColorClass)}>
+                            {storageStatusText}
+                            {storageFee > 0 && !isClaimed && (
+                              <p className="text-[10px] font-medium mt-0.5">Storage penalty: ₱500/day after day 30</p>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() => handleToggleClaimStatus(selectedOrder, parsed)}
+                            className={cn(
+                              "w-full py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-2 border flex items-center justify-center gap-1.5",
+                              isClaimed
+                                ? "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                                : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-sm shadow-emerald-600/10"
+                            )}
+                          >
+                            {isClaimed ? "Mark as Unclaimed" : "Mark as Picked Up / Claimed"}
+                          </button>
+                        </div>
+                      );
+                    }
+                  } catch (e) { }
+                }
+                return null;
+              })()}
 
               <div className="flex gap-2">
                 {selectedOrder.status === 'open' && (
@@ -493,14 +933,14 @@ export default function Orders() {
                   </button>
                 )}
 
-                {(selectedOrder.status === 'open' || selectedOrder.status === 'paid') && (
+                {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && (selectedOrder.status === 'open' || selectedOrder.status === 'paid') && (
                   <button onClick={() => handleVoid(selectedOrder.id)} className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-bold flex flex-col items-center justify-center transition-colors">
                     <StopCircle size={18} className="mb-1" />
                     Void
                   </button>
                 )}
 
-                {selectedOrder.status === 'paid' && (
+                {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && selectedOrder.status === 'paid' && (
                   <button onClick={() => handleRefund(selectedOrder.id)} className="flex-1 py-2 bg-purple-50 hover:bg-purple-100 text-purple-600 rounded-lg text-sm font-bold flex flex-col items-center justify-center transition-colors">
                     <HandCoins size={18} className="mb-1" />
                     Refund
@@ -922,16 +1362,16 @@ export default function Orders() {
                   if (parsed.is_laundry) {
                     laundryDetails = parsed;
                   }
-                } catch (e) {}
+                } catch (e) { }
               }
 
               if (laundryDetails) {
                 return (
-                  <div className="relative print:relative text-black">
+                  <div className="relative print:relative text-black receipt-ticket-content">
                     {receiptData.status === 'voided' && (
                       <div className="void-watermark select-none pointer-events-none">VOID</div>
                     )}
-                    
+
                     {/* Company Details */}
                     <div className="text-center section-block">
                       <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
@@ -1054,7 +1494,7 @@ export default function Orders() {
               }
 
               return (
-                <div className="relative print:relative">
+                <div className="relative print:relative receipt-ticket-content">
                   {/* VOID Watermark overlay */}
                   {receiptData.status === 'voided' && (
                     <div className="void-watermark select-none pointer-events-none">VOID</div>
@@ -1091,7 +1531,7 @@ export default function Orders() {
                       <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
                     </div>
                     <div className="flex justify-between row-item">
-                      <span>Order: #{receiptData.id.toString().padStart(6, '0')}</span>
+                      <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
                     </div>
                     <div className="flex justify-between row-item">
                       <span>Cashier: {receiptData.cashier_name || 'Staff'}</span>
@@ -1187,7 +1627,54 @@ export default function Orders() {
               );
             })()}
 
-            <div className="mt-8 flex gap-3 print:hidden">
+            {/* QZ Tray Printer Configuration Panel */}
+            <div className="mt-4 pt-3 border-t border-slate-100 print:hidden text-left font-sans text-xs flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-slate-700">Printer Mode:</span>
+                <select
+                  value={useQzTray ? 'qz' : 'browser'}
+                  onChange={e => {
+                    const checked = e.target.value === 'qz';
+                    setUseQzTray(checked);
+                    localStorage.setItem('qz_enabled', String(checked));
+                  }}
+                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-blue-500"
+                >
+                  <option value="browser">Browser Print dialog</option>
+                  <option value="qz">Direct print (QZ Tray)</option>
+                </select>
+              </div>
+
+              {useQzTray && (
+                <div className="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-650">Printer Name:</span>
+                    <input
+                      type="text"
+                      value={qzPrinterName}
+                      onChange={e => {
+                        setQzPrinterName(e.target.value);
+                        localStorage.setItem('qz_printer_name', e.target.value);
+                      }}
+                      placeholder="e.g. POS-80"
+                      className="w-40 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 text-right"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500">Connection Status:</span>
+                    {qzConnected ? (
+                      <span className="text-emerald-650 font-bold flex items-center gap-1">🟢 Connected</span>
+                    ) : qzError ? (
+                      <span className="text-rose-500 font-bold cursor-pointer" title={qzError}>🔴 Disconnected</span>
+                    ) : (
+                      <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-3 print:hidden">
               <button
                 onClick={() => setReceiptData(null)}
                 className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold transition-colors"

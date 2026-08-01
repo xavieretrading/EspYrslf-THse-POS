@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check } from 'lucide-react';
+import qz from 'qz-tray';
+import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../App';
 import { useBranch } from '../BranchContext';
@@ -9,22 +10,8 @@ import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import Swal from 'sweetalert2';
 
-const getProductImage = (name: string) => {
-  const normalized = name.toLowerCase();
-  if (normalized.includes('espresso')) return 'https://images.unsplash.com/photo-1510707577719-094119f7c366?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('americano')) return 'https://images.unsplash.com/photo-1551030173-122aabc4489c?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('latte') && normalized.includes('matcha')) return 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('latte') && normalized.includes('iced')) return 'https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('latte')) return 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('cappuccino')) return 'https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('macchiato')) return 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('frappe') || normalized.includes('blend')) return 'https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('peach') || normalized.includes('tea')) return 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('earl grey') || normalized.includes('brew')) return 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('croissant')) return 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('cookie')) return 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=300&q=80';
-  if (normalized.includes('cheesecake') || normalized.includes('cake')) return 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=300&q=80';
-  return 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=300&q=80';
+export const getProductImage = (name: string) => {
+  return '';
 };
 
 type Product = { id: number; name: string; price: number; category_name: string; stock: number };
@@ -125,7 +112,7 @@ export default function POS() {
   const [laundryPhone, setLaundryPhone] = useState('');
   const [selectedLaundryService, setSelectedLaundryService] = useState<any>(null);
   const [laundryWeight, setLaundryWeight] = useState('');
-  
+
   // Washing Preferences
   const [laundryPrefWarmWater, setLaundryPrefWarmWater] = useState(false);
   const [laundryPrefColdWater, setLaundryPrefColdWater] = useState(false);
@@ -135,7 +122,7 @@ export default function POS() {
 
   // Addons
   const [laundryAddonRush, setLaundryAddonRush] = useState(false);
-  const [laundrySelectedAddons, setLaundrySelectedAddons] = useState<Record<number, boolean>>({});
+  const [laundrySelectedAddons, setLaundrySelectedAddons] = useState<Record<number, number>>({});
   const [laundryPrefCustom, setLaundryPrefCustom] = useState('');
 
   // Estimated Pickup
@@ -146,9 +133,72 @@ export default function POS() {
   });
   const [laundryPickupTime, setLaundryPickupTime] = useState('16:00');
 
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    'Everyday Wear (Wash, Dry & Fold)': true,
+    'Everyday Wear (Wash Only)': true,
+    'Pressing & Ironing': true,
+    'Dry Clean': true,
+    'Dry Clean (Minimum of 2 weeks and Maximum of 1 month)': true,
+    'Special Items & Dry Clean': true
+  });
+
+  // Printer settings
+  const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || 'POSPrinter POS-80C');
+  const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
+  const [qzConnected, setQzConnected] = useState(false);
+  const [qzError, setQzError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!useQzTray) {
+      if (qz.websocket.isActive()) {
+        qz.websocket.disconnect().catch(err => console.error("QZ Disconnect error:", err));
+      }
+      setQzConnected(false);
+      return;
+    }
+
+    const connectQz = async () => {
+      try {
+        // Setup signature and certificate promises to enable silent, permission-free printing
+        qz.security.setCertificatePromise((resolve, reject) => {
+          fetch('/api/qz/certificate')
+            .then(res => res.text())
+            .then(resolve)
+            .catch(reject);
+        });
+
+        qz.security.setSignaturePromise((toSign) => {
+          return (resolve, reject) => {
+            fetch('/api/qz/sign', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ request: toSign })
+            })
+              .then(res => res.text())
+              .then(resolve)
+              .catch(reject);
+          };
+        });
+
+        if (!qz.websocket.isActive()) {
+          await qz.websocket.connect();
+        }
+        setQzConnected(true);
+        setQzError(null);
+      } catch (err: any) {
+        console.error("QZ connection failed:", err);
+        setQzConnected(false);
+        setQzError(err.message || "Could not connect to QZ Tray. Make sure it is running.");
+      }
+    };
+
+    connectQz();
+  }, [useQzTray]);
+
   // Payment
   const [laundryPaymentMethod, setLaundryPaymentMethod] = useState<'cash' | 'gcash' | 'card'>('cash');
   const [laundryCashReceived, setLaundryCashReceived] = useState('');
+  const [laundryGcashReference, setLaundryGcashReference] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
@@ -162,6 +212,20 @@ export default function POS() {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [storeCreditQuery, setStoreCreditQuery] = useState('');
   const [storeCreditsList, setStoreCreditsList] = useState<any[]>([]);
+
+  // Beverage Customization Modal States
+  const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
+  const [customSize, setCustomSize] = useState<'Small (12 oz)' | 'Medium (16 oz)' | 'Large (22 oz)'>('Medium (16 oz)');
+  const [customSugar, setCustomSugar] = useState<'0%' | '25%' | '50%' | '75%' | '100%'>('100%');
+  const [customIce, setCustomIce] = useState<'No Ice' | '25%' | '50%' | '75%' | '100%'>('100%');
+  const [customEspresso, setCustomEspresso] = useState<'Regular' | '+1 Shot' | '+2 Shots'>('Regular');
+  const [customMilk, setCustomMilk] = useState<'Whole Milk' | 'Oat Milk' | 'Soy Milk' | 'Almond Milk'>('Whole Milk');
+  const [customAddons, setCustomAddons] = useState<string[]>([]);
+  const [customInstructions, setCustomInstructions] = useState('');
+  const [laundryServiceSearch, setLaundryServiceSearch] = useState('');
+  const [isLaundryDropdownOpen, setIsLaundryDropdownOpen] = useState(false);
+  const [laundryServicesList, setLaundryServicesList] = useState<any[]>([]);
+  const [laundryIsWalkIn, setLaundryIsWalkIn] = useState(false);
   const [selectedStoreCredit, setSelectedStoreCredit] = useState<any>(null);
   const [showComputationDetails, setShowComputationDetails] = useState(false);
   const [expandedCartItemId, setExpandedCartItemId] = useState<string | number | null>(null);
@@ -405,13 +469,14 @@ export default function POS() {
   }, [activeBranch, location.search]);
 
   const filteredProducts = products.filter(p => {
+    const isSellable = (p as any).is_sellable !== 0;
     const matchesDivision = !isLaundryBranch || p.division === selectedDivision;
     const matchesCategory = selectedCategory === 'All' || p.category_name === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesDivision && matchesCategory && matchesSearch;
+    return isSellable && matchesDivision && matchesCategory && matchesSearch;
   });
 
-  const addToCart = (product: Product) => {
+  const addToCart = async (product: Product) => {
     if (settings?.strict_item_locked) {
       if (product.stock <= 0) {
         swalAlert('Out of Stock', `Cannot add ${product.name} to cart because it is out of stock (Strict Stock Lock Enabled)`, 'error');
@@ -426,16 +491,37 @@ export default function POS() {
       }
     }
 
-    setCart(prev => {
-      // Find matching item that hasn't been saved yet
-      const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved);
-      if (existingUnsavedIndex >= 0) {
-        const newCart = [...prev];
-        newCart[existingUnsavedIndex].quantity += 1;
-        return newCart;
-      }
-      return [...prev, { ...product, quantity: 1, notes: '', _isSaved: false }];
-    });
+    const isBeverage = !isLaundryBranch && (
+      product.category_name.toLowerCase().includes('coffee') ||
+      product.category_name.toLowerCase().includes('tea') ||
+      product.category_name.toLowerCase().includes('blend') ||
+      product.category_name.toLowerCase().includes('beverage')
+    );
+
+    if (isBeverage) {
+      setCustomSize('Medium (16 oz)');
+      setCustomSugar('100%');
+      setCustomIce('100%');
+      setCustomEspresso('Regular');
+      setCustomMilk('Whole Milk');
+      setCustomAddons([]);
+      setCustomInstructions('');
+      setCustomizingProduct(product);
+    } else {
+      setCart(prev => {
+        // Find matching item that hasn't been saved yet and has no custom notes
+        const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved && item.notes === '');
+        if (existingUnsavedIndex >= 0) {
+          const newCart = [...prev];
+          newCart[existingUnsavedIndex] = {
+            ...newCart[existingUnsavedIndex],
+            quantity: newCart[existingUnsavedIndex].quantity + 1
+          };
+          return newCart;
+        }
+        return [...prev, { ...product, quantity: 1, notes: '', _isSaved: false }];
+      });
+    }
   };
 
   const updateQuantity = (id: number, delta: number) => {
@@ -555,25 +641,42 @@ export default function POS() {
     ...products.filter(p => {
       const div = p.division?.toLowerCase() || '';
       const cat = p.category_name?.toLowerCase() || '';
+      const isAddonCat = ['detergents & additives', 'add on', 'add-on', 'supplies', 'detergents', 'additives'].includes(cat);
       return (div === 'laundry' || cat.includes('laundry') || cat.includes('clean') || cat.includes('dry') || cat.includes('service'))
-        && cat !== 'detergents & additives';
+        && !isAddonCat;
     }),
     ...customServices
   ];
 
   const dynamicAddonTotal = (laundryAddonRush ? 100 : 0) + Object.keys(laundrySelectedAddons).reduce((sum, idStr) => {
     const id = parseInt(idStr);
-    if (laundrySelectedAddons[id]) {
+    const qty = laundrySelectedAddons[id] || 0;
+    if (qty > 0) {
       const addon = products.find(p => p.id === id);
-      return sum + (addon ? addon.price : 0);
+      return sum + (addon ? addon.price * qty : 0);
     }
     return sum;
   }, 0);
 
-  const isLaundryPerKg = selectedLaundryService?.name?.toLowerCase().includes('per kg') || selectedLaundryService?.name?.toLowerCase().includes('per kilo') || selectedLaundryService?.name?.toLowerCase().includes('ironing service');
-  const laundrySubtotal = isLaundryPerKg 
-    ? ((parseFloat(laundryWeight) || 0) * (selectedLaundryService ? selectedLaundryService.price : 70))
-    : (selectedLaundryService ? selectedLaundryService.price : 0);
+  const laundrySubtotal = laundryServicesList.reduce((sum, item) => sum + item.subtotal, 0);
+  const laundryTotalWeight = laundryServicesList.reduce((sum, item) => sum + item.weight, 0);
+
+  const currentSelectionSubtotal = (() => {
+    if (!selectedLaundryService) return 0;
+    const w = parseFloat(laundryWeight) || 0;
+    if (w > 0) {
+      const isPromo5Plus2 = selectedLaundryService.name?.toLowerCase().includes('5+2') ||
+        selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
+        selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
+        selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
+      if (isPromo5Plus2) {
+        const billedWeight = w <= 7 ? 5 : (w - 2);
+        return billedWeight * selectedLaundryService.price;
+      }
+      return w * selectedLaundryService.price;
+    }
+    return selectedLaundryService.price;
+  })();
 
   const laundryGrandTotal = laundrySubtotal + dynamicAddonTotal;
 
@@ -597,13 +700,36 @@ export default function POS() {
     }
   };
 
+  const refreshProducts = async () => {
+    if (!activeBranch) return;
+    try {
+      const res = await fetch(`/api/products?branch_id=${activeBranch.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
+    } catch (e) {
+      console.error('Error refreshing products:', e);
+    }
+  };
+
   const handleAddCustomServicePrompt = async () => {
+    const laundryCategories = categories.filter(c => c.division === 'laundry');
+    if (laundryCategories.length === 0) {
+      swalAlert('No Categories', 'Please create a laundry category in Inventory first.', 'warning');
+      return;
+    }
+
     const { value: formValues } = await Swal.fire({
       title: 'Add Custom Service',
       html:
         '<div style="text-align: left; font-family: sans-serif; font-size: 13px;">' +
         '<label style="font-weight: bold; margin-bottom: 4px; display: block;">Service Name</label>' +
         '<input id="swal-input-name" class="swal2-input" placeholder="e.g. Dry Clean Special" style="margin-top:0; margin-bottom: 12px; width: 85%; font-size: 14px;">' +
+        '<label style="font-weight: bold; margin-bottom: 4px; display: block;">Category</label>' +
+        `<select id="swal-input-category" class="swal2-input" style="margin-top:0; margin-bottom: 12px; width: 85%; font-size: 14px; height: 40px; border-radius: 6px; border: 1px solid #d9d9d9; padding: 0 10px;">` +
+        laundryCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('') +
+        '</select>' +
         '<label style="font-weight: bold; margin-bottom: 4px; display: block;">Price per KG / Rate</label>' +
         '<input id="swal-input-price" type="number" class="swal2-input" placeholder="e.g. 150" style="margin-top:0; width: 85%; font-size: 14px;">' +
         '</div>',
@@ -613,38 +739,123 @@ export default function POS() {
       confirmButtonColor: '#3b82f6',
       preConfirm: () => {
         const name = (document.getElementById('swal-input-name') as HTMLInputElement).value;
+        const categoryId = parseInt((document.getElementById('swal-input-category') as HTMLSelectElement).value);
         const price = parseFloat((document.getElementById('swal-input-price') as HTMLInputElement).value);
         if (!name.trim()) {
           Swal.showValidationMessage('Please enter a service name');
+          return false;
+        }
+        if (isNaN(categoryId) || categoryId <= 0) {
+          Swal.showValidationMessage('Please select a laundry category');
           return false;
         }
         if (isNaN(price) || price <= 0) {
           Swal.showValidationMessage('Please enter a valid price');
           return false;
         }
-        return { name, price };
+        return { name, categoryId, price };
       }
     });
 
     if (formValues) {
-      const newService = {
-        id: Date.now(),
-        name: formValues.name,
-        price: formValues.price,
-        division: 'laundry'
-      };
-      setCustomServices(prev => [...prev, newService]);
-      setSelectedLaundryService(newService);
-      swalAlert('Service Added', `"${formValues.name}" is now active at ₱${formValues.price.toFixed(2)}/kg`, 'success');
+      try {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            branch_id: activeBranch?.id,
+            name: formValues.name,
+            price: formValues.price,
+            cost: 0,
+            category_id: formValues.categoryId,
+            stock: 9999
+          })
+        });
+
+        if (res.ok) {
+          const createdProduct = await res.json();
+          // Reload products from server so it reflects in the list permanently
+          await refreshProducts();
+          // Set as selected service
+          setSelectedLaundryService(createdProduct);
+          swalAlert('Service Added', `"${formValues.name}" has been saved to the database.`, 'success');
+        } else {
+          const err = await res.json();
+          swalAlert('Error', err.error || 'Failed to save service to database', 'error');
+        }
+      } catch (err: any) {
+        swalAlert('Error', err.message || 'Network error', 'error');
+      }
     } else {
       setSelectedLaundryService(null);
     }
   };
+  const addLaundryServiceToList = () => {
+    if (!selectedLaundryService) {
+      swalAlert('Missing Service Selection', 'Please select a laundry service first.', 'warning');
+      return;
+    }
+    const weightVal = parseFloat(laundryWeight);
+    if (isNaN(weightVal) || weightVal <= 0) {
+      swalAlert('Invalid Qty/Weight', 'Please enter a valid weight or quantity first.', 'warning');
+      return;
+    }
 
+    const isPerKg = (selectedLaundryService.unit || '').toLowerCase() === 'kg' ||
+      (selectedLaundryService.unit || '').toLowerCase() === 'kilo' ||
+      selectedLaundryService.name?.toLowerCase().includes('/kg') ||
+      selectedLaundryService.name?.toLowerCase().includes('/kilo') ||
+      selectedLaundryService.name?.toLowerCase().includes('per kg') ||
+      selectedLaundryService.name?.toLowerCase().includes('per kilo') ||
+      selectedLaundryService.name?.toLowerCase().includes('kilo') ||
+      ((selectedLaundryService.category_name || '').toLowerCase().includes('everyday wear') &&
+        !(selectedLaundryService.category_name || '').toLowerCase().includes('wash only'));
+    const isPromo5Plus2 = selectedLaundryService.name?.toLowerCase().includes('5+2') ||
+      selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
+      selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
+      selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
+
+    const existingIdx = laundryServicesList.findIndex(item => item.id === selectedLaundryService.id);
+    if (existingIdx !== -1) {
+      const updated = [...laundryServicesList];
+      const newWeight = updated[existingIdx].weight + weightVal;
+      const isPromo = updated[existingIdx].isPromo5Plus2;
+      const newBilled = isPromo ? (newWeight <= 7 ? 5 : newWeight - 2) : newWeight;
+      updated[existingIdx].weight = newWeight;
+      updated[existingIdx].billedWeight = newBilled;
+      updated[existingIdx].freeKilos = isPromo ? (newWeight - newBilled) : 0;
+      updated[existingIdx].subtotal = newBilled * updated[existingIdx].price;
+      setLaundryServicesList(updated);
+    } else {
+      const billedWeight = isPromo5Plus2 ? (weightVal <= 7 ? 5 : weightVal - 2) : weightVal;
+      const sub = billedWeight * selectedLaundryService.price;
+      const freeKilos = isPromo5Plus2 ? (weightVal - billedWeight) : 0;
+      setLaundryServicesList([
+        ...laundryServicesList,
+        {
+          id: selectedLaundryService.id,
+          name: selectedLaundryService.name,
+          price: selectedLaundryService.price,
+          weight: weightVal,
+          billedWeight: billedWeight,
+          subtotal: sub,
+          isPerKg: isPerKg,
+          isPromo5Plus2: isPromo5Plus2,
+          freeKilos: freeKilos,
+          category_name: selectedLaundryService.category_name
+        }
+      ]);
+    }
+
+    setSelectedLaundryService(null);
+    setLaundryWeight('');
+  };
   const resetLaundryForm = () => {
     setLaundryCustomerName('');
     setLaundryPhone('');
     setSelectedLaundryService(null);
+    setLaundryServicesList([]);
+    setLaundryIsWalkIn(false);
     setLaundryWeight('');
     setLaundryPrefWarmWater(false);
     setLaundryPrefColdWater(false);
@@ -656,6 +867,7 @@ export default function POS() {
     setLaundryAddonRush(false);
     setLaundryPaymentMethod('cash');
     setLaundryCashReceived('');
+    setLaundryGcashReference('');
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setLaundryPickupDate(tomorrow.toISOString().split('T')[0]);
@@ -663,34 +875,83 @@ export default function POS() {
   };
 
   const handleCheckoutLaundry = async (payImmediately: boolean) => {
+    if (!activeBranch) return;
+    if (isProcessingPayment) return;
+
+    // Check validation of inputs
     if (!laundryCustomerName.trim()) {
       swalAlert('Missing Customer Information', 'Please enter customer name', 'warning');
       return;
     }
-    const weight = parseFloat(laundryWeight);
-    if (isNaN(weight) || weight <= 0) {
-      swalAlert('Invalid Weight', 'Please enter a valid weight in KG', 'warning');
-      return;
+
+    let activeList = [...laundryServicesList];
+    const hasAddons = laundryAddonRush || Object.values(laundrySelectedAddons).some((qty: any) => qty > 0);
+
+    if (activeList.length === 0) {
+      if (selectedLaundryService && parseFloat(laundryWeight) > 0) {
+        const weightVal = parseFloat(laundryWeight);
+        const isPerKg = (selectedLaundryService.unit || '').toLowerCase() === 'kg' ||
+          (selectedLaundryService.unit || '').toLowerCase() === 'kilo' ||
+          selectedLaundryService.name?.toLowerCase().includes('/kg') ||
+          selectedLaundryService.name?.toLowerCase().includes('/kilo') ||
+          selectedLaundryService.name?.toLowerCase().includes('per kg') ||
+          selectedLaundryService.name?.toLowerCase().includes('per kilo') ||
+          selectedLaundryService.name?.toLowerCase().includes('kilo') ||
+          ((selectedLaundryService.category_name || '').toLowerCase().includes('everyday wear') &&
+            !(selectedLaundryService.category_name || '').toLowerCase().includes('wash only'));
+        const isPromo5Plus2 = selectedLaundryService.name?.toLowerCase().includes('5+2') ||
+          selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
+          selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
+          selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
+        const billedWeight = isPromo5Plus2 ? (weightVal <= 7 ? 5 : weightVal - 2) : weightVal;
+        const sub = billedWeight * selectedLaundryService.price;
+        const freeKilos = isPromo5Plus2 ? (weightVal - billedWeight) : 0;
+        activeList = [{
+          id: selectedLaundryService.id,
+          name: selectedLaundryService.name,
+          price: selectedLaundryService.price,
+          weight: weightVal,
+          billedWeight: billedWeight,
+          subtotal: sub,
+          isPerKg: isPerKg,
+          isPromo5Plus2: isPromo5Plus2,
+          freeKilos: freeKilos,
+          category_name: selectedLaundryService.category_name
+        }];
+        setLaundryServicesList(activeList);
+      } else if (hasAddons) {
+        // Allow checkout of only addons
+      } else {
+        swalAlert('Empty Cart', 'Please select a laundry service or add-ons first.', 'warning');
+        return;
+      }
     }
-    
-    const rate = selectedLaundryService ? selectedLaundryService.price : (settings?.laundry_rate_per_kg || 70);
-    const isPerKg = selectedLaundryService?.name?.toLowerCase().includes('per kg') || selectedLaundryService?.name?.toLowerCase().includes('per kilo') || selectedLaundryService?.name?.toLowerCase().includes('ironing service');
-    const subtotalCost = isPerKg ? (weight * rate) : rate;
-    
+
+    const subtotalCost = activeList.reduce((sum, item) => sum + item.subtotal, 0);
+    const totalWeight = activeList.reduce((sum, item) => sum + item.weight, 0);
+    const firstRate = activeList[0]?.price || 70;
+
     const rushPrice = 100;
-    
+
     // Sum dynamic detergents/additives pricing
-    const detergentAddons = products.filter(p => p.category_name === 'Detergents & Additives');
+    const detergentAddons = products.filter(p => {
+      const cat = (p.category_name || '').toLowerCase();
+      return cat === 'detergents & additives' || cat === 'add on' || cat === 'add-on' || cat === 'supplies' || cat === 'detergents' || cat === 'additives';
+    });
     const selectedAddonProducts: any[] = [];
     let addonTotal = laundryAddonRush ? rushPrice : 0;
-    
+
     Object.keys(laundrySelectedAddons).forEach(idStr => {
       const id = parseInt(idStr);
-      if (laundrySelectedAddons[id]) {
+      const qty = laundrySelectedAddons[id] || 0;
+      if (qty > 0) {
         const addon = products.find(p => p.id === id);
         if (addon) {
-          addonTotal += addon.price;
-          selectedAddonProducts.push(addon);
+          addonTotal += addon.price * qty;
+          selectedAddonProducts.push({
+            ...addon,
+            quantity: qty
+          });
         }
       }
     });
@@ -703,20 +964,24 @@ export default function POS() {
       return;
     }
 
+    // Confirmation Swal
+    const confirmMessage = payImmediately
+      ? `Are you sure you want to process payment of ₱${grandTotal.toFixed(2)} via ${laundryPaymentMethod.toUpperCase()}?`
+      : `Are you sure you want to save this laundry order for ${laundryCustomerName || 'Walk-In'}?`;
+
+    const isConfirm = await swalConfirm(confirmMessage);
+    if (!isConfirm) return;
+
     setIsProcessingPayment(true);
     try {
       const firstValidProduct = products.find(p => p.branch_id === activeBranch?.id) || products[0];
 
-      const itemsPayload: any[] = [
-        {
-          product_id: (selectedLaundryService && products.some(p => p.id === selectedLaundryService.id))
-            ? selectedLaundryService.id
-            : (firstValidProduct?.id || 1),
-          quantity: 1,
-          price: subtotalCost,
-          notes: `Service: ${selectedLaundryService?.name || 'Laundry Service'} | Weight/Qty: ${weight} kg/units, Rate: ₱${rate.toFixed(2)}`
-        }
-      ];
+      const itemsPayload: any[] = activeList.map(item => ({
+        product_id: item.id,
+        quantity: 1,
+        price: item.subtotal,
+        notes: `Service: ${item.name} | Weight/Qty: ${item.weight.toFixed(1)} kg, Rate: ₱${item.price.toFixed(2)}/kg`
+      }));
 
       if (laundryAddonRush) {
         const p = products.find(prod => prod.name.toLowerCase().includes('rush'));
@@ -732,9 +997,9 @@ export default function POS() {
       selectedAddonProducts.forEach(addon => {
         itemsPayload.push({
           product_id: addon.id,
-          quantity: 1,
-          price: addon.price,
-          notes: `Laundry Add-on: ${addon.name}`
+          quantity: addon.quantity || 1,
+          price: addon.price * (addon.quantity || 1),
+          notes: `Laundry Add-on: ${addon.name} (x${addon.quantity || 1})`
         });
       });
 
@@ -749,7 +1014,7 @@ export default function POS() {
       const addonsList: any[] = [];
       if (laundryAddonRush) addonsList.push({ name: 'Rush Service', price: rushPrice });
       selectedAddonProducts.forEach(addon => {
-        addonsList.push({ name: addon.name, price: addon.price });
+        addonsList.push({ name: `${addon.name} (x${addon.quantity || 1})`, price: addon.price * (addon.quantity || 1) });
       });
 
       const laundryDetails = {
@@ -757,14 +1022,17 @@ export default function POS() {
         company_name: settings?.company_name || 'SIP & SPIN LAUNDRY SHOP',
         customer_name: laundryCustomerName,
         phone: laundryPhone,
-        service_name: selectedLaundryService?.name || 'Wash, Dry & Fold',
-        weight: weight,
-        rate: rate,
+        service_name: activeList.length > 0 ? activeList.map(item => item.name).join(', ') : 'Supplies & Add-ons Only',
+        weight: totalWeight,
+        rate: firstRate,
         subtotal: subtotalCost,
+        services: activeList,
         preferences: preferencesList,
         addons: addonsList,
         pickup_date: laundryPickupDate,
-        pickup_time: laundryPickupTime
+        pickup_time: laundryPickupTime,
+        payment_method: laundryPaymentMethod,
+        gcash_reference: laundryPaymentMethod === 'gcash' ? laundryGcashReference : null
       };
 
       const localUser = localStorage.getItem('resto_active_user');
@@ -805,7 +1073,7 @@ export default function POS() {
             payment_method: laundryPaymentMethod,
             amount_tendered: laundryPaymentMethod === 'cash' ? cashRec : grandTotal,
             change: laundryPaymentMethod === 'cash' ? (cashRec - grandTotal) : 0,
-            reference_number: ''
+            reference_number: laundryPaymentMethod === 'gcash' ? laundryGcashReference : ''
           })
         });
 
@@ -918,7 +1186,7 @@ export default function POS() {
         if (data.success) {
           logActivity(userName, 'Place Order', `Created new order #${data.id} on ${orderType === 'dine-in' ? (selectedTable?.name || 'Walk-In') : 'Takeaway'}`);
           setActiveOrderId(data.id);
-          swalAlert('Success', 'Order sent to kitchen!', 'success');
+          swalAlert('Success', 'Order sent for preparation', 'success');
           // Refresh tables
           fetch(`/api/tables?branch_id=${activeBranch?.id}`).then(res => res.json()).then(setTables);
           setCart(cart.map(c => ({ ...c, _isSaved: true })));
@@ -1243,6 +1511,10 @@ export default function POS() {
   };
 
   const handleModalVoid = async (id: number) => {
+    if (currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+      swalAlert('Permission Denied', 'Only administrators or managers are allowed to void orders.', 'error');
+      return;
+    }
     const isConfirm = await swalConfirm('Are you sure you want to VOID this order?');
     if (!isConfirm) return;
     const res = await fetch(`/api/orders/${id}/void`, {
@@ -1377,7 +1649,170 @@ export default function POS() {
         await fetch(`/api/orders/${receiptData.id}/reprint`, { method: 'POST' });
       } catch (err) { }
     }
-    window.print();
+
+    if (useQzTray) {
+      try {
+        if (!qz.websocket.isActive()) {
+          await qz.websocket.connect();
+        }
+        const config = qz.configs.create(qzPrinterName);
+        const element = document.querySelector('.receipt-ticket-content');
+        if (!element) {
+          swalAlert('Print Error', 'Could not locate the receipt layout on screen.', 'error');
+          return;
+        }
+
+        const printStyles = `
+          html, body { 
+            margin: 0; 
+            padding: 0;
+            background-color: white !important;
+            color: black !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+          }
+          .receipt-ticket-content { 
+            width: 80mm !important; 
+            max-width: 80mm !important; 
+            margin: 0 auto !important; 
+            padding: 6px !important; 
+            background: white !important;
+            box-sizing: border-box !important;
+          }
+          .receipt-ticket-content * {
+            font-size: 9.5pt !important; 
+            line-height: 1.2 !important; 
+            color: black !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            font-weight: 400 !important;
+          }
+          .receipt-ticket-content p, .receipt-ticket-content div, .receipt-ticket-content span {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .receipt-ticket-content .row-item {
+            margin-top: 2.5px !important;
+            margin-bottom: 2.5px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: flex-start !important;
+          }
+          .receipt-ticket-content .section-block {
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
+          }
+          .receipt-ticket-content .section-header {
+            font-size: 10.5pt !important;
+            font-weight: 700 !important;
+            border-top: 1px dashed black !important;
+            border-bottom: 1px dashed black !important;
+            padding-top: 3px !important;
+            padding-bottom: 3px !important;
+            margin-top: 6px !important;
+            margin-bottom: 6px !important;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+          .receipt-ticket-content .receipt-logo {
+            max-width: 280px !important;
+            max-height: 85px !important;
+            height: auto !important;
+            display: block !important;
+            margin: 0 auto 4px auto !important;
+            object-fit: contain !important;
+          }
+          .receipt-ticket-content .company-name {
+            font-size: 11.5pt !important;
+            font-weight: 700 !important;
+            display: block;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 2px !important;
+          }
+          .receipt-ticket-content .receipt-title {
+            font-size: 10.5pt !important;
+            font-weight: 700 !important;
+            display: block;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 2px !important;
+          }
+          .receipt-ticket-content .print-total,
+          .receipt-ticket-content .print-total * {
+            font-size: 13pt !important;
+            font-weight: 700 !important;
+            line-height: 1.4 !important;
+          }
+          .receipt-ticket-content .print-change,
+          .receipt-ticket-content .print-change * {
+            font-size: 11.5pt !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+          }
+          .receipt-ticket-content .font-bold,
+          .receipt-ticket-content .font-black,
+          .receipt-ticket-content .font-semibold,
+          .receipt-ticket-content .print-bold-text {
+            font-weight: 700 !important;
+          }
+          .text-center {
+            text-align: center !important;
+          }
+          .text-right {
+            text-align: right !important;
+          }
+          .border-t {
+            border-top: 1px dashed black !important;
+          }
+          .border-b {
+            border-bottom: 1px solid black !important;
+          }
+          .border-y {
+            border-top: 1px dashed black !important;
+            border-bottom: 1px dashed black !important;
+          }
+          .italic {
+            font-style: italic !important;
+          }
+          .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        `;
+
+        const printData = [
+          {
+            type: 'html',
+            format: 'plain',
+            data: `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta charset="utf-8">
+                  <style>${printStyles}</style>
+                </head>
+                <body>
+                  <div class="receipt-ticket-content">
+                    ${element.innerHTML}
+                  </div>
+                </body>
+              </html>
+            `
+          }
+        ];
+
+        await qz.print(config, printData);
+        swalAlert('Success', 'Receipt printed successfully via QZ Tray.', 'success');
+      } catch (err: any) {
+        console.error("QZ print failed:", err);
+        swalAlert('Print Error', err.message || 'Failed to print via QZ Tray. Make sure it is running and your printer name is correct.', 'error');
+      }
+    } else {
+      window.print();
+    }
   };
 
   const popOut = () => {
@@ -1427,13 +1862,13 @@ export default function POS() {
           {/* Header */}
           <div className="px-6 py-4 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 flex-shrink-0">
             <div className="flex items-center gap-4">
-              <h1 className="text-xl font-black text-slate-800 tracking-tight">🧺 Laundry Order Entry</h1>
+              <h1 className="text-xl font-black text-slate-800 tracking-tight">Laundry Order Entry</h1>
               <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
                 <button
                   onClick={() => setSelectedDivision('coffee')}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-white transition-all shadow-xs"
                 >
-                  ☕ Switch to Coffee POS
+                  Switch to Coffee POS
                 </button>
               </div>
             </div>
@@ -1455,343 +1890,514 @@ export default function POS() {
             </div>
           </div>
 
-          {/* Form Content Wrapper */}
-          <div className="flex-1 overflow-hidden p-3 bg-slate-100">
-            <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-              
-              {/* LEFT COLUMN: Customer, Service & Weight Keypad */}
-              <div className="space-y-3 flex flex-col h-full">
-                
-                {/* Customer Details Card */}
-                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
-                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                    👤 Customer Information
+          <div className="flex-1 overflow-hidden p-1.5 bg-slate-100">
+            <div className="w-full max-w-none grid grid-cols-1 lg:grid-cols-[30%_1fr_1fr] gap-3 h-full px-2">
+
+              {/* COLUMN 1: Selected Services List (Cart) */}
+              <div className="flex flex-col h-full lg:col-span-1">
+                <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex flex-col h-full">
+                  <h2 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-2 flex items-center justify-between border-b border-slate-100 pb-1.5">
+                    <span className="flex items-center gap-1.5 font-sans">
+                      Selected Services
+                      <span className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{laundryServicesList.length}</span>
+                    </span>
+                    {laundryServicesList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setLaundryServicesList([])}
+                        className="text-rose-600 hover:text-rose-700 flex items-center gap-1 text-[9px] font-black uppercase tracking-wider transition-colors"
+                      >
+                        <Trash2 size={12} /> Remove All
+                      </button>
+                    )}
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Customer Name</label>
-                      <input
-                        type="text"
-                        value={laundryCustomerName}
-                        onChange={e => setLaundryCustomerName(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold"
-                        placeholder="Customer Name..."
-                      />
+
+                  {/* List Container */}
+                  <div className="flex-1 overflow-y-auto mb-3 space-y-2 pr-1 custom-scrollbar">
+                    {laundryServicesList.length > 0 ? (
+                      laundryServicesList.map((item, idx) => {
+                        const isBedsheet = item.name.toLowerCase().includes('sheet') || item.name.toLowerCase().includes('bed') || item.name.toLowerCase().includes('comforter') || item.name.toLowerCase().includes('curtain');
+                        return (
+                          <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all gap-2 shadow-xs">
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 text-blue-600">
+                                {isBedsheet ? <Gift size={16} /> : <Package size={16} />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-extrabold text-slate-800 text-[11px] truncate leading-tight">{item.name.replace('/kg', '').replace('/kilo', '')}</p>
+                                <p className="text-[9px] text-slate-400 font-bold mt-0.5">
+                                  ₱{item.price.toFixed(2)} / {item.isPerKg ? 'kg' : 'pcs'}
+                                  {item.isPromo5Plus2 && item.freeKilos > 0 && (
+                                    <span className="text-emerald-600 font-black ml-1">({item.freeKilos.toFixed(1)}kg Free)</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0 font-sans font-black text-xs text-slate-800 min-w-[50px] pr-1">
+                              {item.isPerKg ? `${item.weight.toFixed(1)} kg` : `${item.weight.toFixed(0)} pcs`}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className="font-mono font-bold text-xs text-slate-900 pr-1">₱{item.subtotal.toFixed(0)}</span>
+                              <button
+                                type="button"
+                                onClick={() => setLaundryServicesList(laundryServicesList.filter((_, i) => i !== idx))}
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 size={13} className="text-rose-500" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full min-h-[220px] text-slate-400 p-6 text-center">
+                        <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 border border-slate-100">
+                          <Package size={20} className="text-slate-400" />
+                        </div>
+                        <p className="text-xs font-black uppercase tracking-wide text-slate-700">No Services Selected</p>
+                        <p className="text-[10px] text-slate-450 mt-1 leading-relaxed max-w-[170px]">Select a service and enter quantity/weight in the middle column, then click Add Service.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Totals & Actions Footer */}
+                  <div className="pt-3 border-t border-slate-100 space-y-2.5 font-sans mt-auto flex-shrink-0">
+                    <div className="flex justify-between items-center text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                      <span>Total Items</span>
+                      <span className="text-slate-800 font-extrabold text-xs">{laundryServicesList.length}</span>
                     </div>
-                    <div>
-                      <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Phone Number</label>
-                      <input
-                        type="text"
-                        value={laundryPhone}
-                        onChange={e => setLaundryPhone(e.target.value)}
-                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold"
-                        placeholder="Phone Number..."
-                      />
+                    <div className="flex justify-between items-center text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                      <span>Subtotal</span>
+                      <span className="text-slate-900 font-black text-sm font-mono">₱{laundrySubtotal.toFixed(2)}</span>
+                    </div>
+
+                    {/* Bottom Buttons */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setLaundryServicesList([])}
+                        className="w-[38%] py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Trash2 size={12} /> Clear All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={addLaundryServiceToList}
+                        className="w-[62%] py-2 bg-white hover:bg-blue-50 border-2 border-blue-500 text-blue-600 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
+                      >
+                        <Plus size={12} /> Add Service
+                      </button>
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Laundry Service Card */}
-                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
-                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                    👔 Laundry Service Selector
+              {/* COLUMN 2 (Middle): Customer, Service & Weight Keypad */}
+              <div className="space-y-3 flex flex-col h-full lg:col-span-1">
+
+                {/* Customer Details Card */}
+                <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200">
+                  <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <User size={13} className="text-slate-400" />
+                    Customer Information
                   </h2>
-                  <div>
-                    <select
-                      value={selectedLaundryService?.id || ''}
-                      onChange={(e) => {
-                        if (e.target.value === 'add-custom') {
-                          handleAddCustomServicePrompt();
-                        } else {
-                          const s = laundryServices.find(srv => srv.id.toString() === e.target.value);
-                          setSelectedLaundryService(s || null);
-                        }
-                      }}
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold cursor-pointer"
-                    >
-                      <option value="">-- Choose Laundry Service --</option>
-                      {laundryServices.map(s => {
-                        const isPerKg = s.name.toLowerCase().includes('per kg') || s.name.toLowerCase().includes('per kilo') || s.name.toLowerCase().includes('ironing service');
-                        const isPromo = s.name.toLowerCase().includes('promo') || s.category_name?.toLowerCase().includes('promo');
-                        return (
-                          <option key={s.id} value={s.id}>
-                            {isPromo ? '🎁 [PROMO] ' : ''}{s.name} - ₱{s.price.toFixed(2)}{isPerKg ? '/kg' : ''}
-                          </option>
-                        );
-                      })}
-                      <option value="add-custom" className="text-blue-600 font-bold">+ Add Custom Service...</option>
-                    </select>
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Customer Name</label>
+                        <div className="relative flex items-center">
+                          <User className="absolute left-2.5 text-slate-400" size={12} />
+                          <input
+                            type="text"
+                            disabled={laundryIsWalkIn}
+                            value={laundryIsWalkIn ? 'Walk-in Customer' : laundryCustomerName}
+                            onChange={e => setLaundryCustomerName(e.target.value)}
+                            className="w-full pl-7 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold disabled:opacity-75 disabled:bg-slate-100"
+                            placeholder="Customer Name..."
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Phone Number</label>
+                        <div className="relative flex items-center">
+                          <Smartphone className="absolute left-2.5 text-slate-400" size={12} />
+                          <input
+                            type="text"
+                            disabled={laundryIsWalkIn}
+                            value={laundryIsWalkIn ? '' : laundryPhone}
+                            onChange={e => setLaundryPhone(e.target.value)}
+                            className="w-full pl-7 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:border-blue-500 outline-none text-xs font-semibold disabled:opacity-75 disabled:bg-slate-100"
+                            placeholder="Phone Number..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Walk-in checkbox */}
+                    <label className="inline-flex items-center gap-2 cursor-pointer select-none mt-1 font-sans">
+                      <input
+                        type="checkbox"
+                        checked={laundryIsWalkIn}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setLaundryIsWalkIn(checked);
+                          if (checked) {
+                            setLaundryCustomerName('Walk-in Customer');
+                            setLaundryPhone('');
+                          } else {
+                            setLaundryCustomerName('');
+                          }
+                        }}
+                        className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500 accent-blue-600"
+                      />
+                      <span className="text-[10px] font-bold text-slate-650 flex items-center gap-1">
+                        Walk-in Customer
+                        <span className="text-slate-400 cursor-pointer" title="Automatically formats order for anonymous walk-in client">ⓘ</span>
+                      </span>
+                    </label>
                   </div>
-                  {/* Promo Badge details if selected */}
+                </div>
+
+                {/* Laundry Services Selector Panel */}
+                <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col min-h-0">
+
+                  {/* Weight / Qty Entry Row */}
+                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 gap-3 mb-2 flex-shrink-0">
+                    <span className="text-xs font-black text-slate-705 uppercase tracking-wider">Weight / Qty Entry</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = parseFloat(laundryWeight) || 0;
+                          if (val > 0) {
+                            const newVal = Math.max(0, val - 1);
+                            setLaundryWeight(Number(newVal.toFixed(2)).toString());
+                          }
+                        }}
+                        className="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-base"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="text"
+                        value={laundryWeight}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                            setLaundryWeight(val);
+                          }
+                        }}
+                        className="w-20 py-1.5 bg-white border border-slate-250 rounded-lg text-center font-mono font-black text-sm text-slate-800 outline-none focus:border-blue-500"
+                        placeholder="0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = parseFloat(laundryWeight) || 0;
+                          const newVal = val + 1;
+                          setLaundryWeight(Number(newVal.toFixed(2)).toString());
+                        }}
+                        className="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-base"
+                      >
+                        +
+                      </button>
+                      <span className="text-[10px] text-slate-500 font-extrabold ml-1 uppercase"></span>
+                    </div>
+                  </div>
+
+                  {/* Grouped Services Accordions List */}
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar min-h-0">
+                    {(() => {
+                      const grouped: Record<string, typeof laundryServices> = {};
+                      laundryServices.forEach(s => {
+                        const cat = s.category_name || 'Other Services';
+                        if (!grouped[cat]) grouped[cat] = [];
+                        grouped[cat].push(s);
+                      });
+
+                      return Object.entries(grouped).map(([catName, list]) => {
+                        const isOpen = !!expandedCategories[catName];
+                        return (
+                          <div key={catName} className="flex flex-col">
+                            {/* Accordion Toggle Header */}
+                            <button
+                              type="button"
+                              onClick={() => setExpandedCategories({ [catName]: !isOpen })}
+                              className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all text-left"
+                            >
+                              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{catName}</span>
+                              <ChevronDown size={14} className={cn("text-slate-500 transition-transform duration-200", isOpen && "rotate-180")} />
+                            </button>
+
+                            {/* Service Buttons Grid */}
+                            {isOpen && (
+                              <div className="grid grid-cols-2 gap-2 p-2 bg-slate-50/20 border border-t-0 border-slate-200 rounded-b-xl -mt-1 mb-1">
+                                {list.map(s => {
+                                  const isSelected = selectedLaundryService?.id === s.id;
+                                  const isPromo = s.name.toLowerCase().includes('5+2') || s.name.toLowerCase().includes('regular clothes') || s.name.toLowerCase().includes('towels & bedsheets');
+                                  const isPerKg = (s.unit || '').toLowerCase() === 'kg' ||
+                                    (s.unit || '').toLowerCase() === 'kilo' ||
+                                    s.name?.toLowerCase().includes('/kg') ||
+                                    s.name?.toLowerCase().includes('/kilo') ||
+                                    s.name?.toLowerCase().includes('per kg') ||
+                                    s.name?.toLowerCase().includes('per kilo') ||
+                                    s.name?.toLowerCase().includes('kilo') ||
+                                    ((s.category_name || '').toLowerCase().includes('everyday wear') &&
+                                      !(s.category_name || '').toLowerCase().includes('wash only'));
+
+                                  return (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      onClick={() => setSelectedLaundryService(s)}
+                                      className={cn(
+                                        "p-3.5 text-left rounded-xl transition-all border flex flex-col justify-between gap-1.5 shadow-2xs relative overflow-hidden min-h-[64px] cursor-pointer",
+                                        isSelected
+                                          ? "bg-blue-50 border-blue-500 ring-1 ring-blue-500 text-blue-900"
+                                          : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
+                                      )}
+                                    >
+                                      {isPromo && (
+                                        <span className="absolute right-0 top-0 bg-amber-500 text-white text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded-bl-md">
+                                          PROMO
+                                        </span>
+                                      )}
+                                      <span className="font-extrabold text-[12px] leading-tight pr-4 truncate max-w-full" title={s.name}>
+                                        {s.name.replace('/kg', '').replace('/kilo', '').replace(' (5+2 FREE)', '')}
+                                      </span>
+                                      <span className="font-mono font-bold text-[11px] text-blue-600">
+                                        ₱{s.price.toFixed(2)}/{isPerKg ? 'kg' : 'pcs'}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  {/* Promo Banner if active */}
                   {selectedLaundryService && (selectedLaundryService.name.toLowerCase().includes('promo') || selectedLaundryService.category_name?.toLowerCase().includes('promo')) && (
-                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white p-2 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase shadow-xs tracking-wider animate-pulse">
-                      <span>🎁 Active Promo Package Selected!</span>
+                    <div className="mt-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white p-1.5 rounded-xl flex items-center justify-center gap-1.5 text-[9px] font-black uppercase shadow-xs tracking-wider animate-pulse flex-shrink-0">
+                      <span> Active Promo Package Selected!</span>
                     </div>
                   )}
-                </div>
 
-                {/* Weight Keypad Card */}
-                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                      ⚖️ Weight Entry (KG)
-                    </h2>
-                    
-                    {/* Digital Scale Display */}
-                    <div className="bg-slate-900 text-blue-400 p-2.5 px-4 rounded-xl flex justify-between items-center font-mono shadow-inner">
-                      <div>
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Rate / KG</span>
-                        <span className="text-xs font-bold">
-                          ₱{selectedLaundryService ? selectedLaundryService.price.toFixed(2) : (settings?.laundry_rate_per_kg || 70).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block">Current Weight</span>
-                        <span className="text-xl font-black tracking-tight">{laundryWeight || '0.0'} <span className="text-xs">KG</span></span>
-                      </div>
-                    </div>
-
-                    {/* Numeric Keypad grid */}
-                    <div className="grid grid-cols-3 gap-1.5 mt-2.5">
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => handleKeypadPress(num.toString())}
-                          className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
-                        >
-                          {num}
-                        </button>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => handleKeypadPress('C')}
-                        className="bg-red-50 hover:bg-red-100 active:scale-[0.97] text-red-600 transition-all font-black text-sm rounded-lg flex items-center justify-center py-2"
-                      >
-                        C
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleKeypadPress('0')}
-                        className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
-                      >
-                        0
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleKeypadPress('.')}
-                        className="bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-all font-black text-sm text-slate-700 rounded-lg flex items-center justify-center py-2"
-                      >
-                        .
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Wide Backspace button */}
+                  {/* Add Custom Service prompt */}
                   <button
                     type="button"
-                    onClick={() => handleKeypadPress('⌫')}
-                    className="w-full mt-2 py-1.5 bg-slate-200 hover:bg-slate-300 active:scale-[0.98] text-slate-700 transition-all font-black text-xs rounded-lg flex items-center justify-center gap-1.5"
+                    onClick={handleAddCustomServicePrompt}
+                    className="mt-2 py-1.5 border border-dashed border-slate-350 hover:bg-slate-50 hover:border-slate-400 text-slate-500 hover:text-slate-700 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1 flex-shrink-0"
                   >
-                    <span>⌫ Backspace</span>
+                    + Add Custom Service...
                   </button>
                 </div>
-
               </div>
 
               {/* RIGHT COLUMN: Preferences, Add-ons, Pickup, Payment & Summary */}
-              <div className="space-y-3 flex flex-col h-full">
+              <div className="space-y-2 flex flex-col h-full">
 
                 {/* Washing Preferences & Add-ons Card */}
-                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200">
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Preferences column */}
-                    <div>
-                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        ⚙️ Preferences
-                      </h2>
-                      <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
-                          <input type="checkbox" checked={laundryPrefWarmWater} onChange={e => setLaundryPrefWarmWater(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                          Warm Water
-                        </label>
-                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
-                          <input type="checkbox" checked={laundryPrefColdWater} onChange={e => setLaundryPrefColdWater(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                          Cold Water
-                        </label>
-                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
-                          <input type="checkbox" checked={laundryPrefUnscented} onChange={e => setLaundryPrefUnscented(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                          Unscented
-                        </label>
-                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
-                          <input type="checkbox" checked={laundryPrefSeparateWhite} onChange={e => setLaundryPrefSeparateWhite(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                          Separate White
-                        </label>
-                        <label className="flex items-center gap-2 p-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer text-[10px] font-bold text-slate-700 select-none">
-                          <input type="checkbox" checked={laundryPrefSeparateColored} onChange={e => setLaundryPrefSeparateColored(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                          Separate Colored
-                        </label>
-                      </div>
-                      
-                      {/* Manual Custom preference / instructions */}
-                      <div className="mt-2.5 pt-2.5 border-t border-slate-100">
-                        <span className="text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1 block">Custom Instructions</span>
-                        <input 
-                          type="text"
-                          value={laundryPrefCustom}
-                          onChange={e => setLaundryPrefCustom(e.target.value)}
-                          placeholder="e.g. Extra detergent, delicate wash"
-                          className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-bold text-slate-700 outline-none focus:border-blue-500 placeholder-slate-400"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Add-ons column */}
-                    <div>
-                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                        ➕ Add-ons
-                      </h2>
-                      <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar">
-                        {/* Rush Service option */}
-                        <label className={cn("flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonRush ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
-                          <div className="flex items-center gap-2">
-                            <input type="checkbox" checked={laundryAddonRush} onChange={e => setLaundryAddonRush(e.target.checked)} className="accent-blue-600 w-3.5 h-3.5" />
-                            <span>⚡ Rush Service</span>
-                          </div>
-                          <span className="text-blue-600 text-[9px] font-black">+₱100.00</span>
-                        </label>
+                <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                      ➕ Add-ons / Detergents & Softeners
+                    </h2>
 
-                        {/* Dynamic Detergent Additives */}
-                        {products
-                          .filter(p => p.category_name === 'Detergents & Additives')
-                          .map(addon => {
-                            const isChecked = !!laundrySelectedAddons[addon.id];
-                            return (
-                              <label 
-                                key={addon.id} 
-                                className={cn(
-                                  "flex items-center justify-between p-1.5 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", 
-                                  isChecked ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200"
-                                )}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={isChecked} 
-                                    onChange={e => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: e.target.checked }))} 
-                                    className="accent-blue-600 w-3.5 h-3.5" 
-                                  />
-                                  <span className="truncate max-w-[130px]" title={addon.name}>{addon.name}</span>
-                                </div>
-                                <span className="text-blue-600 text-[9px] font-black">+₱{addon.price.toFixed(2)}</span>
-                              </label>
-                            );
-                          })}
-                      </div>
+                    {/* Addons Grid */}
+                    <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto pr-1 custom-scrollbar">
+                      {/* Rush Service option */}
+                      <label className={cn("flex items-center justify-between p-1 border rounded-xl cursor-pointer select-none text-[10px] font-bold text-slate-700", laundryAddonRush ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200")}>
+                        <div className="flex items-center gap-1.5 pl-1">
+                          <input type="checkbox" checked={laundryAddonRush} onChange={e => setLaundryAddonRush(e.target.checked)} className="accent-blue-600 w-3 h-3" />
+                          <span>⚡ Rush Service</span>
+                        </div>
+                        <span className="text-blue-600 text-[9px] font-black pr-1">+₱100</span>
+                      </label>
+
+                      {/* Dynamic Detergent Additives */}
+                      {products
+                        .filter(p => {
+                          const cat = (p.category_name || '').toLowerCase();
+                          return cat === 'detergents & additives' || cat === 'add on' || cat === 'add-on' || cat === 'supplies' || cat === 'detergents' || cat === 'additives';
+                        })
+                        .map(addon => {
+                          const qty = laundrySelectedAddons[addon.id] || 0;
+                          const isChecked = qty > 0;
+                          return (
+                            <div
+                              key={addon.id}
+                              className={cn(
+                                "flex items-center justify-between p-1 border rounded-xl select-none text-[10px] font-bold text-slate-700 transition-all",
+                                isChecked ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200"
+                              )}
+                            >
+                              <span className="truncate max-w-[90px] pl-1 font-bold" title={addon.name}>{addon.name}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-blue-600 text-[9px] font-black mr-1">+₱{(addon.price * (qty || 1)).toFixed(0)}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1) }))}
+                                  className="w-5 h-5 rounded-md bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-650 hover:bg-slate-50 transition-all text-xs"
+                                >
+                                  -
+                                </button>
+                                <span className="w-4 text-center font-mono font-bold text-[10px]">{qty}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: (prev[addon.id] || 0) + 1 }))}
+                                  className="w-5 h-5 rounded-md bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-650 hover:bg-slate-50 transition-all text-xs"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                     </div>
+                  </div>
+
+                  {/* Manual Custom preference / instructions */}
+                  <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider shrink-0">Custom Notes:</span>
+                    <input
+                      type="text"
+                      value={laundryPrefCustom}
+                      onChange={e => setLaundryPrefCustom(e.target.value)}
+                      placeholder="e.g. Extra detergent, fold dry, separate whites..."
+                      className="flex-1 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 outline-none focus:border-blue-500 placeholder-slate-400"
+                    />
                   </div>
                 </div>
 
                 {/* Pickup, Settlement & Checkout Card */}
-                <div className="bg-white p-3 px-4 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col justify-between overflow-hidden">
-                  <div className="space-y-2">
-                    
+                <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col justify-between overflow-hidden">
+                  <div className="space-y-1.5">
+
                     {/* Pickup Details */}
                     <div>
                       <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                        📅 Pickup Details
+                        Pickup Details
                       </h2>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
                         <input
                           type="date"
                           value={laundryPickupDate}
                           onChange={e => setLaundryPickupDate(e.target.value)}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
+                          className="w-full px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
                         />
                         <input
                           type="time"
                           value={laundryPickupTime}
                           onChange={e => setLaundryPickupTime(e.target.value)}
-                          className="w-full px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
+                          className="w-full px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-lg outline-none text-xs font-bold cursor-pointer"
                         />
                       </div>
                     </div>
 
                     {/* Payment Method */}
                     <div>
-                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-2">
-                        💳 Payment Settlement
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans">
+                        Payment Settlement
                       </h2>
-                      <div className="flex gap-2">
-                        {(['cash', 'gcash', 'card'] as const).map(method => (
-                          <button
-                            key={method}
-                            type="button"
-                            onClick={() => setLaundryPaymentMethod(method)}
-                            className={cn(
-                              "flex-1 py-1 rounded-lg font-black text-[10px] uppercase tracking-wide border transition-all active:scale-[0.97]",
-                              laundryPaymentMethod === method
-                                ? "bg-blue-600 text-white border-blue-700"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            )}
-                          >
-                            {method === 'card' ? '💳 Card' : method === 'gcash' ? '📱 GCash' : '💵 Cash'}
-                          </button>
-                        ))}
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setLaundryPaymentMethod('cash')}
+                          className={cn(
+                            "py-1 rounded-xl font-bold text-[10px] uppercase tracking-wide border transition-all flex items-center justify-center gap-1 active:scale-[0.97]",
+                            laundryPaymentMethod === 'cash'
+                              ? "bg-blue-600 text-white border-blue-700 shadow-sm font-black"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <Banknote size={12} /> Cash
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLaundryPaymentMethod('gcash')}
+                          className={cn(
+                            "py-1 rounded-xl font-bold text-[10px] uppercase tracking-wide border transition-all flex items-center justify-center gap-1 active:scale-[0.97]",
+                            laundryPaymentMethod === 'gcash'
+                              ? "bg-blue-600 text-white border-blue-700 shadow-sm font-black"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <Smartphone size={12} /> GCash
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLaundryPaymentMethod('card')}
+                          className={cn(
+                            "py-1 rounded-xl font-bold text-[10px] uppercase tracking-wide border transition-all flex items-center justify-center gap-1 active:scale-[0.97]",
+                            laundryPaymentMethod === 'card'
+                              ? "bg-blue-600 text-white border-blue-700 shadow-sm font-black"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <CreditCard size={12} /> Card
+                        </button>
                       </div>
                     </div>
 
+                    {/* GCash Reference Panel */}
+                    {laundryPaymentMethod === 'gcash' && (
+                      <div className="bg-slate-50/50 p-2 border border-slate-200 rounded-2xl">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">GCash Reference No.</label>
+                        <input
+                          type="text"
+                          value={laundryGcashReference}
+                          onChange={e => setLaundryGcashReference(e.target.value)}
+                          className="w-full px-3 py-1 bg-white border border-blue-200 rounded-xl outline-none text-sm font-bold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                          placeholder="Enter Reference Number"
+                        />
+                      </div>
+                    )}
+
                     {/* Cash Change Panel */}
                     {laundryPaymentMethod === 'cash' && (
-                      <div className="bg-slate-50 p-2 border border-slate-200 rounded-xl grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[8px] font-bold text-slate-500 uppercase tracking-wide block mb-0.5">Cash Tendered</label>
-                          <input
-                            type="text"
-                            value={laundryCashReceived}
-                            onChange={e => setLaundryCashReceived(e.target.value)}
-                            className="w-full px-2 py-0.5 bg-white border border-slate-200 rounded-lg outline-none text-xs font-black text-slate-800"
-                            placeholder="₱0.00"
-                          />
-                          {/* Quick cash helper buttons */}
-                          <div className="flex gap-1 mt-1">
-                            {[100, 500, 1000].map(cashVal => (
-                              <button
-                                key={cashVal}
-                                type="button"
-                                onClick={() => {
-                                  setLaundryCashReceived((prev) => {
-                                    const current = parseFloat(prev) || 0;
-                                    return (current + cashVal).toString();
-                                  });
-                                }}
-                                className="flex-1 py-0.5 bg-white hover:bg-slate-100 border border-slate-200 rounded text-[8px] font-extrabold text-slate-500"
-                              >
-                                +{cashVal}
-                              </button>
-                            ))}
+                      <div className="bg-slate-50/50 p-2 border border-slate-200 rounded-2xl grid grid-cols-5 gap-2 items-center">
+                        <div className="col-span-3">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block mb-1">Cash Tendered</label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg font-black text-slate-400">₱</span>
+                            <input
+                              type="text"
+                              value={laundryCashReceived}
+                              onChange={e => setLaundryCashReceived(e.target.value)}
+                              className="w-full pl-7 pr-3 py-1 bg-white border border-blue-200 rounded-xl outline-none text-lg font-black text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm"
+                              placeholder="0.00"
+                            />
                           </div>
                         </div>
-                        <div className="flex flex-col justify-center text-right pr-2">
-                          <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Change Due</span>
-                          <span className={cn(
-                            "text-sm font-black font-mono",
-                            (parseFloat(laundryCashReceived) || 0) >= laundryGrandTotal
-                              ? "text-emerald-600"
-                              : "text-slate-400"
-                          )}>
-                            ₱{Math.max(0, (parseFloat(laundryCashReceived) || 0) - laundryGrandTotal).toFixed(2)}
-                          </span>
+                        <div className="col-span-2 flex flex-col justify-center text-right pr-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Change Due</span>
+                          {(() => {
+                            const cashRec = parseFloat(laundryCashReceived) || 0;
+                            const diff = cashRec - laundryGrandTotal;
+                            const isNeg = diff < 0;
+                            return (
+                              <span className={cn(
+                                "text-xl font-black font-mono",
+                                isNeg ? "text-rose-600 animate-pulse" : "text-blue-600"
+                              )}>
+                                {isNeg ? `-₱${Math.abs(diff).toFixed(2)}` : `₱${diff.toFixed(2)}`}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     )}
                   </div>
 
                   {/* Calculations & Checkout action buttons */}
-                  <div className="mt-2.5 pt-2 border-t border-slate-100">
-                    <div className="bg-slate-900 text-white p-2.5 rounded-xl mb-2.5">
+                  <div className="mt-1.5 pt-1.5 border-t border-slate-100">
+                    <div className="bg-slate-900 text-white p-2 rounded-xl mb-1.5">
                       <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
-                        <span>Subtotal ({laundryWeight || '0'} kg)</span>
+                        <span>Subtotal ({laundryTotalWeight.toFixed(2)} kg)</span>
                         <span>₱{laundrySubtotal.toFixed(2)}</span>
                       </div>
                       {dynamicAddonTotal > 0 && (
@@ -1801,32 +2407,40 @@ export default function POS() {
                         </div>
                       )}
                       <div className="flex justify-between items-center border-t border-slate-800 pt-1 mt-1">
-                        <span className="text-[9px] font-black uppercase text-slate-350">Grand Total</span>
-                        <span className="text-sm font-black text-blue-400 font-mono">
+                        <span className="text-[10px] font-black uppercase text-slate-300">Grand Total</span>
+                        <span className="text-lg font-black text-cyan-400 font-mono">
                           ₱{laundryGrandTotal.toFixed(2)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 mt-2">
                       <button
                         type="button"
                         onClick={resetLaundryForm}
-                        className="py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-600 transition-all font-black text-[10px] uppercase tracking-wide rounded-lg text-center"
+                        className="py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-[0.98] text-slate-700 transition-all font-black text-xs uppercase tracking-wider rounded-xl text-center shadow-sm"
                       >
                         Clear
                       </button>
                       <button
                         type="button"
+                        disabled={isProcessingPayment}
                         onClick={() => handleCheckoutLaundry(false)}
-                        className="py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-white transition-all font-black text-[10px] uppercase tracking-wide rounded-lg text-center"
+                        className={cn(
+                          "py-1.5 bg-slate-900 hover:bg-slate-800 active:scale-[0.98] text-white transition-all font-black text-xs uppercase tracking-wider rounded-xl text-center shadow-sm",
+                          isProcessingPayment && "opacity-50 cursor-not-allowed"
+                        )}
                       >
                         Save
                       </button>
                       <button
                         type="button"
+                        disabled={isProcessingPayment}
                         onClick={() => handleCheckoutLaundry(true)}
-                        className="py-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white transition-all font-black text-[10px] uppercase tracking-wide rounded-lg flex items-center justify-center gap-1 shadow-xs text-center"
+                        className={cn(
+                          "py-1.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white transition-all font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/10 text-center",
+                          isProcessingPayment && "opacity-50 cursor-not-allowed"
+                        )}
                       >
                         <Printer size={12} />
                         Pay & Print
@@ -1843,939 +2457,853 @@ export default function POS() {
       ) : (
         <>
           <div className="flex-1 flex flex-col h-full border-r border-slate-200 min-w-0 print:hidden">
-        {/* Header */}
-        <div className="px-3 py-1.5 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 flex-shrink-0 font-sans">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 pl-14">
-            <h1 className="text-sm font-black text-slate-800 tracking-tight whitespace-nowrap mr-1.5">Espresso POS</h1>
-            {terminals.length > 0 && (
-              <select
-                value={activeTerminal?.id || ''}
-                onChange={(e) => {
-                  const term = terminals.find(t => t.id.toString() === e.target.value);
-                  if (term) {
-                    setActiveTerminal(term);
-                    navigate({ search: `?terminal_id=${term.id}` }, { replace: true });
-                  }
-                }}
-                className="bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-lg px-1.5 py-1 outline-none text-xs min-h-[32px] cursor-pointer"
-              >
-                {terminals.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            )}
-            <div className="flex items-center gap-1">
-              {window.location.pathname !== '/standalone-pos' && (
-                <button onClick={popOut} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center min-w-[32px] min-h-[32px]" title="Open POS in new window">
-                  <ExternalLink size={14} />
-                </button>
-              )}
-              <button onClick={toggleFullscreen} className="hidden md:flex p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg items-center justify-center min-w-[32px] min-h-[32px]" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}>
-                {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {currentUser?.role !== 'waiter' && (
-              <>
+            {/* Header */}
+            <div className="px-3 py-1.5 bg-white border-b border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 flex-shrink-0 font-sans">
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 pl-14">
+                <h1 className="text-sm font-black text-slate-800 tracking-tight whitespace-nowrap mr-1.5">Business POS</h1>
+                {terminals.length > 0 && (
+                  <select
+                    value={activeTerminal?.id || ''}
+                    onChange={(e) => {
+                      const term = terminals.find(t => t.id.toString() === e.target.value);
+                      if (term) {
+                        setActiveTerminal(term);
+                        navigate({ search: `?terminal_id=${term.id}` }, { replace: true });
+                      }
+                    }}
+                    className="bg-slate-100 text-slate-700 font-bold border border-slate-200 rounded-lg px-1.5 py-1 outline-none text-xs min-h-[32px] cursor-pointer"
+                  >
+                    {terminals.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                )}
+                <div className="flex items-center gap-1">
+                  {window.location.pathname !== '/standalone-pos' && (
+                    <button onClick={popOut} className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center justify-center min-w-[32px] min-h-[32px]" title="Open POS in new window">
+                      <ExternalLink size={14} />
+                    </button>
+                  )}
+                  <button onClick={toggleFullscreen} className="hidden md:flex p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg items-center justify-center min-w-[32px] min-h-[32px]" title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}>
+                    {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {currentUser?.role !== 'waiter' && (
+                  <>
+                    <button
+                      onClick={() => setShowZReading(true)}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px]"
+                    >
+                      X/Z-Reading
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShiftAction(currentShift ? 'end' : 'start');
+                        setShiftAmount('');
+                        setShowShiftModal(true);
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[32px]",
+                        currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                      )}
+                    >
+                      <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
+                    </button>
+                  </>
+                )}
+
                 <button
-                  onClick={() => setShowZReading(true)}
-                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px]"
+                  onClick={() => setIsCartOpen(true)}
+                  className="lg:hidden p-2.5 bg-emerald-100 text-emerald-600 rounded-lg relative min-h-[40px] min-w-[40px]"
                 >
-                  X/Z-Reading
+                  <ShoppingCart size={20} />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
+                      {cart.reduce((a, b) => a + b.quantity, 0)}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Division Selector Toggle for Laundry hybrid branch */}
+            {isLaundryBranch && (
+              <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 flex-shrink-0 font-sans">
+                <button
+                  onClick={() => {
+                    setSelectedDivision('coffee');
+                    setSelectedCategory('All');
+                  }}
+                  className={cn(
+                    "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                    selectedDivision === 'coffee'
+                      ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  )}
+                >
+                  Coffee Shop
                 </button>
                 <button
                   onClick={() => {
-                    setShiftAction(currentShift ? 'end' : 'start');
-                    setShiftAmount('');
-                    setShowShiftModal(true);
+                    setSelectedDivision('laundry');
+                    setSelectedCategory('All');
                   }}
                   className={cn(
-                    "px-2.5 py-1 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[32px]",
-                    currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                    "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
+                    selectedDivision === 'laundry'
+                      ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                   )}
                 >
-                  <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
+                  Laundry Service
                 </button>
-              </>
-            )}
-            <div className="relative flex-1 sm:w-48">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-7 pr-3 py-1 bg-slate-100 border-transparent rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition-all outline-none text-xs min-h-[32px] font-sans"
-              />
-            </div>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="lg:hidden p-2.5 bg-emerald-100 text-emerald-600 rounded-lg relative min-h-[40px] min-w-[40px]"
-            >
-              <ShoppingCart size={20} />
-              {cart.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold border-2 border-white">
-                  {cart.reduce((a, b) => a + b.quantity, 0)}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Division Selector Toggle for Laundry hybrid branch */}
-        {isLaundryBranch && (
-          <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 flex-shrink-0 font-sans">
-            <button
-              onClick={() => {
-                setSelectedDivision('coffee');
-                setSelectedCategory('All');
-              }}
-              className={cn(
-                "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
-                selectedDivision === 'coffee'
-                  ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              )}
-            >
-              ☕ Coffee Shop
-            </button>
-            <button
-              onClick={() => {
-                setSelectedDivision('laundry');
-                setSelectedCategory('All');
-              }}
-              className={cn(
-                "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 border transition-all active:scale-[0.97] uppercase tracking-wide min-h-[38px]",
-                selectedDivision === 'laundry'
-                  ? "bg-emerald-600 text-white border-emerald-700 shadow-sm"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              )}
-            >
-              🧺 Laundry Service
-            </button>
-          </div>
-        )}
-
-        {/* Categories */}
-        <div className="p-1.5 px-3 flex gap-1.5 overflow-x-auto bg-white border-b border-slate-100 no-scrollbar flex-shrink-0 font-sans">
-          <button
-            onClick={() => setSelectedCategory('All')}
-            className={cn(
-              "px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all min-h-[30px] border shadow-xs",
-              selectedCategory === 'All'
-                ? "bg-emerald-500 text-white border-emerald-600"
-                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-            )}
-          >
-            All Items
-          </button>
-          {categories.filter(c => !isLaundryBranch || (c.division || 'coffee') === selectedDivision).map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCategory(c.name)}
-              className={cn(
-                "px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all min-h-[30px] border shadow-xs",
-                selectedCategory === c.name
-                  ? "bg-emerald-500 text-white border-emerald-600"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              )}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
-
-        {/* Products Grid */}
-        <div className="flex-1 overflow-auto p-3 md:p-6 custom-scrollbar bg-slate-50/50">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-            {filteredProducts.map(product => {
-              const isLocked = settings?.strict_item_locked && product.stock <= 0;
-              return (
-                <button
-                  key={product.id}
-                  onClick={() => addToCart(product)}
-                  className={cn(
-                    "bg-white rounded-2xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden",
-                    isLocked
-                      ? "opacity-60 border-slate-200 bg-slate-50/50 hover:border-slate-200 hover:shadow-sm"
-                      : "border-slate-200 hover:border-emerald-500 hover:shadow-lg"
-                  )}
-                >
-                  {/* Product Image */}
-                  <div className="w-full h-20 md:h-22 overflow-hidden bg-slate-100 relative">
-                    <img
-                      src={getProductImage(product.name)}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-
-                    {/* Stock Badge Overlay */}
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className={cn(
-                        "px-1 py-0.2 rounded text-[7px] font-black uppercase shadow-xs border backdrop-blur-xs",
-                        product.stock <= 0
-                          ? "bg-rose-500 text-white border-rose-600"
-                          : product.stock < 10
-                            ? "bg-amber-400 text-slate-900 border-amber-500 font-extrabold"
-                            : "bg-white/90 text-slate-600 border-slate-200"
-                      )}>
-                        {product.stock <= 0 ? 'Out' : `${product.stock} L`}
-                      </span>
-                    </div>
-
-                    {!isLocked && (
-                      <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="bg-emerald-500 text-white p-0.5 rounded">
-                          <Plus size={12} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Card Content */}
-                  <div className="p-2 flex-1 flex flex-col justify-between">
-                    <div>
-                      <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter block opacity-80 leading-none mb-0.5">{product.category_name}</span>
-                      <h3 className={cn(
-                        "font-bold text-slate-900 leading-tight text-[11px] md:text-xs line-clamp-2",
-                        isLocked ? "text-slate-500" : "group-hover:text-emerald-700"
-                      )}>{product.name}</h3>
-                    </div>
-                    <div className="mt-1 pt-1 border-t border-slate-50 flex justify-between items-center">
-                      <span className="text-[10px] md:text-xs font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">₱{product.price.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar - Cart & Payment */}
-      <div className={cn(
-        "fixed inset-0 lg:relative lg:flex lg:w-96 z-40 lg:z-10 transition-transform duration-300 lg:translate-x-0 print:hidden",
-        isCartOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
-      )}>
-        {/* Mobile Backdrop */}
-        <div
-          className={cn("absolute inset-0 bg-black/40 lg:hidden transition-opacity", isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none")}
-          onClick={() => setIsCartOpen(false)}
-        />
-
-        <div className="absolute lg:relative right-0 top-0 bottom-0 w-full max-w-[400px] lg:max-w-none lg:w-full bg-white flex flex-col h-full shadow-2xl lg:shadow-none border-l border-slate-200 z-50">
-          {/* Cart Header - Mobile */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 lg:hidden font-sans">
-            <h2 className="text-lg font-bold flex items-center gap-2">
-              <ShoppingCart size={20} className="text-emerald-600" />
-              Your Cart
-            </h2>
-            <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-slate-100 rounded-full">
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Order Type Toggle */}
-          <div className="p-2 border-b border-slate-100 bg-slate-50/50 flex gap-1.5 font-sans flex-shrink-0">
-            <button
-              onClick={() => setOrderType('dine-in')}
-              className={cn(
-                "flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-1.5 min-h-[30px]",
-                orderType === 'dine-in'
-                  ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              )}
-            >
-              DINE-IN
-            </button>
-            <button
-              onClick={() => {
-                setOrderType('takeout');
-                setSelectedTable(null);
-              }}
-              className={cn(
-                "flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-1.5 min-h-[30px]",
-                orderType === 'takeout'
-                  ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              )}
-            >
-              TAKEAWAY
-            </button>
-          </div>
-
-          {orderType === 'dine-in' && (
-            <div className="bg-white border rounded-xl border-emerald-100 overflow-hidden flex-shrink-0">
-              <div className="bg-emerald-50 px-3 py-1.5 border-b border-emerald-100 flex justify-between items-center">
-                <label className="text-[9px] font-black text-emerald-700 uppercase tracking-widest block font-sans">Assign Table</label>
               </div>
-              <div className="p-2 flex gap-1.5 overflow-x-auto no-scrollbar font-sans whitespace-nowrap min-h-[48px] items-center">
+            )}
+
+            {/* Categories and Search Row */}
+            <div className="p-1.5 px-3 flex flex-col sm:flex-row gap-3 bg-white border-b border-slate-100 flex-shrink-0 font-sans sm:items-center justify-between">
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar flex-1 pb-1 sm:pb-0">
                 <button
-                  onClick={() => setSelectedTable(null)}
+                  onClick={() => setSelectedCategory('All')}
                   className={cn(
-                    "px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center flex-shrink-0 min-h-[34px]",
-                    orderType === 'dine-in' && selectedTable === null
-                      ? "bg-emerald-500 text-white border-emerald-600 shadow-sm"
-                      : "bg-white text-emerald-600 border-emerald-200 hover:bg-emerald-50 active:scale-[0.95]"
+                    "px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all min-h-[30px] border shadow-xs",
+                    selectedCategory === 'All'
+                      ? "bg-emerald-500 text-white border-emerald-600"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                   )}
                 >
-                  WALK-IN
+                  All Items
                 </button>
-                {tables.map(table => (
+                {categories.filter(c => !isLaundryBranch || (c.division || 'coffee') === selectedDivision).map(c => (
                   <button
-                    key={table.id}
-                    onClick={() => {
-                      if (table.status === 'occupied' && selectedTable?.id !== table.id) return;
-                      setSelectedTable(table);
-                    }}
+                    key={c.id}
+                    onClick={() => setSelectedCategory(c.name)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all flex items-center justify-center flex-shrink-0 min-h-[34px] min-w-[50px]",
-                      selectedTable?.id === table.id
-                        ? "bg-emerald-500 text-white border-emerald-600 shadow-sm"
-                        : table.status === 'occupied'
-                          ? "bg-amber-50 text-amber-600 border-amber-200 cursor-not-allowed opacity-80"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:scale-[0.95]"
+                      "px-3 py-1.5 rounded-lg font-bold text-xs whitespace-nowrap transition-all min-h-[30px] border shadow-xs",
+                      selectedCategory === c.name
+                        ? "bg-emerald-500 text-white border-emerald-600"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                     )}
-                    title={table.name}
                   >
-                    {table.name.replace('Table ', 'T')}
+                    {c.name}
                   </button>
                 ))}
               </div>
-            </div>
-          )}
 
-          {/* Cart Items */}
-          <div className="flex-1 overflow-auto p-4 space-y-2">
-            {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <ShoppingCart size={48} className="mb-4 opacity-20" />
-                <p>Cart is empty</p>
+              {/* Placed Search Bar */}
+              <div className="relative w-full sm:w-60 shrink-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-7 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-250 transition-all outline-none text-xs min-h-[30px] font-semibold font-sans"
+                />
               </div>
-            ) : (
-              cart.map((item, idx) => {
-                const isExpanded = expandedCartItemId === item.id;
-                return (
-                  <div
-                    key={item._isSaved ? `saved-${item.id}-${idx}` : item.id}
-                    className="flex flex-col gap-1 p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-all font-sans"
-                  >
-                    <div className="flex gap-2 items-center">
-                      {/* Clickable Info Area */}
-                      <button
-                        onClick={() => !item._isSaved && setExpandedCartItemId(isExpanded ? null : item.id)}
-                        className="flex-1 text-left flex flex-col min-w-0"
-                        type="button"
-                      >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <h4 className="font-bold text-slate-800 text-xs truncate flex-1 leading-tight">{item.name}</h4>
-                          {!item._isSaved && (
-                            <span className="text-[8px] text-slate-400 font-normal shrink-0">
-                              {isExpanded ? '▲ hide' : '▼ edit'}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-emerald-600 font-semibold text-xs font-mono mt-0.5 leading-none">
-                          ₱{(item.price * item.quantity).toFixed(2)}
-                          {item.quantity > 1 && (
-                            <span className="text-[9px] text-slate-400 font-normal ml-1">
-                              (₱{item.price.toFixed(2)} ea)
-                            </span>
-                          )}
-                        </p>
-                        {item._isSaved && <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-wider mt-0.5 leading-none">Ordered</span>}
-                      </button>
+            </div>
 
-                      {/* Quantity Stepper */}
-                      {!item._isSaved ? (
-                        <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm shrink-0">
-                          <button
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
-                            type="button"
-                          >
-                            <Minus size={10} />
-                          </button>
-                          <span className="w-4 text-center font-bold text-xs text-slate-800">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
-                            type="button"
-                          >
-                            <Plus size={10} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="text-slate-500 font-black text-[10px] px-1.5 shrink-0 select-none bg-slate-200/50 rounded py-0.5">{item.quantity}x</div>
+            {/* Products Grid */}
+            <div className="flex-1 overflow-auto p-3 md:p-6 custom-scrollbar bg-slate-50/50">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-3">
+                {filteredProducts.map(product => {
+                  const isLocked = settings?.strict_item_locked && product.stock <= 0;
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => addToCart(product)}
+                      className={cn(
+                        "bg-white rounded-2xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden",
+                        isLocked
+                          ? "opacity-60 border-slate-200 bg-slate-50/50 hover:border-slate-200 hover:shadow-sm"
+                          : "border-slate-200 hover:border-emerald-500 hover:shadow-lg"
                       )}
-
-                      {/* Trash Button */}
-                      {!item._isSaved && (
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center"
-                          type="button"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Expandable Options Area (Only for unsaved items) */}
-                    {!item._isSaved && isExpanded && (
-                      <div className="space-y-1.5 mt-1 pt-1.5 border-t border-slate-250/50">
-                        <input
-                          type="text"
-                          placeholder="Add notes..."
-                          value={item.notes}
-                          onChange={(e) => updateNotes(item.id, e.target.value)}
-                          className="w-full text-[10px] px-2 py-1 bg-white border border-slate-200 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none transition-all font-sans"
+                    >
+                      {/* Product Image */}
+                      <div className="w-full h-36 md:h-40 overflow-hidden bg-slate-50 border-b border-slate-100 relative flex items-center justify-center">
+                        <img
+                          src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
+                          onError={(e) => {
+                            const imgTarget = e.currentTarget as HTMLImageElement;
+                            imgTarget.style.display = 'none';
+                          }}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0 z-10"
                         />
-                        <div className="flex gap-2 items-center">
-                          <div className="bg-white border border-slate-200 rounded p-1 text-slate-400">
-                            <Percent size={10} />
-                          </div>
-                          <select
-                            className="flex-1 text-[10px] bg-white border border-slate-200 rounded px-1.5 py-1 outline-none focus:border-emerald-500 font-medium font-sans"
-                            disabled={item.isComplimentary}
-                            value={item.itemDiscount?.id || ''}
-                            onChange={(e) => {
-                              const d = discounts.find(d => d.id === parseInt(e.target.value));
-                              updateItemDiscount(item.id, d || null);
-                            }}
-                          >
-                            <option value="">No Item Discount</option>
-                            {discounts.map(d => (
-                              <option key={d.id} value={d.id}>{d.name} ({d.value}%)</option>
-                            ))}
-                          </select>
+                        <div className="text-slate-300 flex flex-col items-center justify-center p-2">
+                          <Package size={20} strokeWidth={1.5} className="text-slate-400/80 mb-0.5" />
+                          <span className="text-[7px] font-black uppercase tracking-widest text-slate-400/60 leading-none">No Picture</span>
                         </div>
-                      </div>
-                    )}
 
-                    {/* Display applied labels */}
-                    {item.itemDiscount && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded uppercase border border-emerald-100 leading-none">
-                          Discount: {item.itemDiscount.name} (-{item.itemDiscount.value}%)
-                        </span>
-                      </div>
-                    )}
-                    {item.isComplimentary && (
-                      <div className="flex flex-col gap-0.5 mt-0.5">
-                        <span className="text-[8px] font-black text-amber-600 bg-amber-50 px-1 py-0.5 rounded uppercase border border-amber-100 w-fit leading-none">
-                          COMPLIMENTARY: TO {item.complimentaryDetails?.recipient || '...'}
-                        </span>
-                        {item.complimentaryDetails?.slipNumber && (
-                          <span className="text-[8px] text-amber-700/80 font-mono ml-0.5 leading-none">
-                            Slip #: {item.complimentaryDetails.slipNumber}
+                        {/* Stock Badge Overlay */}
+                        <div className="absolute top-1.5 left-1.5 z-20">
+                          <span className={cn(
+                            "px-1 py-0.2 rounded text-[7px] font-black uppercase shadow-xs border backdrop-blur-xs",
+                            product.stock <= 0
+                              ? "bg-rose-500 text-white border-rose-600"
+                              : product.stock < 10
+                                ? "bg-amber-400 text-slate-900 border-amber-500 font-extrabold"
+                                : "bg-white/90 text-slate-600 border-slate-200"
+                          )}>
+                            {product.stock <= 0 ? 'Out' : `${product.stock} L`}
                           </span>
+                        </div>
+
+                        {!isLocked && (
+                          <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="bg-emerald-500 text-white p-0.5 rounded">
+                              <Plus size={12} />
+                            </div>
+                          </div>
                         )}
                       </div>
-                    )}
-                    {item._isSaved && item.notes && (
-                      <p className="text-[9px] text-slate-500 italic ml-0.5">Notes: {item.notes}</p>
-                    )}
-                  </div>
-                );
-              })
-            )}
+
+                      {/* Card Content */}
+                      <div className="p-2 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter block opacity-80 leading-none mb-0.5">{product.category_name}</span>
+                          <h3 className={cn(
+                            "font-bold text-slate-900 leading-tight text-[11px] md:text-xs line-clamp-2",
+                            isLocked ? "text-slate-500" : "group-hover:text-emerald-700"
+                          )}>{product.name}</h3>
+                        </div>
+                        <div className="mt-1 pt-1 border-t border-slate-50 flex justify-between items-center">
+                          <span className="text-[10px] md:text-xs font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">₱{product.price.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Totals & Payment */}
-          <div className="p-3 bg-slate-50 border-t border-slate-200 space-y-2.5 flex-shrink-0">
-            {/* Discount Selection */}
-            <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Discount</label>
-              <select
-                className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs outline-none focus:border-emerald-500 font-sans"
-                onChange={(e) => {
-                  const d = discounts.find(d => d.id === parseInt(e.target.value));
-                  setSelectedDiscount(d || null);
-                  if (!d) {
-                    setPaxCount(1);
-                    setDiscountPaxCount(1);
-                  }
-                }}
-                value={selectedDiscount?.id || ''}
-              >
-                <option value="">No Discount</option>
-                {discounts.map(d => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-            </div>
-            {selectedDiscount && (
-              selectedDiscount.name.toLowerCase().includes('senior') ||
-              selectedDiscount.name.toLowerCase().includes('pwd') ||
-              selectedDiscount.name.toLowerCase().includes('athlete') ||
-              selectedDiscount.name.toLowerCase().includes('coach') ||
-              selectedDiscount.name.toLowerCase().includes('solo') ||
-              selectedDiscount.name.toLowerCase().includes('vat exempt') ||
-              selectedDiscount.name.toLowerCase().includes('valor') ||
-              selectedDiscount.name.toLowerCase().includes('medal')
-            ) && (() => {
-              const nameLower = selectedDiscount.name.toLowerCase();
-              const discountLabel = nameLower.includes('senior') ? 'Senior Count' :
-                nameLower.includes('pwd') ? 'PWD Count' :
-                  nameLower.includes('athlete') || nameLower.includes('coach') ? 'Athlete/Coach Count' :
-                    nameLower.includes('solo') ? 'Solo Parent Count' :
-                      nameLower.includes('valor') || nameLower.includes('medal') ? 'Medal of Valor Count' : 'Discount Count';
-              const isSolo = nameLower.includes('solo');
+          {/* Sidebar - Cart & Payment */}
+          <div className={cn(
+            "fixed inset-0 lg:relative lg:flex lg:w-96 z-40 lg:z-10 transition-transform duration-300 lg:translate-x-0 print:hidden",
+            isCartOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+          )}>
+            {/* Mobile Backdrop */}
+            <div
+              className={cn("absolute inset-0 bg-black/40 lg:hidden transition-opacity", isCartOpen ? "opacity-100" : "opacity-0 pointer-events-none")}
+              onClick={() => setIsCartOpen(false)}
+            />
 
-              return (
-                <div className="bg-white p-3 rounded-xl border border-slate-200 transition-all animation-fade-in space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                        Total Customers
-                      </label>
-                      <input
-                        id="totalPaxInput"
-                        type="number"
-                        min="1"
-                        className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold"
-                        value={paxCount}
-                        onChange={(e) => {
-                          const val = Math.max(1, parseInt(e.target.value) || 1);
-                          setPaxCount(val);
-                          if (discountPaxCount > val) {
-                            setDiscountPaxCount(val);
-                          }
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                        {discountLabel}
-                      </label>
-                      <input
-                        id="discountPaxInput"
-                        type="number"
-                        min="1"
-                        max={paxCount}
-                        className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-emerald-600"
-                        value={discountPaxCount}
-                        onChange={(e) => {
-                          const val = Math.max(1, Math.min(paxCount, parseInt(e.target.value) || 1));
-                          setDiscountPaxCount(val);
-                        }}
-                      />
-                    </div>
+            <div className="absolute lg:relative right-0 top-0 bottom-0 w-full max-w-[400px] lg:max-w-none lg:w-full bg-white flex flex-col h-full shadow-2xl lg:shadow-none border-l border-slate-200 z-50">
+              {/* Cart Header - Mobile */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 lg:hidden font-sans">
+                <h2 className="text-lg font-bold flex items-center gap-2">
+                  <ShoppingCart size={20} className="text-emerald-600" />
+                  Your Cart
+                </h2>
+                <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-slate-100 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Order Type Toggle */}
+              <div className="p-2 border-b border-slate-100 bg-slate-50/50 flex gap-1.5 font-sans flex-shrink-0">
+                <button
+                  onClick={() => setOrderType('dine-in')}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-1.5 min-h-[30px]",
+                    orderType === 'dine-in'
+                      ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  )}
+                >
+                  DINE-IN
+                </button>
+                <button
+                  onClick={() => {
+                    setOrderType('takeout');
+                    setSelectedTable(null);
+                  }}
+                  className={cn(
+                    "flex-1 py-1.5 rounded-lg text-[10px] font-black transition-all border flex items-center justify-center gap-1.5 min-h-[30px]",
+                    orderType === 'takeout'
+                      ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                  )}
+                >
+                  TAKEAWAY
+                </button>
+              </div>
+
+
+              {/* Cart Items */}
+              <div className="flex-1 overflow-auto p-4 space-y-2">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                    <ShoppingCart size={48} className="mb-4 opacity-20" />
+                    <p>Cart is empty</p>
                   </div>
+                ) : (
+                  [...cart].reverse().map((item, idx) => {
+                    const isExpanded = expandedCartItemId === item.id;
+                    return (
+                      <div
+                        key={item._isSaved ? `saved-${item.id}-${idx}` : item.id}
+                        className="flex flex-col gap-1 p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-all font-sans"
+                      >
+                        <div className="flex gap-2 items-center">
+                          {/* Clickable Info Area */}
+                          <button
+                            onClick={() => !item._isSaved && setExpandedCartItemId(isExpanded ? null : item.id)}
+                            className="flex-1 text-left flex flex-col min-w-0"
+                            type="button"
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <h4 className="font-bold text-slate-800 text-xs truncate flex-1 leading-tight">{item.name}</h4>
+                              {!item._isSaved && (
+                                <span className="text-[8px] text-slate-400 font-normal shrink-0">
+                                  {isExpanded ? '▲ hide' : '▼ edit'}
+                                </span>
+                              )}
+                            </div>
+                            {item.notes && item.notes.replace(/\[DISCOUNT:.*?\]/g, '').replace(/\[COMPLIMENTARY:.*?\]/g, '').trim() !== '' && (
+                              <div className="mt-1">
+                                <span className="text-[9px] text-slate-500 font-bold bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200">
+                                  {item.notes.replace(/\[DISCOUNT:.*?\]/g, '').replace(/\[COMPLIMENTARY:.*?\]/g, '').trim()}
+                                </span>
+                              </div>
+                            )}
+                            <p className="text-emerald-600 font-semibold text-xs font-mono mt-0.5 leading-none">
+                              ₱{(item.price * item.quantity).toFixed(2)}
+                              {item.quantity > 1 && (
+                                <span className="text-[9px] text-slate-400 font-normal ml-1">
+                                  (₱{item.price.toFixed(2)} ea)
+                                </span>
+                              )}
+                            </p>
+                            {item._isSaved && <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-wider mt-0.5 leading-none">Ordered</span>}
+                          </button>
 
-                  <div className="border-t border-slate-100 pt-2 space-y-2.5">
-                    <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                        Customer Full Name
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Required for BIR report"
-                        className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                        value={discountCustomerName}
-                        onChange={(e) => setDiscountCustomerName(e.target.value)}
-                      />
-                    </div>
+                          {/* Quantity Stepper */}
+                          {!item._isSaved ? (
+                            <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm shrink-0">
+                              <button
+                                onClick={() => updateQuantity(item.id, -1)}
+                                className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                                type="button"
+                              >
+                                <Minus size={10} />
+                              </button>
+                              <span className="w-4 text-center font-bold text-xs text-slate-800">{item.quantity}</span>
+                              <button
+                                onClick={() => updateQuantity(item.id, 1)}
+                                className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                                type="button"
+                              >
+                                <Plus size={10} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="text-slate-500 font-black text-[10px] px-1.5 shrink-0 select-none bg-slate-200/50 rounded py-0.5">{item.quantity}x</div>
+                          )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                          Card / ID Number
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="OSCA/PWD/Athlete/Solo/Valor ID"
-                          className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                          value={discountCustomerIdNo}
-                          onChange={(e) => setDiscountCustomerIdNo(e.target.value)}
-                        />
+                          {/* Trash Button */}
+                          {!item._isSaved && (
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center"
+                              type="button"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Expandable Options Area (Only for unsaved items) */}
+                        {!item._isSaved && isExpanded && (
+                          <div className="space-y-1.5 mt-1 pt-1.5 border-t border-slate-250/50">
+                            <input
+                              type="text"
+                              placeholder="Add notes..."
+                              value={item.notes}
+                              onChange={(e) => updateNotes(item.id, e.target.value)}
+                              className="w-full text-[10px] px-2 py-1 bg-white border border-slate-200 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none transition-all font-sans"
+                            />
+                            <div className="flex gap-2 items-center hidden">
+                              <div className="bg-white border border-slate-200 rounded p-1 text-slate-400">
+                                <Percent size={10} />
+                              </div>
+                              <select
+                                className="flex-1 text-[10px] bg-white border border-slate-200 rounded px-1.5 py-1 outline-none focus:border-emerald-500 font-medium font-sans"
+                                disabled={item.isComplimentary}
+                                value={item.itemDiscount?.id || ''}
+                                onChange={(e) => {
+                                  const d = discounts.find(d => d.id === parseInt(e.target.value));
+                                  updateItemDiscount(item.id, d || null);
+                                }}
+                              >
+                                <option value="">No Item Discount</option>
+                                {discounts.map(d => (
+                                  <option key={d.id} value={d.id}>{d.name} ({d.value}%)</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Display applied labels */}
+                        {item.itemDiscount && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded uppercase border border-emerald-100 leading-none">
+                              Discount: {item.itemDiscount.name} (-{item.itemDiscount.value}%)
+                            </span>
+                          </div>
+                        )}
+                        {item.isComplimentary && (
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            <span className="text-[8px] font-black text-amber-600 bg-amber-50 px-1 py-0.5 rounded uppercase border border-amber-100 w-fit leading-none">
+                              COMPLIMENTARY: TO {item.complimentaryDetails?.recipient || '...'}
+                            </span>
+                            {item.complimentaryDetails?.slipNumber && (
+                              <span className="text-[8px] text-amber-700/80 font-mono ml-0.5 leading-none">
+                                Slip #: {item.complimentaryDetails.slipNumber}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {item._isSaved && item.notes && (
+                          <p className="text-[9px] text-slate-500 italic ml-0.5">Notes: {item.notes}</p>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                          Customer TIN (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. 123-456-789"
-                          className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                          value={discountCustomerTin}
-                          onChange={(e) => setDiscountCustomerTin(e.target.value)}
-                        />
-                      </div>
-                    </div>
+                    );
+                  })
+                )}
+              </div>
 
-                    {isSolo && (
-                      <div className="border-t border-slate-100 pt-2 space-y-2.5">
-                        <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Solo Parent Child Information</p>
+              {/* Totals & Payment */}
+              <div className="p-3 bg-slate-50 border-t border-slate-200 space-y-2.5 flex-shrink-0">
+                {/* Discount Selection */}
+                <div className="hidden">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Discount</label>
+                  <select
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs outline-none focus:border-emerald-500 font-sans"
+                    onChange={(e) => {
+                      const d = discounts.find(d => d.id === parseInt(e.target.value));
+                      setSelectedDiscount(d || null);
+                      if (!d) {
+                        setPaxCount(1);
+                        setDiscountPaxCount(1);
+                      }
+                    }}
+                    value={selectedDiscount?.id || ''}
+                  >
+                    <option value="">No Discount</option>
+                    {discounts.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedDiscount && (
+                  selectedDiscount.name.toLowerCase().includes('senior') ||
+                  selectedDiscount.name.toLowerCase().includes('pwd') ||
+                  selectedDiscount.name.toLowerCase().includes('athlete') ||
+                  selectedDiscount.name.toLowerCase().includes('coach') ||
+                  selectedDiscount.name.toLowerCase().includes('solo') ||
+                  selectedDiscount.name.toLowerCase().includes('vat exempt') ||
+                  selectedDiscount.name.toLowerCase().includes('valor') ||
+                  selectedDiscount.name.toLowerCase().includes('medal')
+                ) && (() => {
+                  const nameLower = selectedDiscount.name.toLowerCase();
+                  const discountLabel = nameLower.includes('senior') ? 'Senior Count' :
+                    nameLower.includes('pwd') ? 'PWD Count' :
+                      nameLower.includes('athlete') || nameLower.includes('coach') ? 'Athlete/Coach Count' :
+                        nameLower.includes('solo') ? 'Solo Parent Count' :
+                          nameLower.includes('valor') || nameLower.includes('medal') ? 'Medal of Valor Count' : 'Discount Count';
+                  const isSolo = nameLower.includes('solo');
+
+                  return (
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 transition-all animation-fade-in space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                            Child's Full Name
+                            Total Customers
+                          </label>
+                          <input
+                            id="totalPaxInput"
+                            type="number"
+                            min="1"
+                            className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold"
+                            value={paxCount}
+                            onChange={(e) => {
+                              const val = Math.max(1, parseInt(e.target.value) || 1);
+                              setPaxCount(val);
+                              if (discountPaxCount > val) {
+                                setDiscountPaxCount(val);
+                              }
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                            {discountLabel}
+                          </label>
+                          <input
+                            id="discountPaxInput"
+                            type="number"
+                            min="1"
+                            max={paxCount}
+                            className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-emerald-600"
+                            value={discountPaxCount}
+                            onChange={(e) => {
+                              const val = Math.max(1, Math.min(paxCount, parseInt(e.target.value) || 1));
+                              setDiscountPaxCount(val);
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="border-t border-slate-100 pt-2 space-y-2.5">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                            Customer Full Name
                           </label>
                           <input
                             type="text"
-                            placeholder="Name of child (6 yrs & below)"
+                            placeholder="Required for BIR report"
                             className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                            value={discountChildName}
-                            onChange={(e) => setDiscountChildName(e.target.value)}
+                            value={discountCustomerName}
+                            onChange={(e) => setDiscountCustomerName(e.target.value)}
                           />
                         </div>
+
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                              Child's Birthdate
+                              Card / ID Number
                             </label>
                             <input
-                              type="date"
+                              type="text"
+                              placeholder="OSCA/PWD/Athlete/Solo/Valor ID"
                               className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                              value={discountChildBirthdate}
-                              onChange={(e) => {
-                                const dateStr = e.target.value;
-                                setDiscountChildBirthdate(dateStr);
-                                if (!dateStr) {
-                                  setDiscountChildAge('');
-                                  return;
-                                }
-                                const birth = new Date(dateStr);
-                                const today = new Date();
-                                let age = today.getFullYear() - birth.getFullYear();
-                                const m = today.getMonth() - birth.getMonth();
-                                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-                                  age--;
-                                }
-                                setDiscountChildAge(Math.max(0, age).toString());
-                              }}
+                              value={discountCustomerIdNo}
+                              onChange={(e) => setDiscountCustomerIdNo(e.target.value)}
                             />
                           </div>
                           <div>
                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                              Child's Age
+                              Customer TIN (Optional)
                             </label>
                             <input
-                              type="number"
-                              disabled
-                              placeholder="Auto-calculated"
-                              className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-slate-700"
-                              value={discountChildAge}
+                              type="text"
+                              placeholder="e.g. 123-456-789"
+                              className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
+                              value={discountCustomerTin}
+                              onChange={(e) => setDiscountCustomerTin(e.target.value)}
                             />
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
 
-            <div className="space-y-3">
-              {selectedDiscount && (
-                selectedDiscount.name.toLowerCase().includes('senior') ||
-                selectedDiscount.name.toLowerCase().includes('pwd') ||
-                selectedDiscount.name.toLowerCase().includes('athlete') ||
-                selectedDiscount.name.toLowerCase().includes('coach') ||
-                selectedDiscount.name.toLowerCase().includes('solo') ||
-                selectedDiscount.name.toLowerCase().includes('vat exempt')
-              ) ? (
-                <div className="space-y-1.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-xs relative">
-                  <div className="flex justify-between text-slate-655">
-                    <span className="font-medium text-slate-700">Menu Total (VAT Inclusive)</span>
-                    <span className="font-bold text-slate-900">₱{subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-500 text-[11px]">
-                    <span>VAT-Exclusive Sales</span>
-                    <span>₱{((vatableSales || 0) + (vatExemptSales || 0)).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-orange-600 text-[11px] font-semibold">
-                    <span>VAT Exemption</span>
-                    <span>-₱{vatReliefAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-emerald-600 font-bold text-[11px]">
-                    <span className="flex items-center gap-1">
-                      {selectedDiscount.name}
-                      <span className="relative group cursor-pointer text-slate-400 hover:text-slate-600 transition-colors">
-                        <span className="text-[10px]">ℹ️</span>
-                        <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-52 p-2 bg-slate-800 text-white text-[9px] leading-relaxed font-normal rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-20 duration-200">
-                          Discount is computed from VAT-exclusive amount.
+                        {isSolo && (
+                          <div className="border-t border-slate-100 pt-2 space-y-2.5">
+                            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Solo Parent Child Information</p>
+                            <div>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                                Child's Full Name
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Name of child (6 yrs & below)"
+                                className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
+                                value={discountChildName}
+                                onChange={(e) => setDiscountChildName(e.target.value)}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                                  Child's Birthdate
+                                </label>
+                                <input
+                                  type="date"
+                                  className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
+                                  value={discountChildBirthdate}
+                                  onChange={(e) => {
+                                    const dateStr = e.target.value;
+                                    setDiscountChildBirthdate(dateStr);
+                                    if (!dateStr) {
+                                      setDiscountChildAge('');
+                                      return;
+                                    }
+                                    const birth = new Date(dateStr);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - birth.getFullYear();
+                                    const m = today.getMonth() - birth.getMonth();
+                                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                                      age--;
+                                    }
+                                    setDiscountChildAge(Math.max(0, age).toString());
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                                  Child's Age
+                                </label>
+                                <input
+                                  type="number"
+                                  disabled
+                                  placeholder="Auto-calculated"
+                                  className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-slate-700"
+                                  value={discountChildAge}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="space-y-3">
+                  {selectedDiscount && (
+                    selectedDiscount.name.toLowerCase().includes('senior') ||
+                    selectedDiscount.name.toLowerCase().includes('pwd') ||
+                    selectedDiscount.name.toLowerCase().includes('athlete') ||
+                    selectedDiscount.name.toLowerCase().includes('coach') ||
+                    selectedDiscount.name.toLowerCase().includes('solo') ||
+                    selectedDiscount.name.toLowerCase().includes('vat exempt')
+                  ) ? (
+                    <div className="space-y-1.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-xs relative">
+                      <div className="flex justify-between text-slate-655">
+                        <span className="font-medium text-slate-700">Menu Total (VAT Inclusive)</span>
+                        <span className="font-bold text-slate-900">₱{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500 text-[11px]">
+                        <span>VAT-Exclusive Sales</span>
+                        <span>₱{((vatableSales || 0) + (vatExemptSales || 0)).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-orange-600 text-[11px] font-semibold">
+                        <span>VAT Exemption</span>
+                        <span>-₱{vatReliefAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-600 font-bold text-[11px]">
+                        <span className="flex items-center gap-1">
+                          {selectedDiscount.name}
+                          <span className="relative group cursor-pointer text-slate-400 hover:text-slate-600 transition-colors">
+                            <span className="text-[10px]">ℹ️</span>
+                            <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-52 p-2 bg-slate-800 text-white text-[9px] leading-relaxed font-normal rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-20 duration-200">
+                              Discount is computed from VAT-exclusive amount.
+                            </span>
+                          </span>
                         </span>
-                      </span>
-                    </span>
-                    <span>-₱{scDiscountAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-slate-700 font-bold border-t border-slate-200/55 pt-1 text-[11px]">
-                    <span>Net Food Amount</span>
-                    <span>₱{cartCalculations.netFoodAmount.toFixed(2)}</span>
-                  </div>
-                  {serviceChargeAmount > 0 && (
-                    <div className="flex justify-between text-slate-500 text-[11px] font-medium">
-                      <span>Service Charge ({serviceChargePercentage}%)</span>
-                      <span>₱{serviceChargeAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t-2 border-dashed border-slate-300">
-                    <span className="text-slate-900">TOTAL</span>
-                    <span className="text-blue-700 font-extrabold text-[20px]">₱{total.toFixed(2)}</span>
-                  </div>
-
-                  {/* View Computation Expandable */}
-                  <div className="border-t border-slate-200/50 pt-2 mt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowComputationDetails(!showComputationDetails)}
-                      className="w-full text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 select-none flex items-center justify-center gap-1 py-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 transition-all shadow-xs"
-                    >
-                      {showComputationDetails ? 'Close Computation Plan ▲' : 'View Computation Plan ▼'}
-                    </button>
-                    {showComputationDetails && (
-                      <div className="mt-3 text-[11px] text-slate-600 bg-white p-3 rounded-lg border border-slate-200/80 font-mono space-y-2.5 leading-relaxed animate-fade-in shadow-inner max-h-[180px] overflow-y-auto pr-1.5">
-                        <p className="font-bold text-slate-800 border-b pb-1 text-xs">Senior/PWD Shared Computation Detail</p>
-
-                        <div>
-                          <p className="font-semibold text-slate-700">STEP 1: Determine Eligible Share</p>
-                          <p className="pl-2">Eligible Share = Menu Total / Customers</p>
-                          <p className="pl-2 text-slate-800">₱{subtotal.toFixed(2)} / {paxCount} = ₱{(subtotal / paxCount).toFixed(2)} per person</p>
-                          <p className="pl-2">Senior/PWD Diners count: {discountPaxCount}</p>
-                          <p className="pl-2 text-slate-800 font-medium">Eligible Portion: ₱{(subtotal / paxCount * discountPaxCount).toFixed(2)}</p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-slate-700">STEP 2: Remove VAT First</p>
-                          <p className="pl-2">VAT-Exclusive Amount = Eligible Portion / 1.12</p>
-                          <p className="pl-2 text-slate-850">₱{(subtotal / paxCount * discountPaxCount).toFixed(2)} / 1.12 = ₱{vatExemptSales.toFixed(2)}</p>
-                          <p className="pl-2 text-orange-600 font-medium">VAT Removed (VAT Exemption): -₱{vatReliefAmount.toFixed(2)}</p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-slate-700">STEP 3: Apply 20% Discount</p>
-                          <p className="pl-2">Senior Discount = VAT-Exclusive Amount × 20%</p>
-                          <p className="pl-2 text-emerald-600 font-medium">₱{vatExemptSales.toFixed(2)} × 20% = -₱{scDiscountAmount.toFixed(2)}</p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-slate-700">STEP 4: Non-Senior Portion</p>
-                          <p className="pl-2">Non-Senior Gross Portion remaining: ₱{(subtotal - (subtotal / paxCount * discountPaxCount)).toFixed(2)}</p>
-                        </div>
-
-                        <div>
-                          <p className="font-semibold text-slate-700">STEP 5: Service Charge</p>
-                          <p className="pl-2">Basis: {serviceChargeBasis === 'vat_exclusive' ? 'VAT-Exclusive Sales' : 'Gross Sales'}</p>
-                          <p className="pl-2 text-slate-800">SC (%): {serviceChargePercentage}%</p>
-                          <p className="pl-2 text-slate-800 font-medium">SC Amount: ₱{serviceChargeAmount.toFixed(2)}</p>
-                        </div>
+                        <span>-₱{scDiscountAmount.toFixed(2)}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-1.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/75 shadow-xs">
-                  <div className="flex justify-between text-slate-500">
-                    <span>Menu Total (VAT Inclusive)</span>
-                    <span>₱{subtotal.toFixed(2)}</span>
-                  </div>
-                  {discountAmount > 0 && (
-                    <div className="flex justify-between text-amber-600">
-                      <span>Discount ({selectedDiscount?.name})</span>
-                      <span>-₱{discountAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-slate-500">
-                    <span>VAT (12%)</span>
-                    <span>₱{vatAmount.toFixed(2)}</span>
-                  </div>
-                  {serviceChargeAmount > 0 && (
-                    <div className="flex justify-between text-slate-500 font-semibold">
-                      <span>Service Charge ({serviceChargePercentage}%)</span>
-                      <span>₱{serviceChargeAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t border-slate-200/60">
-                    <span>Total</span>
-                    <span className="text-blue-700 font-extrabold text-[20px]">₱{total.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {activeOrderId ? (
-              <div className="space-y-3 pt-4 border-t border-slate-200">
-                {cart.some(c => !c._isSaved) && (
-                  <button
-                    onClick={handlePlaceOrder}
-                    disabled={isProcessingPayment}
-                    className={cn(
-                      "w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold transition-all active:scale-[0.98] mb-2 shadow-lg shadow-indigo-500/30",
-                      isProcessingPayment && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {isProcessingPayment ? 'Processing...' : 'Send Additions to Kitchen'}
-                  </button>
-                )}
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Payment Method</label>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    <button
-                      onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <Banknote size={18} />
-                      <span className="text-[10px] font-bold mt-1">Cash</span>
-                    </button>
-                    <button
-                      onClick={() => { setPaymentMethod('credit_card'); setSelectedStoreCredit(null); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'credit_card' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <CreditCard size={18} />
-                      <span className="text-[10px] font-bold mt-1">Card</span>
-                    </button>
-                    <button
-                      onClick={() => { setPaymentMethod('gcash'); setSelectedStoreCredit(null); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'gcash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <Smartphone size={18} />
-                      <span className="text-[10px] font-bold mt-1">GCash</span>
-                    </button>
-                    <button
-                      onClick={() => { setPaymentMethod('maya'); setSelectedStoreCredit(null); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'maya' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <Smartphone size={18} />
-                      <span className="text-[10px] font-bold mt-1">Maya</span>
-                    </button>
-                    <button
-                      onClick={() => { setPaymentMethod('voucher'); setSelectedStoreCredit(null); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'voucher' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <Ticket size={18} />
-                      <span className="text-[10px] font-bold mt-1">Voucher</span>
-                    </button>
-                    <button
-                      onClick={() => { setPaymentMethod('store_credit'); setReferenceNumber(''); setSelectedStoreCredit(null); setStoreCreditQuery(''); }}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                        paymentMethod === 'store_credit' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      <ArrowRightLeft size={18} />
-                      <span className="text-[10px] font-bold mt-1">Store Credit</span>
-                    </button>
-                  </div>
-
-                  {paymentMethod === 'store_credit' ? (
-                    <div className="mb-3 space-y-2">
-                      <div className="relative">
-                        <input
-                          type="text"
-                          placeholder="Search Store Credit (Name or ID)..."
-                          value={storeCreditQuery}
-                          onChange={(e) => handleSearchStoreCredit(e.target.value)}
-                          className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-sm"
-                        />
+                      <div className="flex justify-between text-slate-700 font-bold border-t border-slate-200/55 pt-1 text-[11px]">
+                        <span>Net Food Amount</span>
+                        <span>₱{cartCalculations.netFoodAmount.toFixed(2)}</span>
                       </div>
-                      {storeCreditsList.length > 0 && (
-                        <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-xl bg-white shadow-sm p-1.5 space-y-1">
-                          {storeCreditsList.map((sc: any) => (
-                            <button
-                              key={sc.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedStoreCredit(sc);
-                                setReferenceNumber(sc.id.toString());
-                                setAmountTendered(sc.amount.toString());
-                                setStoreCreditsList([]);
-                                setStoreCreditQuery(`${sc.issued_to} (₱${sc.amount.toFixed(2)})`);
-                              }}
-                              className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 rounded-lg flex justify-between font-bold"
-                            >
-                              <span>#{sc.id} - {sc.issued_to}</span>
-                              <span className="text-emerald-600">₱{sc.amount.toFixed(2)}</span>
-                            </button>
-                          ))}
+                      {serviceChargeAmount > 0 && (
+                        <div className="flex justify-between text-slate-500 text-[11px] font-medium">
+                          <span>Service Charge ({serviceChargePercentage}%)</span>
+                          <span>₱{serviceChargeAmount.toFixed(2)}</span>
                         </div>
                       )}
-                      {selectedStoreCredit && (
-                        <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 flex justify-between">
-                          <span>Applied Store Credit: #{selectedStoreCredit.id} ({selectedStoreCredit.issued_to})</span>
-                          <span>₱{selectedStoreCredit.amount.toFixed(2)}</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t-2 border-dashed border-slate-300">
+                        <span className="text-slate-900">TOTAL</span>
+                        <span className="text-blue-700 font-extrabold text-[20px]">₱{total.toFixed(2)}</span>
+                      </div>
+
+                      {/* View Computation Expandable */}
+                      <div className="border-t border-slate-200/50 pt-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowComputationDetails(!showComputationDetails)}
+                          className="w-full text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 select-none flex items-center justify-center gap-1 py-1.5 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 transition-all shadow-xs"
+                        >
+                          {showComputationDetails ? 'Close Computation Plan ▲' : 'View Computation Plan ▼'}
+                        </button>
+                        {showComputationDetails && (
+                          <div className="mt-3 text-[11px] text-slate-600 bg-white p-3 rounded-lg border border-slate-200/80 font-mono space-y-2.5 leading-relaxed animate-fade-in shadow-inner max-h-[180px] overflow-y-auto pr-1.5">
+                            <p className="font-bold text-slate-800 border-b pb-1 text-xs">Senior/PWD Shared Computation Detail</p>
+
+                            <div>
+                              <p className="font-semibold text-slate-700">STEP 1: Determine Eligible Share</p>
+                              <p className="pl-2">Eligible Share = Menu Total / Customers</p>
+                              <p className="pl-2 text-slate-800">₱{subtotal.toFixed(2)} / {paxCount} = ₱{(subtotal / paxCount).toFixed(2)} per person</p>
+                              <p className="pl-2">Senior/PWD Diners count: {discountPaxCount}</p>
+                              <p className="pl-2 text-slate-800 font-medium">Eligible Portion: ₱{(subtotal / paxCount * discountPaxCount).toFixed(2)}</p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-slate-700">STEP 2: Remove VAT First</p>
+                              <p className="pl-2">VAT-Exclusive Amount = Eligible Portion / 1.12</p>
+                              <p className="pl-2 text-slate-850">₱{(subtotal / paxCount * discountPaxCount).toFixed(2)} / 1.12 = ₱{vatExemptSales.toFixed(2)}</p>
+                              <p className="pl-2 text-orange-600 font-medium">VAT Removed (VAT Exemption): -₱{vatReliefAmount.toFixed(2)}</p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-slate-700">STEP 3: Apply 20% Discount</p>
+                              <p className="pl-2">Senior Discount = VAT-Exclusive Amount × 20%</p>
+                              <p className="pl-2 text-emerald-600 font-medium">₱{vatExemptSales.toFixed(2)} × 20% = -₱{scDiscountAmount.toFixed(2)}</p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-slate-700">STEP 4: Non-Senior Portion</p>
+                              <p className="pl-2">Non-Senior Gross Portion remaining: ₱{(subtotal - (subtotal / paxCount * discountPaxCount)).toFixed(2)}</p>
+                            </div>
+
+                            <div>
+                              <p className="font-semibold text-slate-700">STEP 5: Service Charge</p>
+                              <p className="pl-2">Basis: {serviceChargeBasis === 'vat_exclusive' ? 'VAT-Exclusive Sales' : 'Gross Sales'}</p>
+                              <p className="pl-2 text-slate-800">SC (%): {serviceChargePercentage}%</p>
+                              <p className="pl-2 text-slate-800 font-medium">SC Amount: ₱{serviceChargeAmount.toFixed(2)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    paymentMethod !== 'cash' && (
-                      <div className="mb-3">
-                        <input
-                          type="text"
-                          placeholder={paymentMethod === 'voucher' ? "Voucher Reference #" : "Reference Number"}
-                          value={referenceNumber}
-                          onChange={(e) => setReferenceNumber(e.target.value)}
-                          className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-sm"
-                        />
+                    <div className="space-y-1.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/75 shadow-xs">
+                      {/* Menu Total (VAT Inclusive) hidden */}
+                      <div className="flex justify-between text-slate-500 hidden">
+                        <span>Menu Total (VAT Inclusive)</span>
+                        <span>₱{subtotal.toFixed(2)}</span>
                       </div>
-                    )
+                      {discountAmount > 0 && (
+                        <div className="flex justify-between text-amber-600">
+                          <span>Discount ({selectedDiscount?.name})</span>
+                          <span>-₱{discountAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {/* VAT (12%) hidden */}
+                      <div className="flex justify-between text-slate-500 hidden">
+                        <span>VAT (12%)</span>
+                        <span>₱{vatAmount.toFixed(2)}</span>
+                      </div>
+                      {serviceChargeAmount > 0 && (
+                        <div className="flex justify-between text-slate-500 font-semibold">
+                          <span>Service Charge ({serviceChargePercentage}%)</span>
+                          <span>₱{serviceChargeAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t border-slate-200/60">
+                        <span>Total</span>
+                        <span className="text-blue-700 font-extrabold text-[20px]">₱{total.toFixed(2)}</span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                <div className="relative">
-                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input
-                    type="number"
-                    placeholder="Amount Tendered"
-                    value={amountTendered}
-                    onChange={(e) => setAmountTendered(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-lg"
-                  />
-                </div>
-                {change >= 0 && amountTendered && (
-                  <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                    <span>Change</span>
-                    <span>₱{change.toFixed(2)}</span>
+                {activeOrderId ? (
+                  <div className="space-y-3 pt-4 border-t border-slate-200">
+                    {cart.some(c => !c._isSaved) && (
+                      <button
+                        onClick={handlePlaceOrder}
+                        disabled={isProcessingPayment}
+                        className={cn(
+                          "w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold transition-all active:scale-[0.98] mb-2 shadow-lg shadow-indigo-500/30",
+                          isProcessingPayment && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        {isProcessingPayment ? 'Processing...' : 'Add Product'}
+                      </button>
+                    )}
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Payment Method</label>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                            paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <Banknote size={18} />
+                          <span className="text-[10px] font-bold mt-1">Cash</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setPaymentMethod('gcash'); setSelectedStoreCredit(null); }}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                            paymentMethod === 'gcash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <Smartphone size={18} />
+                          <span className="text-[10px] font-bold mt-1">GCash</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setPaymentMethod('maya'); setSelectedStoreCredit(null); }}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                            paymentMethod === 'maya' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          )}
+                        >
+                          <Smartphone size={18} />
+                          <span className="text-[10px] font-bold mt-1">Maya</span>
+                        </button>
+                      </div>
+
+                      {paymentMethod !== 'cash' && (
+                        <div className="mb-3">
+                          <input
+                            type="text"
+                            placeholder="Reference Number"
+                            value={referenceNumber}
+                            onChange={(e) => setReferenceNumber(e.target.value)}
+                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                      <input
+                        type="number"
+                        placeholder="Amount Tendered"
+                        value={amountTendered}
+                        onChange={(e) => setAmountTendered(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-lg"
+                      />
+                    </div>
+                    {change >= 0 && amountTendered && (
+                      <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                        <span>Change</span>
+                        <span>₱{change.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={handlePay}
+                      disabled={isProcessingPayment || (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true)}
+                      className={cn(
+                        "w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-[0.98]",
+                        (isProcessingPayment || (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true))
+                          ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
+                          : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30"
+                      )}
+                    >
+                      {isProcessingPayment ? 'Processing Payment...' : (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true) ? 'Payment Restricted' : 'Complete Payment'}
+                    </button>
                   </div>
+                ) : (
+                  <button
+                    onClick={handlePlaceOrder}
+                    disabled={isProcessingPayment || cart.length === 0}
+                    className={cn(
+                      "w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-[0.98]",
+                      (isProcessingPayment || cart.length === 0)
+                        ? "bg-slate-300 text-slate-500 cursor-not-allowed"
+                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                    )}
+                  >
+                    {isProcessingPayment ? 'Placing Order...' : 'Place Order'}
+                  </button>
                 )}
-                <button
-                  onClick={handlePay}
-                  disabled={isProcessingPayment || (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true)}
-                  className={cn(
-                    "w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-[0.98]",
-                    (isProcessingPayment || (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true))
-                      ? "bg-slate-300 text-slate-500 cursor-not-allowed shadow-none"
-                      : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30"
-                  )}
-                >
-                  {isProcessingPayment ? 'Processing Payment...' : (currentUser?.role !== 'admin' && currentUser?.permissions?.can_pay !== 'true' && currentUser?.permissions?.can_pay !== true) ? 'Payment Restricted' : 'Complete Payment'}
-                </button>
               </div>
-            ) : (
-              <button
-                onClick={handlePlaceOrder}
-                disabled={isProcessingPayment || cart.length === 0}
-                className={cn(
-                  "w-full py-4 rounded-xl font-bold text-lg transition-all active:scale-[0.98]",
-                  (isProcessingPayment || cart.length === 0)
-                    ? "bg-slate-300 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-900 hover:bg-slate-800 text-white"
-                )}
-              >
-                {isProcessingPayment ? 'Placing Order...' : 'Place Order'}
-              </button>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
         </>
       )}
 
@@ -3008,21 +3536,21 @@ export default function POS() {
                   if (parsed.is_laundry) {
                     laundryDetails = parsed;
                   }
-                } catch (e) {}
+                } catch (e) { }
               }
 
               if (laundryDetails) {
                 return (
-                  <div key={type} className={cn("relative print:relative text-black", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
+                  <div key={type} className={cn("relative print:relative text-black receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
                     {receiptData.status === 'voided' && (
                       <div className="void-watermark select-none pointer-events-none">VOID</div>
                     )}
-                    
+
                     {/* Company Details */}
                     <div className="text-center section-block">
                       <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
                       <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
-                      <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p>
+                      <p className="text-[9.5pt] hidden">TIN: {settings?.tin || '899-352-898-00000'}</p>
                     </div>
 
                     <div className="text-center section-block pt-1.5 pb-1">
@@ -3033,16 +3561,11 @@ export default function POS() {
 
                     <div className="section-block pt-1 font-mono text-[9.5pt]">
                       <div className="flex justify-between row-item">
-                        <span>Receipt No:</span>
-                        <span className="font-bold">LS-{(receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
+                        <span>Receipt No: #{(receiptData.receipt_number || receiptData.id)}</span>
+                        <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
                       </div>
                       <div className="flex justify-between row-item">
-                        <span>Date:</span>
-                        <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
-                      </div>
-                      <div className="flex justify-between row-item">
-                        <span>Cashier:</span>
-                        <span>{receiptData.cashier_name || 'Staff'}</span>
+                        <span className="truncate max-w-[100%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                       </div>
                     </div>
 
@@ -3057,22 +3580,45 @@ export default function POS() {
                           <span>{laundryDetails.phone}</span>
                         </div>
                       )}
-                      <div className="flex justify-between row-item">
-                        <span>Service:</span>
-                        <span className="font-bold">{laundryDetails.service_name}</span>
-                      </div>
-                      <div className="flex justify-between row-item">
-                        <span>Weight:</span>
-                        <span>{laundryDetails.weight} kg</span>
-                      </div>
-                      <div className="flex justify-between row-item">
-                        <span>Rate:</span>
-                        <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
-                      </div>
-                      <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
-                        <span>Subtotal</span>
-                        <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
-                      </div>
+                      {laundryDetails.services && laundryDetails.services.length > 0 ? (
+                        <div className="space-y-1.5 border-b border-dashed border-black pb-1.5 mb-1.5">
+                          <div className="text-[8.5pt] font-bold uppercase tracking-wider mb-1">Services List</div>
+                          {laundryDetails.services.map((item: any, idx: number) => (
+                            <div key={idx} className="text-[9pt]">
+                              <div className="flex justify-between row-item font-bold">
+                                <span className="truncate max-w-[75%]">{item.name}</span>
+                                <span>₱{item.subtotal.toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between row-item text-[8pt] text-slate-700 pl-1.5 font-mono">
+                                <span>
+                                  Qty/Weight: {item.weight.toFixed(1)} kg
+                                  {item.isPromo5Plus2 && item.freeKilos > 0 && ` (${item.freeKilos.toFixed(1)}kg Free)`}
+                                </span>
+                                <span>Rate: ₱{item.price.toFixed(2)}/kg</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : laundryDetails.subtotal > 0 ? (
+                        <>
+                          <div className="flex justify-between row-item">
+                            <span>Service:</span>
+                            <span className="font-bold">{laundryDetails.service_name}</span>
+                          </div>
+                          <div className="flex justify-between row-item">
+                            <span>Weight:</span>
+                            <span>{laundryDetails.weight} kg</span>
+                          </div>
+                          <div className="flex justify-between row-item">
+                            <span>Rate:</span>
+                            <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
+                          </div>
+                          <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
+                            <span>Subtotal</span>
+                            <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
+                          </div>
+                        </>
+                      ) : null}
                     </div>
 
                     {/* Preferences */}
@@ -3100,7 +3646,7 @@ export default function POS() {
 
                     {/* Calculations & Totals */}
                     <div className="section-block border-t border-dashed border-black pt-2 mt-2 font-mono text-[10pt] space-y-1">
-                      <div className="flex justify-between row-item font-bold text-[12pt] border-t-2 border-double border-black pt-1">
+                      <div className="flex justify-between row-item font-black text-[16pt] pt-1">
                         <span>TOTAL</span>
                         <span>₱{(receiptData.total || 0).toFixed(2)}</span>
                       </div>
@@ -3141,7 +3687,7 @@ export default function POS() {
               }
 
               return (
-                <div key={type} className={cn("relative print:relative", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
+                <div key={type} className={cn("relative print:relative receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
                   {/* VOID Watermark overlay */}
                   {receiptData.status === 'voided' && (
                     <div className="void-watermark select-none pointer-events-none">VOID</div>
@@ -3156,7 +3702,7 @@ export default function POS() {
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    <p className="hidden">TIN: {settings?.tin || '899-352-898-00000'}</p>
                   </div>
 
                   {/* Receipt Header Title & Metadata */}
@@ -3172,18 +3718,14 @@ export default function POS() {
                     )}
                   </div>
 
-                  <div className="section-block pt-1">
+                  <div className="section-block pt-1 text-[9.5pt]">
                     <div className="flex justify-between row-item">
                       <span>Invoice: {receiptData.receipt_number !== undefined && receiptData.receipt_number !== null ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : 'PENDING'}</span>
+                      <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
                     </div>
                     <div className="flex justify-between row-item">
-                      <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>Order: #{receiptData.id.toString().padStart(6, '0')}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>Cashier: {receiptData.cashier_name || 'Staff'}</span>
+                      <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
+                      <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                     </div>
                   </div>
 
@@ -3251,8 +3793,8 @@ export default function POS() {
                     )}
                   </div>
 
-                  {/* VAT Breakdown details */}
-                  <div className="section-block pt-1">
+                  {/* VAT Breakdown details hidden */}
+                  <div className="section-block pt-1 hidden">
                     <div className="flex justify-between row-item">
                       <span>VATable Sales</span>
                       <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>
@@ -3286,7 +3828,54 @@ export default function POS() {
               );
             })}
 
-            <div className="mt-8 flex gap-3 print:hidden">
+            {/* QZ Tray Printer Configuration Panel */}
+            <div className="mt-4 pt-3 border-t border-slate-100 print:hidden text-left font-sans text-xs flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-slate-700">Printer Mode:</span>
+                <select
+                  value={useQzTray ? 'qz' : 'browser'}
+                  onChange={e => {
+                    const checked = e.target.value === 'qz';
+                    setUseQzTray(checked);
+                    localStorage.setItem('qz_enabled', String(checked));
+                  }}
+                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-blue-500"
+                >
+                  <option value="browser">Browser Print dialog</option>
+                  <option value="qz">Direct print (QZ Tray)</option>
+                </select>
+              </div>
+
+              {useQzTray && (
+                <div className="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-slate-650">Printer Name:</span>
+                    <input
+                      type="text"
+                      value={qzPrinterName}
+                      onChange={e => {
+                        setQzPrinterName(e.target.value);
+                        localStorage.setItem('qz_printer_name', e.target.value);
+                      }}
+                      placeholder="e.g. POS-80"
+                      className="w-40 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 text-right"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-500">Connection Status:</span>
+                    {qzConnected ? (
+                      <span className="text-emerald-650 font-bold flex items-center gap-1">🟢 Connected</span>
+                    ) : qzError ? (
+                      <span className="text-rose-500 font-bold cursor-pointer" title={qzError}>🔴 Disconnected</span>
+                    ) : (
+                      <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex gap-3 print:hidden">
               <button
                 onClick={() => setReceiptData(null)}
                 className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold transition-colors"
@@ -3450,15 +4039,15 @@ export default function POS() {
             <div className="text-center mb-4 print:mb-2 text-slate-800">
               <p className="mb-2 font-black text-lg receipt-title">
                 {zReadingFilter === 'coffee' ? 'COFFEE SHOP SALES REPORT' :
-                 zReadingFilter === 'laundry' ? 'LAUNDRY SHOP SALES REPORT' :
-                 'X-READING / Z-READING'}
+                  zReadingFilter === 'laundry' ? 'LAUNDRY SHOP SALES REPORT' :
+                    'X-READING / Z-READING'}
               </p>
               <br className="print:hidden" />
               <p className="font-black company-name">
                 {zReadingFilter === 'laundry' ? 'SIP & SPIN LAUNDRY SHOP' : (settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE')}
               </p>
               <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
-              <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
+              <p className="hidden">TIN: {settings?.tin || '899-352-898-00000'}</p>
               <p className="mt-2 font-black">***** END OF DAY SHIFT *****</p>
             </div>
 
@@ -3491,33 +4080,33 @@ export default function POS() {
                 <span>Gross Sales:</span>
                 <span>₱{(
                   zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) :
-                  zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
-                  (zReadingData?.summary?.gross_sales || 0)
+                    zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
+                      (zReadingData?.summary?.gross_sales || 0)
                 ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Regular Discount:</span>
                 <span>₱{(
                   zReadingFilter === 'laundry' ? 0 :
-                  (zReadingData?.summary?.total_discounts || 0)
+                    (zReadingData?.summary?.total_discounts || 0)
                 ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Service Charge:</span>
                 <span>₱{(
                   zReadingFilter === 'laundry' ? 0 :
-                  (zReadingData?.summary?.total_service_charge || 0)
+                    (zReadingData?.summary?.total_service_charge || 0)
                 ).toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-black mt-1">
                 <span>Net Sales:</span>
                 <span>₱{(
                   zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) - (zReadingData?.summary?.total_discounts || 0) :
-                  zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
-                  (zReadingData?.summary?.total_sales || 0)
+                    zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
+                      (zReadingData?.summary?.total_sales || 0)
                 ).toFixed(2)}</span>
               </div>
-              
+
               {zReadingFilter === 'all' && (
                 <>
                   <div className="border-t border-dashed border-black my-2"></div>
@@ -4109,7 +4698,7 @@ export default function POS() {
                       </div>
 
                       <div className="pt-4 flex gap-3">
-                        {selectedModalOrder.status === 'open' && (
+                        {(currentUser?.role === 'admin' || currentUser?.role === 'manager') && selectedModalOrder.status === 'open' && (
                           <button
                             onClick={() => handleModalVoid(selectedModalOrder.id)}
                             className="flex-1 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-xs font-black transition-all"
@@ -4192,6 +4781,280 @@ export default function POS() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= DRINK CUSTOMIZATION MODAL ================= */}
+      {customizingProduct && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-lg w-full border border-slate-100 flex flex-col max-h-[95vh]">
+            {/* Header */}
+            <div className="border-b border-slate-100 pb-3 mb-4 text-center">
+              <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-tight">{customizingProduct.name}</h2>
+              <span className="text-[9px] text-slate-400 font-bold tracking-widest uppercase">Customize Beverage</span>
+            </div>
+
+            {/* Customization Body */}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs">
+
+              {/* Size */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['Small (12 oz)', 'Medium (16 oz)', 'Large (22 oz)'] as const).map(sz => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setCustomSize(sz)}
+                      className={cn(
+                        "py-2 px-2 text-center rounded-xl border text-[11px] transition-all font-bold",
+                        customSize === sz
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                      )}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sugar Level */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Sugar Level</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {(['0%', '25%', '50%', '75%', '100%'] as const).map(sug => {
+                    const labelMap = { '0%': 'No', '25%': '25%', '50%': '50%', '75%': '75%', '100%': '100%' };
+                    return (
+                      <button
+                        key={sug}
+                        type="button"
+                        onClick={() => setCustomSugar(sug)}
+                        className={cn(
+                          "py-2 px-1 text-center rounded-xl border text-[10px] transition-all font-bold",
+                          customSugar === sug
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                        )}
+                      >
+                        {labelMap[sug]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ice Level */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Ice Level</label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {(['No Ice', '25%', '50%', '75%', '100%'] as const).map(iceOpt => (
+                    <button
+                      key={iceOpt}
+                      type="button"
+                      onClick={() => setCustomIce(iceOpt)}
+                      className={cn(
+                        "py-2 px-1 text-center rounded-xl border text-[10px] transition-all font-bold",
+                        customIce === iceOpt
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                      )}
+                    >
+                      {iceOpt.replace(' Ice', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Espresso Shot */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Espresso Shot</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['Regular', '+1 Shot', '+2 Shots'] as const).map(sh => {
+                    const priceLabel = sh === '+1 Shot' ? ' (+₱30)' : sh === '+2 Shots' ? ' (+₱60)' : '';
+                    return (
+                      <button
+                        key={sh}
+                        type="button"
+                        onClick={() => setCustomEspresso(sh)}
+                        className={cn(
+                          "py-2 px-2 text-center rounded-xl border text-[10px] transition-all font-bold",
+                          customEspresso === sh
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                        )}
+                      >
+                        {sh}{priceLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Milk Options */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Milk Options</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['Whole Milk', 'Oat Milk', 'Soy Milk', 'Almond Milk'] as const).map(mk => {
+                    const extraPrice = mk === 'Oat Milk' || mk === 'Soy Milk' ? 20 : mk === 'Almond Milk' ? 30 : 0;
+                    const priceLabel = extraPrice > 0 ? ` (+₱${extraPrice})` : '';
+                    return (
+                      <button
+                        key={mk}
+                        type="button"
+                        onClick={() => setCustomMilk(mk)}
+                        className={cn(
+                          "py-2.5 px-3 text-left rounded-xl border text-[10px] transition-all font-bold flex justify-between items-center",
+                          customMilk === mk
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                        )}
+                      >
+                        <span>{mk}</span>
+                        <span className="opacity-80 text-[9px]">{priceLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Toppings / Add-ons */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Toppings / Add-ons</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'Whipped Cream', name: 'Whipped Cream', price: 20 },
+                    { id: 'Caramel Drizzle', name: 'Caramel Drizzle', price: 15 },
+                    { id: 'Chocolate Syrup', name: 'Chocolate Syrup', price: 15 },
+                    { id: 'Pearl', name: 'Pearl', price: 20 },
+                    { id: 'Coffee Jelly', name: 'Coffee Jelly', price: 20 }
+                  ].map(tp => {
+                    const isChecked = customAddons.includes(tp.id);
+                    return (
+                      <label
+                        key={tp.id}
+                        className={cn(
+                          "flex items-center justify-between p-2.5 rounded-xl border text-[10px] font-bold cursor-pointer transition-all select-none",
+                          isChecked
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setCustomAddons([...customAddons, tp.id]);
+                              } else {
+                                setCustomAddons(customAddons.filter(a => a !== tp.id));
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <div className={cn(
+                            "w-3.5 h-3.5 border rounded flex items-center justify-center transition-all",
+                            isChecked ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 bg-white"
+                          )}>
+                            {isChecked && <Check size={10} strokeWidth={3} />}
+                          </div>
+                          <span>{tp.name}</span>
+                        </div>
+                        <span className="text-[9px] opacity-80">+₱{tp.price}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Special Instructions */}
+              <div>
+                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Special Instructions</label>
+                <input
+                  type="text"
+                  placeholder="e.g. extra hot, less sweet, no foam..."
+                  value={customInstructions}
+                  onChange={(e) => setCustomInstructions(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl outline-none text-xs font-semibold focus:bg-white focus:border-emerald-500 transition-all font-sans"
+                />
+              </div>
+
+            </div>
+
+            {/* Footer Summary & Action buttons */}
+            <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-none">Total Price</span>
+                <span className="text-lg font-black text-emerald-600 font-mono">
+                  ₱{(
+                    customizingProduct.price +
+                    (customEspresso === '+1 Shot' ? 30 : customEspresso === '+2 Shots' ? 60 : 0) +
+                    (customMilk === 'Oat Milk' || customMilk === 'Soy Milk' ? 20 : customMilk === 'Almond Milk' ? 30 : 0) +
+                    customAddons.reduce((sum, item) => sum + (item.includes('Caramel') || item.includes('Chocolate') ? 15 : 20), 0)
+                  ).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCustomizingProduct(null)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wide transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const extraPrice =
+                      (customEspresso === '+1 Shot' ? 30 : customEspresso === '+2 Shots' ? 60 : 0) +
+                      (customMilk === 'Oat Milk' || customMilk === 'Soy Milk' ? 20 : customMilk === 'Almond Milk' ? 30 : 0) +
+                      customAddons.reduce((sum, item) => sum + (item.includes('Caramel') || item.includes('Chocolate') ? 15 : 20), 0);
+
+                    const adjustedPrice = customizingProduct.price + extraPrice;
+
+                    // Compile bullet instructions notes
+                    const sizeShort = customSize.includes('12 oz') ? '12 oz' : customSize.includes('16 oz') ? '16 oz' : '22 oz';
+                    let bulletNotes = `(${sizeShort})`;
+                    bulletNotes += ` • Sugar: ${customSugar}`;
+                    bulletNotes += ` • Ice: ${customIce}`;
+
+                    if (customEspresso !== 'Regular') {
+                      bulletNotes += ` • ${customEspresso} Shot`;
+                    }
+                    if (customMilk !== 'Whole Milk') {
+                      bulletNotes += ` • ${customMilk}`;
+                    }
+                    customAddons.forEach(addon => {
+                      bulletNotes += ` • ${addon}`;
+                    });
+                    if (customInstructions.trim()) {
+                      bulletNotes += ` • Inst: ${customInstructions.trim()}`;
+                    }
+
+                    setCart(prev => {
+                      const existingUnsavedIndex = prev.findIndex(item => item.id === customizingProduct.id && !item._isSaved && item.notes === bulletNotes);
+                      if (existingUnsavedIndex >= 0) {
+                        const newCart = [...prev];
+                        newCart[existingUnsavedIndex] = {
+                          ...newCart[existingUnsavedIndex],
+                          quantity: newCart[existingUnsavedIndex].quantity + 1
+                        };
+                        return newCart;
+                      }
+                      return [...prev, { ...customizingProduct, price: adjustedPrice, quantity: 1, notes: bulletNotes, _isSaved: false }];
+                    });
+
+                    setCustomizingProduct(null);
+                  }}
+                  className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md uppercase tracking-wide transition-all active:scale-[0.98]"
+                >
+                  Add to Order
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

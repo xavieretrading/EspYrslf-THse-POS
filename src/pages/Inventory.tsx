@@ -20,13 +20,16 @@ import {
   AlertTriangle,
   FileText,
   ChevronRight,
-  Info
+  Info,
+  UploadCloud,
+  Package
 } from 'lucide-react';
 import { cn } from '../App';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
+import { getProductImage } from './POS';
 
 type Category = { id: number; name: string };
 type Product = { id: number; name: string; stock: number; category_name: string; category_id: number; cost: number; price: number; division?: string };
@@ -91,9 +94,23 @@ export default function Inventory() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDivision, setNewCategoryDivision] = useState<'coffee' | 'laundry'>('coffee');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '' });
+  const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '', is_sellable: '1', unit: 'pcs' });
+  const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+  const [recipeProduct, setRecipeProduct] = useState<Product | null>(null);
+  const [recipeIngredients, setRecipeIngredients] = useState<{ ingredient_id: number; quantity: number }[]>([]);
+  const [selectedIngredientId, setSelectedIngredientId] = useState('');
+  const [ingredientQuantity, setIngredientQuantity] = useState('1');
 
   // Warehouse and Transfers states removed
+
+  // === PAGINATION STATES ===
+  const [productsPage, setProductsPage] = useState(1);
+  const [reportsPage, setReportsPage] = useState(1);
+  const [fastMovingPage, setFastMovingPage] = useState(1);
+  const [cycleCountsPage, setCycleCountsPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   // === NEW STATES FOR IN & OUT REPORTS ===
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -109,6 +126,21 @@ export default function Inventory() {
   const [cycleCountItems, setCycleCountItems] = useState<Record<number, number>>({}); // product_id -> actual count
   const [cycleCountFilterCategory, setCycleCountFilterCategory] = useState<string>('all');
   const [selectedCycleCountDetail, setSelectedCycleCountDetail] = useState<any | null>(null);
+
+  useEffect(() => {
+    setProductsPage(1);
+  }, [searchQuery, selectedDivision]);
+
+  useEffect(() => {
+    setReportsPage(1);
+  }, [reportsSearch, reportsFilterType]);
+
+  useEffect(() => {
+    setProductsPage(1);
+    setReportsPage(1);
+    setFastMovingPage(1);
+    setCycleCountsPage(1);
+  }, [activeTab]);
 
   const fetchData = async () => {
     if (!activeBranch) return;
@@ -186,11 +218,36 @@ export default function Inventory() {
     e.preventDefault();
     if (!activeBranch) return;
 
+    let imageUrl = editingProduct ? (editingProduct as any).image_url : null;
+
+    if (uploadedImageBase64 && uploadedImageBase64.startsWith('data:image/')) {
+      try {
+        const uploadRes = await fetch('/api/products/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            base64Image: uploadedImageBase64
+          })
+        });
+        if (uploadRes.ok) {
+          const uploadResult = await uploadRes.json();
+          imageUrl = uploadResult.url;
+        }
+      } catch (uploadErr) {
+        console.error('Failed to upload image:', uploadErr);
+      }
+    } else if (uploadedImageBase64 === null) {
+      imageUrl = null;
+    }
+
     const url = editingProduct ? `/api/products/${editingProduct.id}` : '/api/products';
     const method = editingProduct ? 'PUT' : 'POST';
 
     const selectedCat = categories.find(c => c.id === parseInt(formData.category_id));
-    const isService = selectedDivision === 'laundry' && selectedCat?.name !== 'Detergents & Additives';
+    const isService = selectedDivision === 'laundry' && 
+      selectedCat && 
+      !['detergents & additives', 'add on', 'add-on', 'supplies', 'detergents', 'additives'].includes(selectedCat.name.toLowerCase());
 
     const res = await fetch(url, {
       method,
@@ -201,7 +258,10 @@ export default function Inventory() {
         price: parseFloat(formData.price),
         cost: isService ? 0 : parseFloat(formData.cost || '0'),
         category_id: parseInt(formData.category_id),
-        stock: isService ? 9999 : parseInt(formData.stock || '0')
+        stock: isService ? 9999 : parseInt(formData.stock || '0'),
+        image_url: imageUrl,
+        is_sellable: parseInt(formData.is_sellable || '1'),
+        unit: formData.unit || 'pcs'
       })
     });
 
@@ -228,27 +288,72 @@ export default function Inventory() {
 
   const openAddModal = () => {
     setEditingProduct(null);
+    setUploadedImageBase64(null);
     const firstCatOfDivision = categories.find(c => c.division === selectedDivision);
     setFormData({
       name: '',
       cost: '',
       price: '',
       category_id: firstCatOfDivision?.id.toString() || categories[0]?.id.toString() || '',
-      stock: '0'
+      stock: '0',
+      is_sellable: '1',
+      unit: 'pcs'
     });
     setIsProductModalOpen(true);
   };
 
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
+    setUploadedImageBase64((product as any).image_url || null);
     setFormData({
       name: product.name,
       cost: product.cost.toString(),
       price: product.price.toString(),
       category_id: product.category_id?.toString() || '',
-      stock: (product.stock || 0).toString()
+      stock: (product.stock || 0).toString(),
+      is_sellable: (product as any).is_sellable !== 0 ? '1' : '0',
+      unit: (product as any).unit || 'pcs'
     });
     setIsProductModalOpen(true);
+  };
+
+  const openRecipeModal = async (product: Product) => {
+    setRecipeProduct(product);
+    setSelectedIngredientId('');
+    setIngredientQuantity('1');
+    try {
+      const res = await fetch(`/api/products/${product.id}/recipe`);
+      if (res.ok) {
+        const data = await res.json();
+        setRecipeIngredients(data.map((item: any) => ({
+          ingredient_id: item.ingredient_id,
+          quantity: item.quantity
+        })));
+      }
+    } catch (err) {
+      console.error('Failed to load recipe:', err);
+    }
+    setIsRecipeModalOpen(true);
+  };
+
+  const handleSaveRecipe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recipeProduct) return;
+
+    const res = await fetch(`/api/products/${recipeProduct.id}/recipe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ingredients: recipeIngredients
+      })
+    });
+
+    if (res.ok) {
+      swalAlert('Recipe Saved', `Ingredients recipe for ${recipeProduct.name} saved successfully!`, 'success');
+      setIsRecipeModalOpen(false);
+    } else {
+      swalAlert('Error', 'Failed to save ingredients recipe', 'error');
+    }
   };
 
   // Category management
@@ -340,10 +445,7 @@ export default function Inventory() {
     }
   };
 
-  // === ANALYTICS & COMPUTATIONS ===
   const getFastMovingItems = () => {
-    // Group all outward transactions from inventory_transactions
-    // Filter transactions by type: 'out'
     const countsMap: Record<number, { product: Product; count: number }> = {};
 
     products.forEach(p => {
@@ -367,8 +469,15 @@ export default function Inventory() {
   // Filtering for stocks
   const filteredProducts = products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) && (!isLaundryBranch || (p.division || 'coffee') === selectedDivision));
 
+  // Paginated Products
+  const productsStartIdx = (productsPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(productsStartIdx, productsStartIdx + ITEMS_PER_PAGE);
+  const totalProductsPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
   const selectedCat = categories.find(c => c.id === parseInt(formData.category_id));
-  const isServiceCategory = selectedDivision === 'laundry' && selectedCat?.name !== 'Detergents & Additives';
+  const isServiceCategory = selectedDivision === 'laundry' && 
+    selectedCat && 
+    !['detergents & additives', 'add on', 'add-on', 'supplies', 'detergents', 'additives'].includes(selectedCat.name.toLowerCase());
 
   // Filtering for transaction reports
   const filteredReports = transactions.filter(tx => {
@@ -378,15 +487,31 @@ export default function Inventory() {
     return matchesType && matchesSearch;
   });
 
+  // Paginated Reports
+  const reportsStartIdx = (reportsPage - 1) * ITEMS_PER_PAGE;
+  const paginatedReports = filteredReports.slice(reportsStartIdx, reportsStartIdx + ITEMS_PER_PAGE);
+  const totalReportsPages = Math.ceil(filteredReports.length / ITEMS_PER_PAGE);
+
+  // Paginated Fast Moving Items
+  const fastMovingItems = getFastMovingItems();
+  const fastMovingStartIdx = (fastMovingPage - 1) * ITEMS_PER_PAGE;
+  const paginatedFastMoving = fastMovingItems.slice(fastMovingStartIdx, fastMovingStartIdx + ITEMS_PER_PAGE);
+  const totalFastMovingPages = Math.ceil(fastMovingItems.length / ITEMS_PER_PAGE);
+
+  // Paginated Cycle Counts
+  const cycleCountsStartIdx = (cycleCountsPage - 1) * ITEMS_PER_PAGE;
+  const paginatedCycleCounts = cycleCounts.slice(cycleCountsStartIdx, cycleCountsStartIdx + ITEMS_PER_PAGE);
+  const totalCycleCountsPages = Math.ceil(cycleCounts.length / ITEMS_PER_PAGE);
+
   return (
     <div className="p-8 h-full flex flex-col bg-slate-50 relative overflow-y-auto">
       {/* Header section */}
       <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-            <MapPin className="text-emerald-500" /> Inventory & Warehousing
+            <MapPin className="text-emerald-500" /> Inventory Products
           </h1>
-          <p className="text-slate-500">Manage products, warehouse allocations, stock transfers, audit counts, and moving analytics.</p>
+          <p className="text-slate-500">Manage products, stock adjustments and analytics.</p>
         </div>
         <div className="flex flex-wrap gap-3 items-center">
           {/* Strict Item Locked Toggle */}
@@ -495,7 +620,7 @@ export default function Inventory() {
                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                     )}
                   >
-                    ☕ Coffee Shop Supplies
+                    Coffee Shop Supplies
                   </button>
                   <button
                     onClick={() => setSelectedDivision('laundry')}
@@ -506,7 +631,7 @@ export default function Inventory() {
                         : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                     )}
                   >
-                    🧺 Laundry Supplies / Services
+                    Laundry Supplies / Services
                   </button>
                 </div>
               )}
@@ -536,9 +661,24 @@ export default function Inventory() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredProducts.map(product => (
+                    {paginatedProducts.map(product => (
                       <tr key={product.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="p-4 font-bold text-slate-900 text-sm">{product.name}</td>
+                        <td className="p-4 font-bold text-slate-900 text-sm">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 relative">
+                              <img
+                                src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                }}
+                                alt={product.name}
+                                className="w-full h-full object-cover absolute inset-0 z-10"
+                              />
+                              <Package size={14} className="text-slate-450" strokeWidth={1.5} />
+                            </div>
+                            <span className="truncate">{product.name}</span>
+                          </div>
+                        </td>
                         <td className="p-4 text-slate-500 text-sm">{product.category_name}</td>
                         <td className="p-4 text-right text-slate-500 font-mono text-sm">₱{product.cost?.toFixed(2)}</td>
                         <td className="p-4 text-right text-slate-500 font-mono text-sm">₱{product.price?.toFixed(2)}</td>
@@ -547,11 +687,20 @@ export default function Inventory() {
                             "font-bold px-3 py-1 rounded-full cursor-pointer text-xs uppercase tracking-wide inline-block shadow-sm",
                             product.stock <= 10 ? "bg-rose-50 border border-rose-200 text-rose-700" : "bg-emerald-50 border border-emerald-200 text-emerald-700"
                           )} onClick={() => setSelectedProduct(product)} title="Click to transact stock Level">
-                            {product.stock} Units
+                            {product.stock} {(product as any).unit || 'pcs'}
                           </span>
                         </td>
                         <td className="p-4">
                           <div className="flex gap-1 justify-center">
+                            {product.is_sellable !== 0 && (
+                              <button
+                                onClick={() => openRecipeModal(product)}
+                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Configure Ingredients Recipe (BOM)"
+                              >
+                                <List size={16} />
+                              </button>
+                            )}
                             <button
                               onClick={() => openEditModal(product)}
                               className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
@@ -580,6 +729,68 @@ export default function Inventory() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalProductsPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 p-4 bg-slate-50/30">
+                  <div className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-bold text-slate-700">{productsStartIdx + 1}</span> to{' '}
+                    <span className="font-bold text-slate-700">
+                      {Math.min(productsStartIdx + ITEMS_PER_PAGE, filteredProducts.length)}
+                    </span>{' '}
+                    of <span className="font-bold text-slate-700">{filteredProducts.length}</span> products
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setProductsPage(prev => Math.max(1, prev - 1))}
+                      disabled={productsPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalProductsPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        page === 1 ||
+                        page === totalProductsPages ||
+                        Math.abs(page - productsPage) <= 1
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setProductsPage(page)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                              productsPage === page
+                                ? "bg-emerald-600 text-white border-emerald-700"
+                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        );
+                      }
+                      if (
+                        (page === 2 && productsPage > 3) ||
+                        (page === totalProductsPages - 1 && productsPage < totalProductsPages - 2)
+                      ) {
+                        return (
+                          <span key={`prod-ellipsis-${page}`} className="px-2 py-1.5 text-xs text-slate-400 font-bold select-none">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => setProductsPage(prev => Math.min(totalProductsPages, prev + 1))}
+                      disabled={productsPage === totalProductsPages}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Transaction Panel */}
@@ -595,7 +806,7 @@ export default function Inventory() {
                     <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Selected Product</p>
                     <p className="font-extrabold text-slate-900 text-base">{selectedProduct.name}</p>
                     <p className="text-xs text-slate-500 mt-2 flex items-center gap-1 font-semibold">
-                      Current DB Stock: <span className="font-bold text-emerald-600">{selectedProduct.stock} Units</span>
+                      Current DB Stock: <span className="font-bold text-emerald-600">{selectedProduct.stock} {(selectedProduct as any).unit || 'pcs'}</span>
                     </p>
                   </div>
 
@@ -765,7 +976,7 @@ export default function Inventory() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
-                    {filteredReports.map((tx, idx) => {
+                    {paginatedReports.map((tx, idx) => {
                       const prodName = tx.products?.name || tx.product_name || 'Unknown Product/Legacy';
                       return (
                         <tr key={tx.id || idx} className="hover:bg-slate-50/30 transition-colors">
@@ -812,6 +1023,68 @@ export default function Inventory() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalReportsPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 p-4 bg-slate-50/30">
+                  <div className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-bold text-slate-700">{reportsStartIdx + 1}</span> to{' '}
+                    <span className="font-bold text-slate-700">
+                      {Math.min(reportsStartIdx + ITEMS_PER_PAGE, filteredReports.length)}
+                    </span>{' '}
+                    of <span className="font-bold text-slate-700">{filteredReports.length}</span> logs
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setReportsPage(prev => Math.max(1, prev - 1))}
+                      disabled={reportsPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalReportsPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        page === 1 ||
+                        page === totalReportsPages ||
+                        Math.abs(page - reportsPage) <= 1
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setReportsPage(page)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                              reportsPage === page
+                                ? "bg-emerald-600 text-white border-emerald-700"
+                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        );
+                      }
+                      if (
+                        (page === 2 && reportsPage > 3) ||
+                        (page === totalReportsPages - 1 && reportsPage < totalReportsPages - 2)
+                      ) {
+                        return (
+                          <span key={`rep-ellipsis-${page}`} className="px-2 py-1.5 text-xs text-slate-400 font-bold select-none">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => setReportsPage(prev => Math.min(totalReportsPages, prev + 1))}
+                      disabled={reportsPage === totalReportsPages}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -869,10 +1142,10 @@ export default function Inventory() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
-                    {getFastMovingItems().map((item, idx) => (
+                    {paginatedFastMoving.map((item, idx) => (
                       <tr key={item.product.id} className="hover:bg-slate-50/30 transition-colors">
                         <td className="p-4 text-center font-extrabold text-slate-400">
-                          {idx + 1}
+                          {fastMovingStartIdx + idx + 1}
                         </td>
                         <td className="p-4 font-bold text-slate-900">
                           {item.product.name}
@@ -883,11 +1156,11 @@ export default function Inventory() {
                             "px-2.5 py-1 text-xs font-extrabold rounded-full",
                             item.product.stock <= 10 ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-700"
                           )}>
-                            {item.product.stock} Units
+                            {item.product.stock} {(item.product as any).unit || 'pcs'}
                           </span>
                         </td>
                         <td className="p-4 text-right font-black font-mono text-rose-600">
-                          {item.count} units
+                          {item.count} {(item.product as any).unit || 'pcs'}
                         </td>
                         <td className="p-4 text-center">
                           <span className={cn(
@@ -896,7 +1169,7 @@ export default function Inventory() {
                               item.count >= 5 ? "bg-yellow-100 text-yellow-800" :
                                 "bg-slate-100 text-slate-500"
                           )}>
-                            {item.count >= 15 ? 'Hot Velocity 🔥' : item.count >= 5 ? 'Steady Demand ⚡' : 'Slower Shelf 📋'}
+                            {item.count >= 15 ? 'Hot Velocity' : item.count >= 5 ? 'Steady Demand' : 'Slower Shelf'}
                           </span>
                         </td>
                       </tr>
@@ -904,6 +1177,68 @@ export default function Inventory() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalFastMovingPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 p-4 bg-slate-50/30">
+                  <div className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-bold text-slate-700">{fastMovingStartIdx + 1}</span> to{' '}
+                    <span className="font-bold text-slate-700">
+                      {Math.min(fastMovingStartIdx + ITEMS_PER_PAGE, fastMovingItems.length)}
+                    </span>{' '}
+                    of <span className="font-bold text-slate-700">{fastMovingItems.length}</span> items
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setFastMovingPage(prev => Math.max(1, prev - 1))}
+                      disabled={fastMovingPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: totalFastMovingPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        page === 1 ||
+                        page === totalFastMovingPages ||
+                        Math.abs(page - fastMovingPage) <= 1
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setFastMovingPage(page)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                              fastMovingPage === page
+                                ? "bg-emerald-600 text-white border-emerald-700"
+                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        );
+                      }
+                      if (
+                        (page === 2 && fastMovingPage > 3) ||
+                        (page === totalFastMovingPages - 1 && fastMovingPage < totalFastMovingPages - 2)
+                      ) {
+                        return (
+                          <span key={`fm-ellipsis-${page}`} className="px-2 py-1.5 text-xs text-slate-400 font-bold select-none">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => setFastMovingPage(prev => Math.min(totalFastMovingPages, prev + 1))}
+                      disabled={fastMovingPage === totalFastMovingPages}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -988,7 +1323,7 @@ export default function Inventory() {
                             <tr key={p.id} className="hover:bg-slate-50/20">
                               <td className="p-3 font-bold text-slate-800">{p.name}</td>
                               <td className="p-3 text-slate-500">{p.category_name}</td>
-                              <td className="p-3 text-right font-mono font-bold text-slate-600">{expected} Units</td>
+                              <td className="p-3 text-right font-mono font-bold text-slate-600">{expected} {(p as any).unit || 'pcs'}</td>
                               <td className="p-3">
                                 <input
                                   type="number"
@@ -1101,7 +1436,7 @@ export default function Inventory() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-sm">
-                        {cycleCounts.map((cc) => (
+                        {paginatedCycleCounts.map((cc) => (
                           <tr key={cc.id} className="hover:bg-slate-50/20">
                             <td className="p-4 text-slate-500 font-mono text-xs">
                               {new Date(cc.created_at).toLocaleString('en-US', {
@@ -1143,6 +1478,68 @@ export default function Inventory() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Pagination Controls */}
+                  {totalCycleCountsPages > 1 && (
+                    <div className="flex items-center justify-between border-t border-slate-100 p-4 bg-slate-50/30">
+                      <div className="text-xs text-slate-500 font-semibold">
+                        Showing <span className="font-bold text-slate-700">{cycleCountsStartIdx + 1}</span> to{' '}
+                        <span className="font-bold text-slate-700">
+                          {Math.min(cycleCountsStartIdx + ITEMS_PER_PAGE, cycleCounts.length)}
+                        </span>{' '}
+                        of <span className="font-bold text-slate-700">{cycleCounts.length}</span> logs
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setCycleCountsPage(prev => Math.max(1, prev - 1))}
+                          disabled={cycleCountsPage === 1}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Previous
+                        </button>
+                        {Array.from({ length: totalCycleCountsPages }, (_, i) => i + 1).map((page) => {
+                          if (
+                            page === 1 ||
+                            page === totalCycleCountsPages ||
+                            Math.abs(page - cycleCountsPage) <= 1
+                          ) {
+                            return (
+                              <button
+                                key={page}
+                                onClick={() => setCycleCountsPage(page)}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                                  cycleCountsPage === page
+                                    ? "bg-emerald-600 text-white border-emerald-700"
+                                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                                )}
+                              >
+                                {page}
+                              </button>
+                            );
+                          }
+                          if (
+                            (page === 2 && cycleCountsPage > 3) ||
+                            (page === totalCycleCountsPages - 1 && cycleCountsPage < totalCycleCountsPages - 2)
+                          ) {
+                            return (
+                              <span key={`cc-ellipsis-${page}`} className="px-2 py-1.5 text-xs text-slate-400 font-bold select-none">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        })}
+                        <button
+                          onClick={() => setCycleCountsPage(prev => Math.min(totalCycleCountsPages, prev + 1))}
+                          disabled={cycleCountsPage === totalCycleCountsPages}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1196,8 +1593,8 @@ export default function Inventory() {
                     {(selectedCycleCountDetail.items || []).map((it: any, index: number) => (
                       <tr key={index} className="hover:bg-slate-50/20">
                         <td className="p-3 font-bold text-slate-800">{it.name}</td>
-                        <td className="p-3 text-right font-semibold font-mono text-slate-550">{it.expected} Units</td>
-                        <td className="p-3 text-right font-bold font-mono text-slate-800">{it.actual} Units</td>
+                        <td className="p-3 text-right font-semibold font-mono text-slate-550">{it.expected} {it.unit || 'pcs'}</td>
+                        <td className="p-3 text-right font-bold font-mono text-slate-800">{it.actual} {it.unit || 'pcs'}</td>
                         <td className="p-3 text-right font-bold font-mono">
                           {it.discrepancy === 0 ? (
                             <span className="text-emerald-600">Perfect Match</span>
@@ -1264,7 +1661,7 @@ export default function Inventory() {
                       onChange={() => setNewCategoryDivision('coffee')}
                       className="accent-emerald-600"
                     />
-                    ☕ Coffee Shop
+                    Coffee Shop
                   </label>
                   <label className="inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer font-bold select-none ml-2">
                     <input
@@ -1275,27 +1672,39 @@ export default function Inventory() {
                       onChange={() => setNewCategoryDivision('laundry')}
                       className="accent-emerald-600"
                     />
-                    🧺 Laundry
+                    Laundry
                   </label>
                 </div>
               )}
             </form>
 
             <div className="max-h-60 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100 shadow-inner">
-              {categories.map(cat => (
-                <div key={cat.id} className="p-3.5 flex justify-between items-center hover:bg-slate-50/50">
-                  <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">{cat.name}</span>
-                  <button
-                    onClick={() => handleDeleteCategory(cat.id)}
-                    className="p-1 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-[10px] font-bold uppercase"
-                  >
-                    Delete Category
-                  </button>
-                </div>
-              ))}
-              {categories.length === 0 && (
-                <p className="p-8 text-center text-slate-400 text-xs italic font-medium">No categories found in system.</p>
-              )}
+              {(() => {
+                const filteredCats = categories.filter(cat => {
+                  if (isLaundryBranch) {
+                    return (cat.division || 'coffee') === newCategoryDivision;
+                  }
+                  return true;
+                });
+                return (
+                  <>
+                    {filteredCats.map(cat => (
+                      <div key={cat.id} className="p-3.5 flex justify-between items-center hover:bg-slate-50/50">
+                        <span className="font-bold text-slate-800 text-xs uppercase tracking-wider">{cat.name}</span>
+                        <button
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          className="p-1 px-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-[10px] font-bold uppercase"
+                        >
+                          Delete Category
+                        </button>
+                      </div>
+                    ))}
+                    {filteredCats.length === 0 && (
+                      <p className="p-8 text-center text-slate-400 text-xs italic font-medium">No categories found for this division.</p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -1305,9 +1714,9 @@ export default function Inventory() {
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-slate-100">
-            <h2 className="text-xl font-bold text-slate-900 mb-2 uppercase tracking-wider">{editingProduct ? 'Edit Product details' : 'Add New Product'}</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-2 uppercase tracking-wider">{editingProduct ? 'Edit details' : 'Add New '}</h2>
             <div className="mb-6 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100">
-              {selectedDivision === 'coffee' ? '☕ Café / Coffee Supply Item' : '🧺 Laundry Shop Service / Supply'}
+              {selectedDivision === 'coffee' ? 'Café / Coffee Supply Item' : 'Laundry Shop Service / Supply'}
             </div>
 
             <form onSubmit={handleSaveProduct} className="space-y-4">
@@ -1321,6 +1730,79 @@ export default function Inventory() {
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
                   placeholder="Product Name"
                 />
+              </div>
+ 
+              {/* Product Image drag & drop */}
+              <div>
+                <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Product Image</label>
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                  onDragLeave={() => setDragActive(false)}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setDragActive(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      const file = e.dataTransfer.files[0];
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setUploadedImageBase64(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className={cn(
+                    "border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all min-h-[100px]",
+                    dragActive ? "border-emerald-500 bg-emerald-50/50" : "border-slate-200 bg-slate-50 hover:bg-slate-100/50"
+                  )}
+                  onClick={() => document.getElementById('product-image-file')?.click()}
+                >
+                  <input
+                    id="product-image-file"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const file = e.target.files[0];
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setUploadedImageBase64(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                  {uploadedImageBase64 ? (
+                    <div className="relative flex flex-col items-center gap-2">
+                      <img
+                        src={uploadedImageBase64}
+                        onError={(e) => {
+                          if (editingProduct) {
+                            (e.target as HTMLImageElement).src = getProductImage(editingProduct.name);
+                          }
+                        }}
+                        alt="Preview"
+                        className="w-16 h-16 object-cover rounded-xl border border-slate-200 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUploadedImageBase64(null);
+                        }}
+                        className="text-[10px] text-rose-600 font-extrabold uppercase hover:underline"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <UploadCloud size={24} className="mx-auto text-slate-400 mb-1.5" />
+                      <p className="text-[10px] font-bold text-slate-600">Drag & drop product picture here, or <span className="text-blue-500 hover:underline">browse</span></p>
+                      <p className="text-[8px] text-slate-400 mt-0.5">Supports PNG, JPG, JPEG</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -1341,16 +1823,31 @@ export default function Inventory() {
               </div>
 
               {isServiceCategory ? (
-                <div>
-                  <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Selling Price / Rate (₱)</label>
-                  <input
-                    type="number"
-                    required step="0.01" min="0"
-                    value={formData.price}
-                    onChange={e => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
-                    placeholder="e.g. 49.00"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Selling Price / Rate (₱)</label>
+                    <input
+                      type="number"
+                      required step="0.01" min="0"
+                      value={formData.price}
+                      onChange={e => setFormData({ ...formData, price: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                      placeholder="Amount"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Unit of Measure</label>
+                    <select
+                      required
+                      value={formData.unit || 'pcs'}
+                      onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                    >
+                      <option value="kg">kg (kilos)</option>
+                      <option value="pcs">pcs (pieces)</option>
+                      <option value="pair">pair</option>
+                    </select>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -1377,19 +1874,61 @@ export default function Inventory() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Stock Quantity</label>
-                    <input
-                      type="number"
-                      required min="0"
-                      value={formData.stock}
-                      onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
-                      placeholder="e.g. 20"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Stock Quantity</label>
+                      <input
+                        type="number"
+                        required min="0"
+                        value={formData.stock}
+                        onChange={e => setFormData({ ...formData, stock: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                        placeholder="e.g. 20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Unit of Measure</label>
+                      <input
+                        type="text"
+                        list="common-uom-units"
+                        required
+                        value={formData.unit || ''}
+                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                        placeholder="e.g. pcs, bottles"
+                      />
+                      <datalist id="common-uom-units">
+                        <option value="pcs" />
+                        <option value="bottles" />
+                        <option value="cans" />
+                        <option value="cups" />
+                        <option value="boxes" />
+                        <option value="packs" />
+                        <option value="sacks" />
+                        <option value="grams" />
+                        <option value="kg" />
+                        <option value="ml" />
+                        <option value="liters" />
+                      </datalist>
+                    </div>
                   </div>
                 </>
               )}
+
+              {/* Sellable / Display on POS Toggle */}
+              <div className="flex items-center gap-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl mt-4">
+                <input
+                  type="checkbox"
+                  id="product-is-sellable"
+                  checked={formData.is_sellable === '1'}
+                  onChange={e => setFormData({ ...formData, is_sellable: e.target.checked ? '1' : '0' })}
+                  className="w-4 h-4 text-emerald-600 border-slate-350 rounded focus:ring-emerald-500 accent-emerald-500 cursor-pointer"
+                />
+                <label htmlFor="product-is-sellable" className="text-xs font-bold text-slate-700 select-none cursor-pointer flex flex-col">
+                  <span>Display on POS Screen</span>
+                  <span className="text-[10px] text-slate-450 font-normal leading-none mt-0.5">If unchecked, this stays as raw inventory and won't show on checkout catalog.</span>
+                </label>
+              </div>
 
               <div className="flex gap-3 pt-6 mt-6 border-t border-slate-100">
                 <button
@@ -1407,6 +1946,141 @@ export default function Inventory() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MODAL: CONFIGURE RECIPE / BOM ================= */}
+      {isRecipeModalOpen && recipeProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full border border-slate-100 flex flex-col max-h-[90vh]">
+            <h2 className="text-xl font-black text-slate-900 mb-1 uppercase tracking-tight">Recipe Ingredients (BOM)</h2>
+            <p className="text-xs text-slate-500 font-bold mb-4">Configure automatic inventory deductions when selling: <span className="text-emerald-600 underline font-black">{recipeProduct.name}</span></p>
+
+            {/* Add Ingredient Bar */}
+            <div className="bg-slate-50 p-3.5 border border-slate-200 rounded-2xl flex flex-col sm:flex-row gap-3 items-end mb-4">
+              <div className="flex-1 min-w-0">
+                <label className="text-[10px] font-black text-slate-700 block mb-1 uppercase tracking-wider">Select Ingredient / Supply</label>
+                <select
+                  value={selectedIngredientId}
+                  onChange={e => setSelectedIngredientId(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-205 rounded-xl outline-none text-xs font-semibold"
+                >
+                  <option value="">-- Select ingredient --</option>
+                  {products
+                    .filter(p => p.id !== recipeProduct.id && !recipeIngredients.some(ri => ri.ingredient_id === p.id))
+                    .map(p => (
+                      <option key={p.id} value={p.id}>{p.name} (Stock: {p.stock} {(p as any).unit || 'pcs'})</option>
+                    ))}
+                </select>
+              </div>
+              <div className="w-24 shrink-0">
+                <label className="text-[10px] font-black text-slate-700 block mb-1 uppercase tracking-wider">Qty Per Unit</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  value={ingredientQuantity}
+                  onChange={e => setIngredientQuantity(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-205 rounded-xl outline-none text-xs font-semibold"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!selectedIngredientId) return;
+                  setRecipeIngredients([
+                    ...recipeIngredients,
+                    {
+                      ingredient_id: parseInt(selectedIngredientId),
+                      quantity: parseFloat(ingredientQuantity || '1')
+                    }
+                  ]);
+                  setSelectedIngredientId('');
+                  setIngredientQuantity('1');
+                }}
+                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Ingredients List */}
+            <div className="flex-1 overflow-y-auto mb-4 border border-slate-100 rounded-2xl custom-scrollbar">
+              {recipeIngredients.length > 0 ? (
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-100">
+                    <tr>
+                      <th className="p-3 text-[10px] font-black text-slate-500 uppercase tracking-wider">Ingredient</th>
+                      <th className="p-3 text-[10px] font-black text-slate-500 uppercase tracking-wider text-right">Deduct Qty</th>
+                      <th className="p-3 text-[10px] font-black text-slate-500 tracking-wider text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {recipeIngredients.map((item, idx) => {
+                      const ingProduct = products.find(p => p.id === item.ingredient_id);
+                      return (
+                        <tr key={item.ingredient_id} className="hover:bg-slate-50/50">
+                          <td className="p-3">
+                            <p className="text-xs font-bold text-slate-800">{ingProduct?.name || 'Unknown Item'}</p>
+                            <p className="text-[9px] text-slate-400 font-bold">Current stock: {ingProduct?.stock || 0} {(ingProduct as any)?.unit || 'pcs'}</p>
+                          </td>
+                          <td className="p-3 text-right">
+                            <input
+                              type="number"
+                              step="0.001"
+                              min="0.001"
+                              value={item.quantity}
+                              onChange={e => {
+                                const newRecipe = [...recipeIngredients];
+                                newRecipe[idx].quantity = parseFloat(e.target.value || '1');
+                                setRecipeIngredients(newRecipe);
+                              }}
+                              className="w-20 px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-right text-xs font-semibold focus:bg-white"
+                            />
+                          </td>
+                          <td className="p-3 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRecipeIngredients(recipeIngredients.filter(ri => ri.ingredient_id !== item.ingredient_id));
+                              }}
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-slate-400 text-center">
+                  <List size={28} strokeWidth={1.5} className="mb-2 text-slate-300" />
+                  <p className="text-xs font-bold">No ingredients linked yet.</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Use the bar above to define stock deductions for this product.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4 border-t border-slate-100 mt-auto">
+              <button
+                type="button"
+                onClick={() => setIsRecipeModalOpen(false)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-black text-xs uppercase"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRecipe}
+                className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-xs uppercase shadow-md transition-all active:scale-[0.98]"
+              >
+                Save Recipe
+              </button>
+            </div>
           </div>
         </div>
       )}

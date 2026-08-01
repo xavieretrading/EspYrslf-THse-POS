@@ -1,5 +1,1041 @@
 [
   {
+    "id": "17855530716505lylv",
+    "timestamp": "2026-08-01T02:57:51.650Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #17. Total: ₱99.00"
+  },
+  {
+    "id": "1785553058064zi0n2",
+    "timestamp": "2026-08-01T02:57:38.064Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #17 on Walk-In"
+  },
+  {
+    "id": "1785552137081ok7tu",
+    "timestamp": "2026-08-01T02:42:17.081Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #16. Total: ₱99.00"
+  },
+  {
+    "id": "1785552111483mnw2t",
+    "timestamp": "2026-08-01T02:41:51.483Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #16 on Walk-In"
+  },
+  {
+    "id": "1785551703086rx0he",
+    "timestamp": "2026-08-01T02:35:03.086Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #15. Total: ₱0.00"
+  },
+  {
+    "id": "1785550395162dppnx",
+    "timestamp": "2026-08-01T02:13:15.162Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #14. Total: ₱99.00"
+  },
+  {
+    "id": "1785550382563h4mvs",
+    "timestamp": "2026-08-01T02:13:02.563Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #14 on Walk-In"
+  },
+  {
+    "id": "17855498478866o0mg",
+    "timestamp": "2026-08-01T02:04:07.886Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Zonrox/ ColorSafe"
+  },
+  {
+    "id": "17855497723223cf9n",
+    "timestamp": "2026-08-01T02:02:52.322Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Del/ Fragrance Pearls"
+  },
+  {
+    "id": "17855497378605wu65",
+    "timestamp": "2026-08-01T02:02:17.860Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Del/ Gentle Protect"
+  },
+  {
+    "id": "17855496637973ishp",
+    "timestamp": "2026-08-01T02:01:03.797Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Tide/ Garden Bloom"
+  },
+  {
+    "id": "178554962679338stz",
+    "timestamp": "2026-08-01T02:00:26.793Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Downy/ Passion "
+  },
+  {
+    "id": "1785549597666upv31",
+    "timestamp": "2026-08-01T01:59:57.666Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Downy / Sunrise Fresh"
+  },
+  {
+    "id": "1785549562195xz7ia",
+    "timestamp": "2026-08-01T01:59:22.195Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Breeze / Rush Clean"
+  },
+  {
+    "id": "1785549456817zz7vy",
+    "timestamp": "2026-08-01T01:57:36.817Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Downy/ Kontra Kulob"
+  },
+  {
+    "id": "1785549391306dqpie",
+    "timestamp": "2026-08-01T01:56:31.306Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Ariel/Power Liquid w/"
+  },
+  {
+    "id": "1785549331387325fd",
+    "timestamp": "2026-08-01T01:55:31.387Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Downy/Perfume / CottonFresh"
+  },
+  {
+    "id": "17855490091373ctwe",
+    "timestamp": "2026-08-01T01:50:09.137Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Barong / Formal Shirt"
+  },
+  {
+    "id": "17855464692790sylv",
+    "timestamp": "2026-08-01T01:07:49.279Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #13. Total: ₱330.00"
+  },
+  {
+    "id": "1785546430527bl5k2",
+    "timestamp": "2026-08-01T01:07:10.527Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #13 on Walk-In"
+  },
+  {
+    "id": "178551635827369mdr",
+    "timestamp": "2026-07-31T16:45:58.273Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Towels & Bedsheets:"
+  },
+  {
+    "id": "17855163302959fmfm",
+    "timestamp": "2026-07-31T16:45:30.295Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Towels & Bedsheets:"
+  },
+  {
+    "id": "1785512233753qg98m",
+    "timestamp": "2026-07-31T15:37:13.753Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "178551042626837088",
+    "timestamp": "2026-07-31T15:07:06.268Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Coca Cola/Jackdaniel"
+  },
+  {
+    "id": "1785510348412urtgk",
+    "timestamp": "2026-07-31T15:05:48.412Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: San Miglight "
+  },
+  {
+    "id": "1785510293028bxf2e",
+    "timestamp": "2026-07-31T15:04:53.028Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Coke Regular"
+  },
+  {
+    "id": "1785510109472o2gzp",
+    "timestamp": "2026-07-31T15:01:49.472Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mocha"
+  },
+  {
+    "id": "1785510050116epc38",
+    "timestamp": "2026-07-31T15:00:50.116Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Cappuccino"
+  },
+  {
+    "id": "17855099876764hfwi",
+    "timestamp": "2026-07-31T14:59:47.676Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Espresso"
+  },
+  {
+    "id": "17855098999150urba",
+    "timestamp": "2026-07-31T14:58:19.915Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Hot Chocolate"
+  },
+  {
+    "id": "1785509793799puypq",
+    "timestamp": "2026-07-31T14:56:33.799Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Red Horse Can"
+  },
+  {
+    "id": "178550972143852tnw",
+    "timestamp": "2026-07-31T14:55:21.438Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Pocari Sweet - 500ml"
+  },
+  {
+    "id": "17855097121221qdjs",
+    "timestamp": "2026-07-31T14:55:12.122Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Pocari Sweet - 500ml"
+  },
+  {
+    "id": "1785509693610h1i39",
+    "timestamp": "2026-07-31T14:54:53.610Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Americano"
+  },
+  {
+    "id": "1785509601583es89m",
+    "timestamp": "2026-07-31T14:53:21.583Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Redbull"
+  },
+  {
+    "id": "1785509516109g0acn",
+    "timestamp": "2026-07-31T14:51:56.109Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Sprite"
+  },
+  {
+    "id": "17855095159405sb3e",
+    "timestamp": "2026-07-31T14:51:55.940Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Sprite"
+  },
+  {
+    "id": "178550951502171fw7",
+    "timestamp": "2026-07-31T14:51:55.021Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Sprite"
+  },
+  {
+    "id": "1785509497371ly0pn",
+    "timestamp": "2026-07-31T14:51:37.371Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Coke Zero"
+  },
+  {
+    "id": "1785509479106fd720",
+    "timestamp": "2026-07-31T14:51:19.106Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Summit Water"
+  },
+  {
+    "id": "1785509367908o1ly7",
+    "timestamp": "2026-07-31T14:49:27.908Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Espresso with Milk"
+  },
+  {
+    "id": "17855093497888jivx",
+    "timestamp": "2026-07-31T14:49:09.789Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Hot Chocolate"
+  },
+  {
+    "id": "17855093316420rp0s",
+    "timestamp": "2026-07-31T14:48:51.642Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Mocha"
+  },
+  {
+    "id": "17855093158054zjck",
+    "timestamp": "2026-07-31T14:48:35.805Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Macchiato"
+  },
+  {
+    "id": "1785509279665d1nzs",
+    "timestamp": "2026-07-31T14:47:59.665Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Latte"
+  },
+  {
+    "id": "1785509268194vtsn8",
+    "timestamp": "2026-07-31T14:47:48.194Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Spanish Latte"
+  },
+  {
+    "id": "1785509255292usf7g",
+    "timestamp": "2026-07-31T14:47:35.296Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Cappuccino"
+  },
+  {
+    "id": "1785509239699vhvpi",
+    "timestamp": "2026-07-31T14:47:19.699Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Spanish Latte"
+  },
+  {
+    "id": "1785509213715b18xn",
+    "timestamp": "2026-07-31T14:46:53.715Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Americano"
+  },
+  {
+    "id": "1785509196664xoyb3",
+    "timestamp": "2026-07-31T14:46:36.667Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Latte"
+  },
+  {
+    "id": "1785509167956brfkx",
+    "timestamp": "2026-07-31T14:46:07.956Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Espresso"
+  },
+  {
+    "id": "1785508496876ro3zq",
+    "timestamp": "2026-07-31T14:34:56.876Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #11 on Walk-In"
+  },
+  {
+    "id": "1785507684902ahjeq",
+    "timestamp": "2026-07-31T14:21:24.902Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: PISO PROMO - Espresso Coffee"
+  },
+  {
+    "id": "1785507684582z4b9x",
+    "timestamp": "2026-07-31T14:21:24.582Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: PISO PROMO - Espresso Coffee"
+  },
+  {
+    "id": "1785507086519w1jnn",
+    "timestamp": "2026-07-31T14:11:26.519Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Piso Sale - Coffee"
+  },
+  {
+    "id": "1785506944698daoo6",
+    "timestamp": "2026-07-31T14:09:04.698Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #10 on Walk-In"
+  },
+  {
+    "id": "1785506407419tu2r9",
+    "timestamp": "2026-07-31T14:00:07.419Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Pers"
+  },
+  {
+    "id": "1785506353678s3mel",
+    "timestamp": "2026-07-31T13:59:13.678Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Coca Cola/Jackdaniel"
+  },
+  {
+    "id": "1785506291857cvdq8",
+    "timestamp": "2026-07-31T13:58:11.857Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Red Horse Can"
+  },
+  {
+    "id": "1785506255998sbyf2",
+    "timestamp": "2026-07-31T13:57:35.998Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Pale Pilsen"
+  },
+  {
+    "id": "1785506166565ztxss",
+    "timestamp": "2026-07-31T13:56:06.565Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Redbull"
+  },
+  {
+    "id": "1785506121427x20vu",
+    "timestamp": "2026-07-31T13:55:21.427Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: San Miglight "
+  },
+  {
+    "id": "1785506026515bh588",
+    "timestamp": "2026-07-31T13:53:46.515Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Lemon Pou (Signature)"
+  },
+  {
+    "id": "1785505989963gzwlg",
+    "timestamp": "2026-07-31T13:53:09.963Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Orange"
+  },
+  {
+    "id": "1785505947366ijkp5",
+    "timestamp": "2026-07-31T13:52:27.366Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Sprite"
+  },
+  {
+    "id": "1785505911909uv976",
+    "timestamp": "2026-07-31T13:51:51.909Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Coke Regular"
+  },
+  {
+    "id": "1785505862248w8p9j",
+    "timestamp": "2026-07-31T13:51:02.248Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Coke Zero"
+  },
+  {
+    "id": "178550582838051bmv",
+    "timestamp": "2026-07-31T13:50:28.380Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Evian 550ml"
+  },
+  {
+    "id": "1785505788620981j8",
+    "timestamp": "2026-07-31T13:49:48.620Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Evian 330ml"
+  },
+  {
+    "id": "17855056867569jo48",
+    "timestamp": "2026-07-31T13:48:06.756Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Pocari Sweet - 500ml"
+  },
+  {
+    "id": "1785505624200cz0zz",
+    "timestamp": "2026-07-31T13:47:04.200Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Iced Durian Latte"
+  },
+  {
+    "id": "1785505618776h1oph",
+    "timestamp": "2026-07-31T13:46:58.776Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Durrian Coffee Frappe"
+  },
+  {
+    "id": "1785505612598pzpuf",
+    "timestamp": "2026-07-31T13:46:52.598Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Hot Durian Latte"
+  },
+  {
+    "id": "1785505602387x6h1z",
+    "timestamp": "2026-07-31T13:46:42.387Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coffee Frappe"
+  },
+  {
+    "id": "17855055951901plrk",
+    "timestamp": "2026-07-31T13:46:35.190Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "17855055813301t6pg",
+    "timestamp": "2026-07-31T13:46:21.330Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Summit Water"
+  },
+  {
+    "id": "1785505571631kuxcx",
+    "timestamp": "2026-07-31T13:46:11.631Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Summit Water"
+  },
+  {
+    "id": "1785505527492z24nk",
+    "timestamp": "2026-07-31T13:45:27.492Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785505513638l0wg3",
+    "timestamp": "2026-07-31T13:45:13.638Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Summit Water"
+  },
+  {
+    "id": "17855053504697e0x7",
+    "timestamp": "2026-07-31T13:42:30.469Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "17855053323190hpnq",
+    "timestamp": "2026-07-31T13:42:12.319Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785505322072youur",
+    "timestamp": "2026-07-31T13:42:02.072Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785505310631vcr42",
+    "timestamp": "2026-07-31T13:41:50.631Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785504917519g845w",
+    "timestamp": "2026-07-31T13:35:17.519Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Summit Water"
+  },
+  {
+    "id": "17855035835554fyqt",
+    "timestamp": "2026-07-31T13:13:03.555Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "17855034399756us5d",
+    "timestamp": "2026-07-31T13:10:39.975Z",
+    "user": "Sir Earl ",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "17854926028905szrt",
+    "timestamp": "2026-07-31T10:10:02.890Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785492564154daiio",
+    "timestamp": "2026-07-31T10:09:24.154Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785492364712tl26d",
+    "timestamp": "2026-07-31T10:06:04.712Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #9. Total: ₱200.00"
+  },
+  {
+    "id": "1785492353584nned4",
+    "timestamp": "2026-07-31T10:05:53.584Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #9 on Walk-In"
+  },
+  {
+    "id": "1785492087364shxwa",
+    "timestamp": "2026-07-31T10:01:27.364Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #7. Total: ₱200.00"
+  },
+  {
+    "id": "1785492075721h96fa",
+    "timestamp": "2026-07-31T10:01:15.721Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #7 on Walk-In"
+  },
+  {
+    "id": "1785491379715mfezu",
+    "timestamp": "2026-07-31T09:49:39.715Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #6. Total: ₱400.00"
+  },
+  {
+    "id": "1785491364866dzn0y",
+    "timestamp": "2026-07-31T09:49:24.866Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #6 on Walk-In"
+  },
+  {
+    "id": "1785491008628xgmc8",
+    "timestamp": "2026-07-31T09:43:28.628Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #5 on Walk-In"
+  },
+  {
+    "id": "17854894714139kh8r",
+    "timestamp": "2026-07-31T09:17:51.413Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Iced Durian Latte"
+  },
+  {
+    "id": "1785489446252lg9oo",
+    "timestamp": "2026-07-31T09:17:26.252Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Hot Durian Latte"
+  },
+  {
+    "id": "1785489417634zrlsh",
+    "timestamp": "2026-07-31T09:16:57.634Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Durrian Coffee Frappe"
+  },
+  {
+    "id": "1785489399929b37k4",
+    "timestamp": "2026-07-31T09:16:39.929Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coffee Frappe"
+  },
+  {
+    "id": "178548913909026mq8",
+    "timestamp": "2026-07-31T09:12:19.090Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785489117166myd0j",
+    "timestamp": "2026-07-31T09:11:57.166Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785489020292oznns",
+    "timestamp": "2026-07-31T09:10:20.292Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "178548893912075mq5",
+    "timestamp": "2026-07-31T09:08:59.120Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coconut Coffee"
+  },
+  {
+    "id": "1785488543483avfl7",
+    "timestamp": "2026-07-31T09:02:23.483Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785488511335vnxte",
+    "timestamp": "2026-07-31T09:01:51.335Z",
+    "user": "junrel-WAITER",
+    "activity": "Edit Product",
+    "details": "Updated product: Durrian Coffee Frappe"
+  },
+  {
+    "id": "1785487949804k9024",
+    "timestamp": "2026-07-31T08:52:29.804Z",
+    "user": "junrel-WAITER",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785485806642bxrn4",
+    "timestamp": "2026-07-31T08:16:46.642Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Mango Coconut Coffee"
+  },
+  {
+    "id": "178548578008182gfv",
+    "timestamp": "2026-07-31T08:16:20.081Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Iced Durian Latte"
+  },
+  {
+    "id": "1785485749645z0owb",
+    "timestamp": "2026-07-31T08:15:49.645Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Hot Durian Latte"
+  },
+  {
+    "id": "1785485728881cam5x",
+    "timestamp": "2026-07-31T08:15:28.881Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Mango Coffee Frappe"
+  },
+  {
+    "id": "178548570192603vwg",
+    "timestamp": "2026-07-31T08:15:01.926Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Durrian Coffee Frappe"
+  },
+  {
+    "id": "1785485568414vrwnv",
+    "timestamp": "2026-07-31T08:12:48.414Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Stuff Toys - Extra Large"
+  },
+  {
+    "id": "17854855384310fv37",
+    "timestamp": "2026-07-31T08:12:18.431Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Stuff Toys - Large"
+  },
+  {
+    "id": "1785485514382w6blo",
+    "timestamp": "2026-07-31T08:11:54.382Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Stuff Toys - Medium"
+  },
+  {
+    "id": "1785485505729z0hx0",
+    "timestamp": "2026-07-31T08:11:45.729Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Stuff Toys - Medium"
+  },
+  {
+    "id": "1785485481314jhnjb",
+    "timestamp": "2026-07-31T08:11:21.314Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Stuff Toys - Small"
+  },
+  {
+    "id": "17854854500421ki3w",
+    "timestamp": "2026-07-31T08:10:50.042Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Shoes"
+  },
+  {
+    "id": "1785485356709y5k72",
+    "timestamp": "2026-07-31T08:09:16.709Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Suits"
+  },
+  {
+    "id": "1785485326907f84k9",
+    "timestamp": "2026-07-31T08:08:46.907Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Gown"
+  },
+  {
+    "id": "1785485267049ed5q8",
+    "timestamp": "2026-07-31T08:07:47.049Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Wash only"
+  },
+  {
+    "id": "17854852313347r8jn",
+    "timestamp": "2026-07-31T08:07:11.334Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Dress:"
+  },
+  {
+    "id": "1785485213418tltwb",
+    "timestamp": "2026-07-31T08:06:53.418Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Barong / Formal Shirt:"
+  },
+  {
+    "id": "1785485155810icizw",
+    "timestamp": "2026-07-31T08:05:55.810Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Polo / Button-Up Shirt:"
+  },
+  {
+    "id": "1785485136216jf6ns",
+    "timestamp": "2026-07-31T08:05:36.216Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Pants / Trousers:"
+  },
+  {
+    "id": "1785485113948zg5sl",
+    "timestamp": "2026-07-31T08:05:13.948Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Comforter:"
+  },
+  {
+    "id": "1785485093582q9khw",
+    "timestamp": "2026-07-31T08:04:53.582Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Curtains:"
+  },
+  {
+    "id": "1785485081020pz49n",
+    "timestamp": "2026-07-31T08:04:41.020Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Undergarments / Delicate Load:"
+  },
+  {
+    "id": "1785485047063phke6",
+    "timestamp": "2026-07-31T08:04:07.063Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Towels &amp; Bedsheets:"
+  },
+  {
+    "id": "1785485036531v62yi",
+    "timestamp": "2026-07-31T08:03:56.531Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Towels &amp; Bedsheets:"
+  },
+  {
+    "id": "1785485023056nzzbt",
+    "timestamp": "2026-07-31T08:03:43.056Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Regular Clothes:"
+  },
+  {
+    "id": "1785484946685ub12z",
+    "timestamp": "2026-07-31T08:02:26.685Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: 2"
+  },
+  {
+    "id": "1785484300280yeoef",
+    "timestamp": "2026-07-31T07:51:40.280Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #4 on Walk-In"
+  },
+  {
+    "id": "1785484069291urrj2",
+    "timestamp": "2026-07-31T07:47:49.291Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #3. Total: ₱200.00"
+  },
+  {
+    "id": "17854840561385au91",
+    "timestamp": "2026-07-31T07:47:36.138Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #3 on Walk-In"
+  },
+  {
+    "id": "1785484050201ur6qz",
+    "timestamp": "2026-07-31T07:47:30.201Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785481342618n5vm9",
+    "timestamp": "2026-07-31T07:02:22.618Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #2 on Walk-In"
+  },
+  {
+    "id": "1785479383661ndctm",
+    "timestamp": "2026-07-31T06:29:43.661Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1785475860182qai2m",
+    "timestamp": "2026-07-31T05:31:00.182Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #26. Total: ₱202.00"
+  },
+  {
+    "id": "1785475844248vhrtl",
+    "timestamp": "2026-07-31T05:30:44.248Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #26 on Walk-In"
+  },
+  {
+    "id": "178547569981020bhc",
+    "timestamp": "2026-07-31T05:28:19.810Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: test 1"
+  },
+  {
+    "id": "1785475631598gzsxu",
+    "timestamp": "2026-07-31T05:27:11.598Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: mango"
+  },
+  {
+    "id": "17854752046660ac70",
+    "timestamp": "2026-07-31T05:20:04.666Z",
+    "user": "System Administrator",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #25. Total: ₱200.00"
+  },
+  {
+    "id": "1785475028463hickn",
+    "timestamp": "2026-07-31T05:17:08.463Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #25 on Walk-In"
+  },
+  {
+    "id": "1785474878029xa245",
+    "timestamp": "2026-07-31T05:14:38.029Z",
+    "user": "System Administrator",
+    "activity": "Add Items to Order",
+    "details": "Added new items to Order #23: 1x Amerikano"
+  },
+  {
+    "id": "1785474706247ufhh0",
+    "timestamp": "2026-07-31T05:11:46.247Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #24 on Takeaway"
+  },
+  {
+    "id": "1785474667000nyit3",
+    "timestamp": "2026-07-31T05:11:07.000Z",
+    "user": "System Administrator",
+    "activity": "Place Order",
+    "details": "Created new order #23 on Walk-In"
+  },
+  {
+    "id": "1785474377084wymim",
+    "timestamp": "2026-07-31T05:06:17.084Z",
+    "user": "System Administrator",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785474346399xhetl",
+    "timestamp": "2026-07-31T05:05:46.399Z",
+    "user": "Sir Earl ",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "1785473992080iiuzi",
     "timestamp": "2026-07-31T04:59:52.080Z",
     "user": "System Administrator",

@@ -16,53 +16,7 @@
       "description": "Non-perishables and dry goods"
     }
   ],
-  "stocks": {
-    "wh-1_163": 20,
-    "wh-1_164": 21,
-    "wh-1_175": 300
-  },
+  "stocks": {},
   "transfers": [],
-  "cycle_counts": [
-    {
-      "id": "cc-1785430100050",
-      "title": "Cycle Count Audit - Jul 31, 2026",
-      "remarks": "",
-      "user": "System Administrator",
-      "created_at": "2026-07-30T16:48:20.051Z",
-      "status": "committed",
-      "items": [
-        {
-          "product_id": 175,
-          "name": "Amerikano",
-          "expected": 2000,
-          "actual": 2000,
-          "discrepancy": 0
-        }
-      ]
-    },
-    {
-      "id": "cc-1785290263307",
-      "title": "Cycle Count Audit - Jul 29, 2026",
-      "remarks": "",
-      "user": "System Administrator",
-      "created_at": "2026-07-29T01:57:43.307Z",
-      "status": "committed",
-      "items": [
-        {
-          "product_id": 165,
-          "name": "CHOCO COFFEE",
-          "expected": 100,
-          "actual": 100,
-          "discrepancy": 0
-        },
-        {
-          "product_id": 166,
-          "name": "mocha",
-          "expected": 200,
-          "actual": 200,
-          "discrepancy": 0
-        }
-      ]
-    }
-  ]
+  "cycle_counts": []
 }

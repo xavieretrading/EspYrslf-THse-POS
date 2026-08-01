@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
@@ -138,6 +139,35 @@ async function generateNextReceiptNumber(orderId: string | number, branchId: str
   }
 }
 
+async function generateNextOrderNumber(branchId: string | number): Promise<number> {
+  const bId = Number(branchId || 1);
+  try {
+    const { data, error } = await supabase
+      .from('order_counter_espresso')
+      .select('current_value')
+      .eq('branch_id', bId);
+
+    if (!error && data && data.length > 0) {
+      const nextVal = Number(data[0].current_value) + 1;
+      const { error: updateErr } = await supabase
+        .from('order_counter_espresso')
+        .update({ current_value: nextVal })
+        .eq('branch_id', bId);
+
+      if (!updateErr) return nextVal;
+    } else {
+      // Initialize sequence for this branch if it doesn't exist
+      const { error: insertErr } = await supabase
+        .from('order_counter_espresso')
+        .insert([{ branch_id: bId, current_value: 1 }]);
+      if (!insertErr) return 1;
+    }
+  } catch (e) {
+    console.error('Error in generateNextOrderNumber:', e);
+  }
+  return 0; // Fallback
+}
+
 // Helper to attach receipt number to list/single orders retrieved from database
 async function attachReceiptNumbers(orders: any): Promise<any> {
   if (!orders) return orders;
@@ -192,7 +222,8 @@ async function attachReceiptNumbers(orders: any): Promise<any> {
 const app = express();
 const PORT = parseInt(process.env.PORT || '8080', 10);
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // API Routes ---
 
@@ -338,35 +369,64 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-  const { branch_id, category_id, name, price, cost, stock } = req.body;
+  const { branch_id, category_id, name, price, cost, stock, image_url, is_sellable, unit } = req.body;
+
+  const insertObj: any = {
+    branch_id, category_id, name, price, cost: cost || 0, stock: stock || 0, is_active: 1, image_url,
+    is_sellable: is_sellable === undefined ? 1 : is_sellable,
+    unit: unit || 'pcs'
+  };
+
+  let { data, error } = await supabase.from('products_espresso').insert([insertObj]).select().single();
   
-  let division = 'coffee';
-  if (category_id) {
-    const { data: cat } = await supabase.from('categories_espresso').select('division').eq('id', category_id).single();
-    if (cat) division = cat.division || 'coffee';
+  if (error && error.message.includes('unit')) {
+    console.warn("⚠️ Warning: 'unit' column not found in database. Retrying save without it. Please run add-unit-column.sql in Supabase SQL Editor.");
+    delete insertObj.unit;
+    const retryResult = await supabase.from('products_espresso').insert([insertObj]).select().single();
+    data = retryResult.data;
+    error = retryResult.error;
   }
 
-  const { data, error } = await supabase.from('products_espresso').insert([{
-    branch_id, category_id, name, price, cost: cost || 0, stock: stock || 0, is_active: 1, division
-  }]).select().single();
+  if (error && error.message.includes('is_sellable')) {
+    console.warn("⚠️ Warning: 'is_sellable' column not found in database. Retrying save without it. Please run add-is-sellable-column.sql.");
+    delete insertObj.is_sellable;
+    const retryResult = await supabase.from('products_espresso').insert([insertObj]).select().single();
+    data = retryResult.data;
+    error = retryResult.error;
+  }
+
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ id: data.id, success: true });
+  res.json({ id: data?.id, success: true });
 });
 
 app.put('/api/products/:id', async (req, res) => {
-  const { name, price, cost, category_id, stock } = req.body;
+  const { name, price, cost, category_id, stock, image_url, is_sellable, unit } = req.body;
   const updates: any = {};
   if (name !== undefined) updates.name = name;
   if (price !== undefined) updates.price = price;
   if (cost !== undefined) updates.cost = cost;
-  if (category_id !== undefined) {
-    updates.category_id = category_id;
-    const { data: cat } = await supabase.from('categories_espresso').select('division').eq('id', category_id).single();
-    if (cat) updates.division = cat.division || 'coffee';
-  }
+  if (category_id !== undefined) updates.category_id = category_id;
   if (stock !== undefined) updates.stock = stock;
+  if (image_url !== undefined) updates.image_url = image_url;
+  if (is_sellable !== undefined) updates.is_sellable = is_sellable;
+  if (unit !== undefined) updates.unit = unit;
   
-  const { error } = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
+  let { error } = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
+  
+  if (error && error.message.includes('unit')) {
+    console.warn("⚠️ Warning: 'unit' column not found in database. Retrying update without it. Please run add-unit-column.sql in Supabase SQL Editor.");
+    delete updates.unit;
+    const retryResult = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
+    error = retryResult.error;
+  }
+
+  if (error && error.message.includes('is_sellable')) {
+    console.warn("⚠️ Warning: 'is_sellable' column not found in database. Retrying update without it. Please run add-is-sellable-column.sql.");
+    delete updates.is_sellable;
+    const retryResult = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
+    error = retryResult.error;
+  }
+
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
@@ -375,6 +435,62 @@ app.delete('/api/products/:id', async (req, res) => {
   // Soft delete to prevent breaking orders
   const { error } = await supabase.from('products_espresso').update({ is_active: 0 }).eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+app.post('/api/products/upload-image', async (req, res) => {
+  const { name, base64Image } = req.body;
+  if (!name || !base64Image) {
+    return res.status(400).json({ error: 'Missing product name or image data' });
+  }
+
+  try {
+    const filename = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') + '.jpg';
+    const filePath = path.join(process.cwd(), 'public', filename);
+
+    // Ensure public folder exists
+    const publicDir = path.join(process.cwd(), 'public');
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    fs.writeFileSync(filePath, buffer);
+    console.log(`Saved product image: ${filename}`);
+
+    res.json({ success: true, url: `/${filename}` });
+  } catch (error: any) {
+    console.error('Error saving uploaded product image:', error);
+    res.status(500).json({ error: error.message || 'Failed to save product image' });
+  }
+});
+
+app.get('/api/products/:id/recipe', async (req, res) => {
+  const { data, error } = await supabase
+    .from('product_recipes')
+    .select('*, ingredient:products_espresso!ingredient_id(name, stock, price)')
+    .eq('product_id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
+
+app.post('/api/products/:id/recipe', async (req, res) => {
+  const { ingredients } = req.body; // Array of { ingredient_id, quantity }
+  
+  // Delete existing recipe items
+  await supabase.from('product_recipes').delete().eq('product_id', req.params.id);
+  
+  if (ingredients && ingredients.length > 0) {
+    const insertData = ingredients.map((ing: any) => ({
+      product_id: parseInt(req.params.id),
+      ingredient_id: parseInt(ing.ingredient_id),
+      quantity: parseFloat(ing.quantity)
+    }));
+    const { error } = await supabase.from('product_recipes').insert(insertData);
+    if (error) return res.status(500).json({ error: error.message });
+  }
   res.json({ success: true });
 });
 
@@ -991,12 +1107,71 @@ app.delete('/api/discounts/:id', async (req, res) => {
   res.json({ success: true });
 });
 
+// QZ security keys
+let qzPrivateKey: string = '';
+let qzCertificate: string = '';
+
+// Generate keys if not already present or load them
+function ensureQzKeys() {
+  if (qzPrivateKey && qzCertificate) return;
+
+  try {
+    // Generate RSA 2048 keypair
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' }
+    });
+
+    qzPrivateKey = privateKey;
+    
+    // Create certificate PEM string
+    qzCertificate = `-----BEGIN CERTIFICATE-----\n` +
+      publicKey.replace(/-----BEGIN PUBLIC KEY-----/g, '')
+        .replace(/-----END PUBLIC KEY-----/g, '')
+        .trim() +
+      `\n-----END CERTIFICATE-----`;
+
+  } catch (err) {
+    console.error("Error generating QZ keys:", err);
+  }
+}
+
+app.get('/api/qz/certificate', (req, res) => {
+  ensureQzKeys();
+  res.header('Content-Type', 'text/plain');
+  res.send(qzCertificate);
+});
+
+app.post('/api/qz/sign', (req, res) => {
+  ensureQzKeys();
+  const requestVal = req.body.request || req.query.request;
+  if (!requestVal) {
+    return res.status(400).send('Request payload is required');
+  }
+
+  try {
+    const signer = crypto.createSign('SHA512');
+    signer.update(requestVal);
+    const signature = signer.sign(qzPrivateKey, 'base64');
+    res.header('Content-Type', 'text/plain');
+    res.send(signature);
+  } catch (err: any) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Orders
 app.post('/api/orders', async (req, res) => {
   const { branch_id, table_id, order_type, items, notes } = req.body;
   
   const orderPayload: any = { branch_id, table_id: table_id || null, status: 'open', notes: notes || null };
   if (order_type) orderPayload.order_type = order_type;
+  
+  const nextOrderNumber = await generateNextOrderNumber(branch_id);
+  if (nextOrderNumber > 0) {
+    orderPayload.order_number = nextOrderNumber;
+  }
   
   let { data: orderData, error: orderError } = await supabase
     .from('orders_espresso')
@@ -1266,10 +1441,11 @@ app.post('/api/orders/:id/refund', async (req, res) => {
   }
 
   // Return inventory
-  const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity').eq('order_id', orderId);
+  const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity, notes').eq('order_id', orderId);
   if (items) {
     for (const item of items) {
-      const { data: product } = await supabase.from('products_espresso').select('stock').eq('id', item.product_id).single();
+      // 1. Restore product itself
+      const { data: product } = await supabase.from('products_espresso').select('name, stock').eq('id', item.product_id).single();
       const newStock = (product?.stock || 0) + item.quantity;
       await supabase.from('products_espresso').update({ stock: newStock }).eq('id', item.product_id);
       
@@ -1279,6 +1455,34 @@ app.post('/api/orders/:id/refund', async (req, res) => {
         quantity: item.quantity,
         remarks: `Refund Order #${orderId}` + (reason ? ` - ${reason}` : '')
       }]);
+
+      // 2. Restore recipe ingredients if defined
+      const { data: recipe } = await supabase.from('product_recipes').select('ingredient_id, quantity').eq('product_id', item.product_id);
+      if (recipe && recipe.length > 0) {
+        for (const recItem of recipe) {
+          const { data: ing } = await supabase.from('products_espresso').select('name, stock').eq('id', recItem.ingredient_id).single();
+          
+          let factor = 1.0;
+          if (ing && ing.name.toLowerCase().includes('sugar') && item.notes) {
+            const notes = item.notes;
+            if (notes.includes('[Sugar: 50%]') || notes.includes('Sugar: 50%') || notes.includes('Sugar Level: 50%')) factor = 0.5;
+            else if (notes.includes('[Sugar: 25%]') || notes.includes('Sugar: 25%') || notes.includes('Sugar Level: 25%')) factor = 0.25;
+            else if (notes.includes('[Sugar: 75%]') || notes.includes('Sugar: 75%') || notes.includes('Sugar Level: 75%')) factor = 0.75;
+            else if (notes.includes('[Sugar: 0%]') || notes.includes('Sugar: 0%') || notes.includes('Sugar Level: 0%') || notes.includes('Sugar Level: No Sugar')) factor = 0.0;
+          }
+
+          const restoreQty = recItem.quantity * item.quantity * factor;
+          const newIngStock = (ing?.stock || 0) + restoreQty;
+          
+          await supabase.from('products_espresso').update({ stock: newIngStock }).eq('id', recItem.ingredient_id);
+          await supabase.from('inventory_transactions_espresso').insert([{
+            product_id: recItem.ingredient_id,
+            type: 'in',
+            quantity: restoreQty,
+            remarks: `Refund Restore Recipe for Order #${orderId} (Parent: ${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : '')
+          }]);
+        }
+      }
     }
   }
 
@@ -1447,6 +1651,17 @@ app.put('/api/orders/:id/table', async (req, res) => {
       await supabase.from('tables_espresso').update({ status: 'occupied' }).eq('id', new_table_id);
     }
 
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/orders/:id/notes', async (req, res) => {
+  const { notes } = req.body;
+  try {
+    const { error } = await supabase.from('orders_espresso').update({ notes }).eq('id', req.params.id);
+    if (error) return res.status(500).json({ error: error.message });
     res.json({ success: true });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -1659,11 +1874,11 @@ app.post('/api/orders/:id/pay', async (req, res) => {
   }
 
   // Deduct Inventory
-  const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity').eq('order_id', orderId);
+  const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity, notes').eq('order_id', orderId);
   if (items) {
     for (const item of items) {
-      // Fetch current stock
-      const { data: product } = await supabase.from('products_espresso').select('stock').eq('id', item.product_id).single();
+      // 1. Fetch current product name and stock
+      const { data: product } = await supabase.from('products_espresso').select('name, stock').eq('id', item.product_id).single();
       const newStock = (product?.stock || 0) - item.quantity;
       await supabase.from('products_espresso').update({ stock: newStock }).eq('id', item.product_id);
       
@@ -1673,6 +1888,35 @@ app.post('/api/orders/:id/pay', async (req, res) => {
         quantity: item.quantity,
         remarks: `Sales Order #${orderId}`
       }]);
+
+      // 2. Fetch and deduct recipe ingredients if defined
+      const { data: recipe } = await supabase.from('product_recipes').select('ingredient_id, quantity').eq('product_id', item.product_id);
+      if (recipe && recipe.length > 0) {
+        for (const recItem of recipe) {
+          const { data: ing } = await supabase.from('products_espresso').select('name, stock').eq('id', recItem.ingredient_id).single();
+          
+          let factor = 1.0;
+          // Dynamically scale sugar usage based on POS customization notes
+          if (ing && ing.name.toLowerCase().includes('sugar') && item.notes) {
+            const notes = item.notes;
+            if (notes.includes('[Sugar: 50%]') || notes.includes('Sugar: 50%') || notes.includes('Sugar Level: 50%')) factor = 0.5;
+            else if (notes.includes('[Sugar: 25%]') || notes.includes('Sugar: 25%') || notes.includes('Sugar Level: 25%')) factor = 0.25;
+            else if (notes.includes('[Sugar: 75%]') || notes.includes('Sugar: 75%') || notes.includes('Sugar Level: 75%')) factor = 0.75;
+            else if (notes.includes('[Sugar: 0%]') || notes.includes('Sugar: 0%') || notes.includes('Sugar Level: 0%') || notes.includes('Sugar Level: No Sugar')) factor = 0.0;
+          }
+
+          const deductQty = recItem.quantity * item.quantity * factor;
+          const newIngStock = (ing?.stock || 0) - deductQty;
+          
+          await supabase.from('products_espresso').update({ stock: newIngStock }).eq('id', recItem.ingredient_id);
+          await supabase.from('inventory_transactions_espresso').insert([{
+            product_id: recItem.ingredient_id,
+            type: 'out',
+            quantity: deductQty,
+            remarks: `Recipe usage for Order #${orderId} (${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : '')
+          }]);
+        }
+      }
     }
   }
 

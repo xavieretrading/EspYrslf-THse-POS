@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Coffee, Package, FileText, Settings as SettingsIcon, Database, MapPin, Store, LogOut, Ticket, Users, Menu, ChefHat, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -88,8 +88,8 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
         isOpen ? "translate-x-0 w-52" : "-translate-x-full w-0"
       )}>
         <div className="w-52 flex flex-col h-full shrink-0">
-          <div className="p-4 pb-2">
-            <div className="flex items-center justify-between mb-3">
+          <div className="p-3 pb-1.5">
+            <div className="flex items-center justify-between mb-2">
               <h1 className="text-sm font-bold text-white flex items-center gap-1.5 min-w-0">
                 <img src={isLaundryBranch ? "/s1p and sp1n.jpg" : "/logo.jpg"} alt="Logo" className="w-6 h-6 rounded-full object-cover border border-slate-700 bg-white" />
                 <span className="truncate">{settings?.company_name || (isLaundryBranch ? 'S1p and Sp1n' : 'Espresso Yourself')}</span>
@@ -103,42 +103,27 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
               </button>
             </div>
           
-          {/* Branch Selector */}
-          {activeUser?.role === 'admin' && (
-            <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 mb-2">
-              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 block flex items-center gap-1 font-sans">
-                <MapPin size={9} /> Current Branch
-              </label>
-              <select 
-                className="w-full bg-transparent text-white font-medium outline-none appearance-none cursor-pointer text-xs font-sans"
-                value={activeBranch?.id || ''}
-                onChange={(e) => {
-                  const b = branches.find(br => br.id === parseInt(e.target.value));
-                  if (b) setActiveBranch(b);
-                }}
-              >
-                {branches.map(b => (
-                  <option key={b.id} value={b.id} className="bg-slate-800 text-white">{b.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* User Info */}
-          <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 flex flex-col font-sans">
-             <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              Current User
-             </label>
-             <div className="text-xs text-white font-medium truncate">{activeUser?.full_name || activeUser?.email}</div>
-             <div className="text-[10px] text-slate-405 uppercase tracking-wider mt-0.5 leading-none">{activeUser?.role}</div>
-             <button 
-                onClick={onLogout}
-                className="mt-2 flex items-center justify-center gap-1.5 w-full py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[11px] font-bold rounded-lg transition-colors min-h-[28px]"
-             >
-                <LogOut size={12} /> Log Out
-             </button>
+           {/* Branch Selector */}
+           {activeUser?.role === 'admin' && (
+             <div className="bg-slate-800 rounded-lg p-1.5 border border-slate-700 mb-1.5">
+               <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 block flex items-center gap-1 font-sans">
+                 <MapPin size={9} /> Current Branch
+               </label>
+               <select 
+                 className="w-full bg-transparent text-white font-medium outline-none appearance-none cursor-pointer text-xs font-sans"
+                 value={activeBranch?.id || ''}
+                 onChange={(e) => {
+                   const b = branches.find(br => br.id === parseInt(e.target.value));
+                   if (b) setActiveBranch(b);
+                 }}
+               >
+                 {branches.map(b => (
+                   <option key={b.id} value={b.id} className="bg-slate-800 text-white">{b.name}</option>
+                 ))}
+               </select>
+             </div>
+           )}
           </div>
-        </div>
 
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto mt-1 custom-scrollbar font-sans">
           {links.map((link) => {
@@ -193,16 +178,23 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
             );
           })}
           </nav>
-          <div className="p-4 border-t border-slate-800 flex flex-col gap-2 font-sans">
-            <div className="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl shadow-sm flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[11px] font-bold text-slate-300">Online</span>
-              </div>
-              <div className="text-[10px] font-bold text-slate-400">
-                v1.0.0
-              </div>
+          <div className="p-4 border-t border-slate-800 flex flex-col gap-2.5 font-sans mt-auto">
+            {/* User Info (Moved Below Navigation) */}
+            <div className="bg-slate-800 rounded-lg p-2 border border-slate-700 flex flex-col font-sans mb-1 shadow-sm">
+               <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+                 Current User
+               </label>
+               <div className="text-xs text-white font-bold truncate">{activeUser?.full_name || activeUser?.email}</div>
+               <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mt-0.5 leading-none">{activeUser?.role}</div>
+               <button 
+                  onClick={onLogout}
+                  className="mt-2 flex items-center justify-center gap-1.5 w-full py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] uppercase tracking-wider font-extrabold rounded-lg transition-colors min-h-[26px] active:scale-[0.98]"
+               >
+                  <LogOut size={12} /> Log Out
+               </button>
             </div>
+
+
             <div className="text-[10px] text-slate-500 text-center">
               &copy; 2026 {isLaundryBranch ? 'S1p and Sp1n Laundry Shop' : 'Espresso Yourself & Tea House'}
             </div>
@@ -215,6 +207,7 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
 
 function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolean, setIsSidebarOpen: (o: boolean) => void }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { activeBranch, setActiveBranch, branches } = useBranch();
   const [activeUser, setActiveUser] = React.useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = React.useState(true);
@@ -292,6 +285,7 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
       if (event === 'SIGNED_OUT') {
          setActiveUser(null);
          localStorage.removeItem('resto_active_user');
+         navigate('/');
       } else if (session?.user) {
          fetchUserProfile(session.user.email);
       }
@@ -333,6 +327,7 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
      await supabase.auth.signOut();
      localStorage.removeItem('resto_active_user');
      setActiveUser(null);
+     navigate('/');
   };
 
   if (isAuthLoading) {
@@ -340,7 +335,18 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
   }
 
   if (!activeUser) {
-     return <Login onLogin={setActiveUser} />;
+     return (
+       <Login 
+         onLogin={(user) => {
+           setActiveUser(user);
+           if (user?.role === 'admin' || user?.role === 'manager') {
+             navigate('/');
+           } else {
+             navigate('/pos');
+           }
+         }} 
+       />
+     );
   }
 
   if (isStandalonePOS) {

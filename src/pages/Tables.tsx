@@ -503,7 +503,7 @@ export default function Tables() {
                       <span>{receiptData.updated_at ? new Date(receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '') : new Date().toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between row-item">
-                      <span>Order: #{receiptData.id ? receiptData.id.toString().padStart(6, '0') : '000000'}</span>
+                      <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
                     </div>
                   </div>
 

@@ -28,7 +28,13 @@
 
 @layer base {
   html {
-    font-size: 110%; /* Increase base font size for better visibility */
+    font-size: 78%; /* Extra compact base font size to prevent layout overflow on laptop displays */
+  }
+  
+  @media (min-width: 1440px) {
+    html {
+      font-size: 82%;
+    }
   }
 }
 

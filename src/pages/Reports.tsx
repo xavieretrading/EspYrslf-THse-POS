@@ -2108,7 +2108,6 @@ export default function Reports() {
             </div>
             <div>
               <h2 className="font-bold text-slate-900">{currentReportTitle}</h2>
-              <p className="text-xs text-slate-500">Configure parameters below to generate.</p>
             </div>
           </div>
 
@@ -2186,7 +2185,7 @@ export default function Reports() {
                 Download Soft Copy (.txt)
               </button>
             )}
-            {reportType === 'SHIFT_SALES' && (
+            {/* {reportType === 'SHIFT_SALES' && (
               <button
                 onClick={() => {
                   let totalSC = 0;
@@ -2204,7 +2203,7 @@ export default function Reports() {
                 <Activity size={18} />
                 Calculate Service Charge
               </button>
-            )}
+            )} */}
             {/* Export All BIR Annexes to Excel — shown for any BIR annex report */}
             {['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR'].includes(reportType) && (
               <button
@@ -2215,7 +2214,7 @@ export default function Reports() {
                 Export All Annexes (.xlsx)
               </button>
             )}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
                 <Printer size={15} className="text-slate-400 ml-1" />
                 <select
@@ -2236,7 +2235,7 @@ export default function Reports() {
                 <Printer size={18} />
                 Print Report
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -2352,12 +2351,12 @@ export default function Reports() {
             `}
           </style>
           <div className={`mx-auto border sm:border-2 border-slate-300 p-8 print:border-none print:p-0 bg-white printable-area print:max-w-none ${reportType === 'BIR_SALES_SUMMARY' || reportType === 'SENIOR_CITIZEN' || reportType === 'PWD' || reportType === 'NATIONAL_ATHLETES' || reportType === 'SOLO_PARENT' || reportType === 'MEDAL_OF_VALOR'
-              ? 'max-w-none'
-              : printSize === 'A4'
-                ? 'max-w-3xl'
-                : printSize === 'legal'
-                  ? 'max-w-4xl'
-                  : 'max-w-xl'
+            ? 'max-w-none'
+            : printSize === 'A4'
+              ? 'max-w-3xl'
+              : printSize === 'legal'
+                ? 'max-w-4xl'
+                : 'max-w-xl'
             }`}>
             {/* BIR Annexes don't need the receipt header; they have their own header block */}
             {reportType !== 'BIR_SALES_SUMMARY' && reportType !== 'SENIOR_CITIZEN' && reportType !== 'PWD' && reportType !== 'NATIONAL_ATHLETES' && reportType !== 'SOLO_PARENT' && reportType !== 'MEDAL_OF_VALOR' && (

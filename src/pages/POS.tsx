@@ -474,21 +474,34 @@ export default function POS() {
     const matchesCategory = selectedCategory === 'All' || p.category_name === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return isSellable && matchesDivision && matchesCategory && matchesSearch;
+  }).sort((a, b) => {
+    const aPromo = a.name.toLowerCase().includes('promo') || a.name.toLowerCase().includes('sale') || a.category_name?.toLowerCase().includes('promo');
+    const bPromo = b.name.toLowerCase().includes('promo') || b.name.toLowerCase().includes('sale') || b.category_name?.toLowerCase().includes('promo');
+    if (aPromo && !bPromo) return -1;
+    if (!aPromo && bPromo) return 1;
+    return 0;
   });
 
   const addToCart = async (product: Product) => {
-    if (settings?.strict_item_locked) {
-      if (product.stock <= 0) {
-        swalAlert('Out of Stock', `Cannot add ${product.name} to cart because it is out of stock (Strict Stock Lock Enabled)`, 'error');
+    const isPisoPromo = product.name.toLowerCase().includes('piso promo') || product.name.toLowerCase().includes('piso sale');
+    if (isPisoPromo) {
+      const alreadyInCart = cart.some(item => item.id === product.id);
+      if (alreadyInCart) {
+        swalAlert('Promo Limit Reached', 'Piso Promo items are strictly limited to a maximum of 1 unit per transaction.', 'warning');
         return;
       }
-      // Check total unsaved quantity of this item already in current cart
-      const currentUnsaved = cart.find(item => item.id === product.id && !item._isSaved);
-      const currentUnsavedQty = currentUnsaved ? currentUnsaved.quantity : 0;
-      if (currentUnsavedQty + 1 > product.stock) {
-        swalAlert('Insufficient Stock', `Cannot add more than the available stock (${product.stock} units left)`, 'error');
-        return;
-      }
+    }
+
+    if (product.stock <= 0) {
+      swalAlert('Out of Stock', `Cannot add ${product.name} to cart because it is out of stock`, 'error');
+      return;
+    }
+    // Check total unsaved quantity of this item already in current cart
+    const currentUnsaved = cart.find(item => item.id === product.id && !item._isSaved);
+    const currentUnsavedQty = currentUnsaved ? currentUnsaved.quantity : 0;
+    if (currentUnsavedQty + 1 > product.stock) {
+      swalAlert('Insufficient Stock', `Cannot add more than the available stock (${product.stock} units left)`, 'error');
+      return;
     }
 
     const isBeverage = !isLaundryBranch && (
@@ -525,9 +538,17 @@ export default function POS() {
   };
 
   const updateQuantity = (id: number, delta: number) => {
+    const currentItem = cart.find(item => item.id === id);
+    if (currentItem && delta > 0) {
+      const isPisoPromo = currentItem.name.toLowerCase().includes('piso promo') || currentItem.name.toLowerCase().includes('piso sale');
+      if (isPisoPromo) {
+        swalAlert('Promo Limit Reached', 'Piso Promo items are strictly limited to a maximum of 1 unit per transaction.', 'warning');
+        return;
+      }
+    }
+
     if (delta > 0 && settings?.strict_item_locked) {
       const prod = products.find(p => p.id === id);
-      const currentItem = cart.find(item => item.id === id);
       if (prod && currentItem) {
         if (currentItem.quantity + delta > prod.stock) {
           swalAlert('Stock Limit Reached', `Cannot increase quantity. Only ${prod.stock} units are currently available inside the inventory.`, 'error');
@@ -1084,14 +1105,12 @@ export default function POS() {
             cashier_name: cashierName
           });
           resetLaundryForm();
-          swalAlert('Payment Successful', 'Receipt is ready to print!', 'success');
         } else {
           const err = await payRes.json();
           swalAlert('Payment Failed', err.error || 'Failed to settle laundry payment', 'error');
         }
       } else {
         resetLaundryForm();
-        swalAlert('Order Saved', 'Laundry service ticket recorded successfully!', 'success');
       }
 
     } catch (e: any) {
@@ -1148,7 +1167,6 @@ export default function POS() {
         const data = await res.json();
         if (data.success) {
           logActivity(userName, 'Add Items to Order', `Added new items to Order #${activeOrderId}: ${newItems.map(i => `${i.quantity}x ${i.name}`).join(', ')}`);
-          swalAlert('Success', 'New items sent to kitchen!', 'success');
           // Re-mark them as saved
           setCart(cart.map(c => ({ ...c, _isSaved: true })));
         } else {
@@ -1186,7 +1204,6 @@ export default function POS() {
         if (data.success) {
           logActivity(userName, 'Place Order', `Created new order #${data.id} on ${orderType === 'dine-in' ? (selectedTable?.name || 'Walk-In') : 'Takeaway'}`);
           setActiveOrderId(data.id);
-          swalAlert('Success', 'Order sent for preparation', 'success');
           // Refresh tables
           fetch(`/api/tables?branch_id=${activeBranch?.id}`).then(res => res.json()).then(setTables);
           setCart(cart.map(c => ({ ...c, _isSaved: true })));
@@ -2606,23 +2623,27 @@ export default function POS() {
             </div>
 
             {/* Products Grid */}
-            <div className="flex-1 overflow-auto p-3 md:p-6 custom-scrollbar bg-slate-50/50">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 2xl:grid-cols-5 gap-3">
+            <div className="flex-1 overflow-auto p-4 md:p-5 custom-scrollbar bg-slate-50/50">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-8 2xl:grid-cols-8 gap-3">
                 {filteredProducts.map(product => {
-                  const isLocked = settings?.strict_item_locked && product.stock <= 0;
+                  const isLocked = product.stock <= 0;
+                  const isPisoPromo = product.name.toLowerCase().includes('piso promo') || product.name.toLowerCase().includes('piso sale');
                   return (
                     <button
                       key={product.id}
                       onClick={() => addToCart(product)}
+                      disabled={isLocked}
                       className={cn(
-                        "bg-white rounded-2xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden",
+                        "bg-white rounded-xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden",
                         isLocked
-                          ? "opacity-60 border-slate-200 bg-slate-50/50 hover:border-slate-200 hover:shadow-sm"
-                          : "border-slate-200 hover:border-emerald-500 hover:shadow-lg"
+                          ? "opacity-60 border-slate-200 bg-slate-50/50 hover:border-slate-200 hover:shadow-sm cursor-not-allowed"
+                          : isPisoPromo
+                            ? "border-amber-400 bg-amber-50/15 hover:border-amber-500 hover:shadow-md ring-1 ring-amber-400/30"
+                            : "border-slate-200 hover:border-emerald-500 hover:shadow-lg"
                       )}
                     >
                       {/* Product Image */}
-                      <div className="w-full h-36 md:h-40 overflow-hidden bg-slate-50 border-b border-slate-100 relative flex items-center justify-center">
+                      <div className="w-full h-16 md:h-20 overflow-hidden bg-slate-50 border-b border-slate-100 relative flex items-center justify-center">
                         <img
                           src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
                           onError={(e) => {
@@ -2632,15 +2653,24 @@ export default function POS() {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0 z-10"
                         />
-                        <div className="text-slate-300 flex flex-col items-center justify-center p-2">
-                          <Package size={20} strokeWidth={1.5} className="text-slate-400/80 mb-0.5" />
-                          <span className="text-[7px] font-black uppercase tracking-widest text-slate-400/60 leading-none">No Picture</span>
+                        <div className="text-slate-300 flex flex-col items-center justify-center p-1">
+                          <Package size={14} strokeWidth={1.5} className="text-slate-400/80 mb-0.5" />
+                          <span className="text-[6px] font-black uppercase tracking-widest text-slate-400/60 leading-none">No Picture</span>
                         </div>
+
+                        {/* Piso Promo Badge Overlay */}
+                        {isPisoPromo && (
+                          <div className="absolute top-1.5 right-1.5 z-20">
+                            <span className="bg-gradient-to-r from-red-500 to-amber-500 text-white px-1.5 py-0.5 rounded text-[6.5px] font-black uppercase shadow-xs tracking-wider animate-pulse border border-red-400">
+                              PISO PROMO
+                            </span>
+                          </div>
+                        )}
 
                         {/* Stock Badge Overlay */}
                         <div className="absolute top-1.5 left-1.5 z-20">
                           <span className={cn(
-                            "px-1 py-0.2 rounded text-[7px] font-black uppercase shadow-xs border backdrop-blur-xs",
+                            "px-1 py-0.2 rounded text-[6px] font-black uppercase shadow-xs border backdrop-blur-xs",
                             product.stock <= 0
                               ? "bg-rose-500 text-white border-rose-600"
                               : product.stock < 10
@@ -2654,23 +2684,23 @@ export default function POS() {
                         {!isLocked && (
                           <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="bg-emerald-500 text-white p-0.5 rounded">
-                              <Plus size={12} />
+                              <Plus size={8} />
                             </div>
                           </div>
                         )}
                       </div>
 
                       {/* Card Content */}
-                      <div className="p-2 flex-1 flex flex-col justify-between">
+                      <div className="p-2.5 flex-1 flex flex-col justify-between">
                         <div>
-                          <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter block opacity-80 leading-none mb-0.5">{product.category_name}</span>
+                          <span className="text-[7.5px] font-bold text-emerald-600 uppercase tracking-tighter block opacity-80 leading-none mb-1">{product.category_name}</span>
                           <h3 className={cn(
-                            "font-bold text-slate-900 leading-tight text-[11px] md:text-xs line-clamp-2",
+                            "font-bold text-slate-900 leading-tight text-[9.5px] md:text-[10.5px] line-clamp-2",
                             isLocked ? "text-slate-500" : "group-hover:text-emerald-700"
                           )}>{product.name}</h3>
                         </div>
-                        <div className="mt-1 pt-1 border-t border-slate-50 flex justify-between items-center">
-                          <span className="text-[10px] md:text-xs font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">₱{product.price.toFixed(2)}</span>
+                        <div className="mt-2 pt-1.5 border-t border-slate-55 flex justify-between items-center">
+                          <span className="text-[9px] md:text-[10px] font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">₱{product.price.toFixed(2)}</span>
                         </div>
                       </div>
                     </button>
@@ -2746,9 +2776,9 @@ export default function POS() {
                     return (
                       <div
                         key={item._isSaved ? `saved-${item.id}-${idx}` : item.id}
-                        className="flex flex-col gap-1 p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-all font-sans"
+                        className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-150 hover:border-slate-200 transition-all font-sans shadow-2xs"
                       >
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-2.5 items-center">
                           {/* Clickable Info Area */}
                           <button
                             onClick={() => !item._isSaved && setExpandedCartItemId(isExpanded ? null : item.id)}
@@ -2756,62 +2786,66 @@ export default function POS() {
                             type="button"
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <h4 className="font-bold text-slate-800 text-xs truncate flex-1 leading-tight">{item.name}</h4>
+                              <h4 className="font-extrabold text-slate-800 text-[13.5px] truncate flex-1 leading-tight">{item.name}</h4>
                               {!item._isSaved && (
-                                <span className="text-[8px] text-slate-400 font-normal shrink-0">
+                                <span className="text-[10px] text-slate-450 font-bold shrink-0 ml-1">
                                   {isExpanded ? '▲ hide' : '▼ edit'}
                                 </span>
                               )}
                             </div>
                             {item.notes && item.notes.replace(/\[DISCOUNT:.*?\]/g, '').replace(/\[COMPLIMENTARY:.*?\]/g, '').trim() !== '' && (
                               <div className="mt-1">
-                                <span className="text-[9px] text-slate-500 font-bold bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200">
+                                <span className="text-[9.5px] text-slate-550 font-bold bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200">
                                   {item.notes.replace(/\[DISCOUNT:.*?\]/g, '').replace(/\[COMPLIMENTARY:.*?\]/g, '').trim()}
                                 </span>
                               </div>
                             )}
-                            <p className="text-emerald-600 font-semibold text-xs font-mono mt-0.5 leading-none">
+                            <p className="text-blue-650 font-black text-[13px] font-mono mt-1 leading-none">
                               ₱{(item.price * item.quantity).toFixed(2)}
                               {item.quantity > 1 && (
-                                <span className="text-[9px] text-slate-400 font-normal ml-1">
+                                <span className="text-[10px] text-slate-500 font-normal ml-1.5">
                                   (₱{item.price.toFixed(2)} ea)
                                 </span>
                               )}
                             </p>
-                            {item._isSaved && <span className="text-[8px] font-bold text-indigo-500 uppercase tracking-wider mt-0.5 leading-none">Ordered</span>}
+                            {item._isSaved && <span className="text-[8.5px] font-bold text-indigo-600 uppercase tracking-wider mt-1 leading-none">Ordered</span>}
                           </button>
 
                           {/* Quantity Stepper */}
                           {!item._isSaved ? (
-                            <div className="flex items-center gap-0.5 bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm shrink-0">
+                            <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs shrink-0">
                               <button
                                 onClick={() => updateQuantity(item.id, -1)}
-                                className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                                className="p-1 hover:bg-slate-100 rounded-md text-slate-600 min-w-[24px] min-h-[24px] flex items-center justify-center bg-slate-50 border border-slate-200"
                                 type="button"
                               >
-                                <Minus size={10} />
+                                <Minus size={11} />
                               </button>
-                              <span className="w-4 text-center font-bold text-xs text-slate-800">{item.quantity}</span>
+                              <span className="w-5 text-center font-extrabold text-xs text-slate-800">{item.quantity}</span>
                               <button
                                 onClick={() => updateQuantity(item.id, 1)}
-                                className="p-1 hover:bg-slate-100 rounded text-slate-600 min-w-[20px] min-h-[20px] flex items-center justify-center"
+                                disabled={item.name.toLowerCase().includes('piso promo') || item.name.toLowerCase().includes('piso sale')}
+                                className={cn(
+                                  "p-1 hover:bg-slate-100 rounded-md text-slate-600 min-w-[24px] min-h-[24px] flex items-center justify-center bg-slate-50 border border-slate-200",
+                                  (item.name.toLowerCase().includes('piso promo') || item.name.toLowerCase().includes('piso sale')) && "opacity-40 cursor-not-allowed"
+                                )}
                                 type="button"
                               >
-                                <Plus size={10} />
+                                <Plus size={11} />
                               </button>
                             </div>
                           ) : (
-                            <div className="text-slate-500 font-black text-[10px] px-1.5 shrink-0 select-none bg-slate-200/50 rounded py-0.5">{item.quantity}x</div>
+                            <div className="text-slate-600 font-black text-[11px] px-2.5 shrink-0 select-none bg-slate-200/60 rounded-lg py-1">{item.quantity}x</div>
                           )}
 
                           {/* Trash Button */}
                           {!item._isSaved && (
                             <button
                               onClick={() => removeItem(item.id)}
-                              className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100 shrink-0 min-w-[24px] min-h-[24px] flex items-center justify-center"
+                              className="p-1.5 text-rose-500 bg-rose-50/50 hover:bg-rose-50 rounded-lg transition-colors border border-rose-100 shrink-0 min-w-[28px] min-h-[28px] flex items-center justify-center"
                               type="button"
                             >
-                              <Trash2 size={12} />
+                              <Trash2 size={13} />
                             </button>
                           )}
                         </div>

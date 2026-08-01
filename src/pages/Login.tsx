@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Briefcase, Lock, Mail } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
 import { logActivity } from '../lib/audit';
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {

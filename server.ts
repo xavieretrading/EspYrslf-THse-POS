@@ -1161,11 +1161,27 @@ app.post('/api/qz/sign', (req, res) => {
   }
 });
 
-// Orders
 app.post('/api/orders', async (req, res) => {
   const { branch_id, table_id, order_type, items, notes } = req.body;
   
-  const orderPayload: any = { branch_id, table_id: table_id || null, status: 'open', notes: notes || null };
+  // Calculate subtotal & total BEFORE order insertion to save a DB update roundtrip!
+  let subtotal = 0;
+  if (items && Array.isArray(items)) {
+    items.forEach((item: any) => {
+      if (!item.is_complimentary) {
+        subtotal += (item.price || 0) * (item.quantity || 1);
+      }
+    });
+  }
+
+  const orderPayload: any = { 
+    branch_id, 
+    table_id: table_id || null, 
+    status: 'open', 
+    notes: notes || null,
+    subtotal: subtotal,
+    total: subtotal
+  };
   if (order_type) orderPayload.order_type = order_type;
   
   const nextOrderNumber = await generateNextOrderNumber(branch_id);
@@ -1192,12 +1208,7 @@ app.post('/api/orders', async (req, res) => {
   if (orderError) return res.status(500).json({ error: orderError.message });
   const orderId = orderData.id;
 
-  let subtotal = 0;
   const orderItems = items.map((item: any) => {
-    if (!item.is_complimentary) {
-      subtotal += (item.price || 0) * (item.quantity || 1);
-    }
-    
     let finalNotes = item.notes || '';
     if (item.is_complimentary) {
         const details = {
@@ -1226,15 +1237,18 @@ app.post('/api/orders', async (req, res) => {
   const { error: itemError } = await supabase.from('order_items_espresso').insert(orderItems);
   if (itemError) {
     console.error('Order items insert error:', itemError.message);
-    // Even if items fail, we have the order, but we should probably inform the user or try to rollback
     return res.status(500).json({ error: 'Failed to insert order items: ' + itemError.message });
   }
 
-  const { error: updateError } = await supabase.from('orders_espresso').update({ subtotal, total: subtotal }).eq('id', orderId);
-  if (updateError) console.error('Order total update error:', updateError.message);
-
+  // Update table status asynchronously so we don't await the network response!
   if (table_id) {
-    await supabase.from('tables_espresso').update({ status: 'occupied' }).eq('id', table_id);
+    (async () => {
+      try {
+        await supabase.from('tables_espresso').update({ status: 'occupied' }).eq('id', table_id);
+      } catch (err) {
+        console.error('Table status update error:', err);
+      }
+    })();
   }
 
   res.json({ id: orderId, success: true });

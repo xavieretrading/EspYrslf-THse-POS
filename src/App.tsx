@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { LayoutDashboard, ShoppingCart, Coffee, Package, FileText, Settings as SettingsIcon, Database, MapPin, Store, LogOut, Ticket, Users, Menu, ChefHat, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -205,6 +205,36 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
   );
 }
 
+function ProtectedRoute({ children, activeUser, path }: { children: React.ReactNode, activeUser: any, path: string }) {
+  if (!activeUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (activeUser.role === 'admin') {
+    return <>{children}</>;
+  }
+
+  const perms = activeUser.permissions;
+  if (!perms) {
+    return <>{children}</>;
+  }
+
+  let hasAccess = false;
+  if (Array.isArray(perms)) {
+    hasAccess = perms.includes(path);
+  } else {
+    const level = perms[path];
+    hasAccess = level && level !== 'none';
+  }
+
+  if (!hasAccess) {
+    const canAccessPos = Array.isArray(perms) ? perms.includes('/pos') : (perms['/pos'] && perms['/pos'] !== 'none');
+    return <Navigate to={canAccessPos ? "/pos" : "/"} replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolean, setIsSidebarOpen: (o: boolean) => void }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -385,18 +415,18 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
           <Menu size={20} />
         </button>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/pos" element={<POS />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/kitchen" element={<Kitchen />} />
-          <Route path="/tables" element={<Tables />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/branches" element={<Branches />} />
-          <Route path="/vouchers" element={<Vouchers />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/users" element={<UserManagement />} />
-          <Route path="/redemption" element={<Redemption />} />
+          <Route path="/" element={<ProtectedRoute activeUser={activeUser} path="/"><Dashboard /></ProtectedRoute>} />
+          <Route path="/pos" element={<ProtectedRoute activeUser={activeUser} path="/pos"><POS /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute activeUser={activeUser} path="/orders"><Orders /></ProtectedRoute>} />
+          <Route path="/kitchen" element={<ProtectedRoute activeUser={activeUser} path="/kitchen"><Kitchen /></ProtectedRoute>} />
+          <Route path="/tables" element={<ProtectedRoute activeUser={activeUser} path="/tables"><Tables /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute activeUser={activeUser} path="/inventory"><Inventory /></ProtectedRoute>} />
+          <Route path="/branches" element={<ProtectedRoute activeUser={activeUser} path="/branches"><Branches /></ProtectedRoute>} />
+          <Route path="/vouchers" element={<ProtectedRoute activeUser={activeUser} path="/vouchers"><Vouchers /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute activeUser={activeUser} path="/reports"><Reports /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute activeUser={activeUser} path="/settings"><Settings /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute activeUser={activeUser} path="/users"><UserManagement /></ProtectedRoute>} />
+          <Route path="/redemption" element={<ProtectedRoute activeUser={activeUser} path="/redemption"><Redemption /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

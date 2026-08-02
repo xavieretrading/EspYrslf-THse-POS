@@ -138,7 +138,7 @@ export default function POS() {
     'Everyday Wear (Wash Only)': true,
     'Pressing & Ironing': true,
     'Dry Clean': true,
-    'Dry Clean (Min of 2 weeks and Max of 1 month)': true,
+    'Dry Clean (Min of 2 weeks and Maximum of 1 month)': true,
     'Special Items & Dry Clean': true
   });
 
@@ -386,8 +386,16 @@ export default function POS() {
     if (localUser) {
       const u = JSON.parse(localUser);
       setCurrentUser(u);
-      if (activeBranch) {
+      // Skip shift check for laundry branches (S1p/Sp1n) — always open
+      const isLaundryBranchLocal = activeBranch?.name?.toLowerCase().includes('laundry') ||
+        activeBranch?.name?.toLowerCase().includes('s1p') ||
+        activeBranch?.name?.toLowerCase().includes('spin');
+      if (activeBranch && !isLaundryBranchLocal) {
         checkShift(u.id, activeBranch.id);
+      } else if (activeBranch && isLaundryBranchLocal) {
+        // Laundry branch: treat as always having an open shift
+        setCurrentShift({ id: 'laundry-always-open', branch_id: activeBranch.id });
+        setShowShiftModal(false);
       }
     }
 
@@ -1843,8 +1851,8 @@ export default function POS() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 relative">
-      {/* Block POS access if no active shift */}
-      {!currentShift && (
+      {/* Block POS access if no active shift — hidden for laundry branches */}
+      {!currentShift && !isLaundryBranch && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-100/80 backdrop-blur-md p-6 text-center">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full border border-slate-100/50 flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-500 border border-amber-100 flex items-center justify-center mb-6 animate-pulse">
@@ -1892,21 +1900,23 @@ export default function POS() {
                 </button>
               </div>
             </div>
-            {/* Action buttons or info */}
+            {/* Action buttons — shift button hidden for laundry branch */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setShiftAction(currentShift ? 'end' : 'start');
-                  setShiftAmount('');
-                  setShowShiftModal(true);
-                }}
-                className={cn(
-                  "px-4 py-2 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm",
-                  currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
-                )}
-              >
-                <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
-              </button>
+              {!isLaundryBranch && (
+                <button
+                  onClick={() => {
+                    setShiftAction(currentShift ? 'end' : 'start');
+                    setShiftAmount('');
+                    setShowShiftModal(true);
+                  }}
+                  className={cn(
+                    "px-4 py-2 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm",
+                    currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                  )}
+                >
+                  <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
+                </button>
+              )}
             </div>
           </div>
 
@@ -2595,19 +2605,22 @@ export default function POS() {
                     >
                       X/Z-Reading
                     </button>
-                    <button
-                      onClick={() => {
-                        setShiftAction(currentShift ? 'end' : 'start');
-                        setShiftAmount('');
-                        setShowShiftModal(true);
-                      }}
-                      className={cn(
-                        "px-2.5 py-1 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[32px]",
-                        currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
-                      )}
-                    >
-                      <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
-                    </button>
+                    {/* END SHIFT button hidden for laundry branch */}
+                    {!isLaundryBranch && (
+                      <button
+                        onClick={() => {
+                          setShiftAction(currentShift ? 'end' : 'start');
+                          setShiftAmount('');
+                          setShowShiftModal(true);
+                        }}
+                        className={cn(
+                          "px-2.5 py-1 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[32px]",
+                          currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
+                        )}
+                      >
+                        <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
+                      </button>
+                    )}
                   </>
                 )}
 
@@ -4275,8 +4288,8 @@ export default function POS() {
         </div>
       )}
 
-      {/* Shift Management Modal */}
-      {showShiftModal && (
+      {/* Shift Management Modal — hidden for laundry branch */}
+      {showShiftModal && !isLaundryBranch && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full m-4 border border-slate-100">
             <div className="flex flex-col items-center text-center mb-6">

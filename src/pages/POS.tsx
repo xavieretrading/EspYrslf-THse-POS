@@ -138,7 +138,7 @@ export default function POS() {
     'Everyday Wear (Wash Only)': true,
     'Pressing & Ironing': true,
     'Dry Clean': true,
-    'Dry Clean (Minimum of 2 weeks and Maximum of 1 month)': true,
+    'Dry Clean (Min of 2 weeks and Max of 1 month)': true,
     'Special Items & Dry Clean': true
   });
 
@@ -2160,9 +2160,9 @@ export default function POS() {
                 <div className="bg-white p-2.5 rounded-2xl shadow-xs border border-slate-200 flex-1 flex flex-col min-h-0">
 
                   {/* Weight / Qty Entry Row */}
-                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 gap-3 mb-2 flex-shrink-0">
-                    <span className="text-xs font-black text-slate-705 uppercase tracking-wider">Weight / Qty Entry</span>
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center justify-between bg-slate-50 p-1.5 rounded-xl border border-slate-200 gap-2 mb-1.5 flex-shrink-0">
+                    <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">Weight / Qty</span>
+                    <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -2172,7 +2172,7 @@ export default function POS() {
                             setLaundryWeight(Number(newVal.toFixed(2)).toString());
                           }
                         }}
-                        className="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-base"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-sm"
                       >
                         -
                       </button>
@@ -2185,7 +2185,7 @@ export default function POS() {
                             setLaundryWeight(val);
                           }
                         }}
-                        className="w-20 py-1.5 bg-white border border-slate-250 rounded-lg text-center font-mono font-black text-sm text-slate-800 outline-none focus:border-blue-500"
+                        className="w-16 py-1 bg-white border border-slate-250 rounded-lg text-center font-mono font-black text-sm text-slate-800 outline-none focus:border-blue-500"
                         placeholder="0"
                       />
                       <button
@@ -2195,11 +2195,10 @@ export default function POS() {
                           const newVal = val + 1;
                           setLaundryWeight(Number(newVal.toFixed(2)).toString());
                         }}
-                        className="w-9 h-9 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-base"
+                        className="w-7 h-7 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 active:scale-[0.95] flex items-center justify-center font-bold text-slate-600 transition-all text-sm"
                       >
                         +
                       </button>
-                      <span className="text-[10px] text-slate-500 font-extrabold ml-1 uppercase"></span>
                     </div>
                   </div>
 
@@ -2221,10 +2220,10 @@ export default function POS() {
                             <button
                               type="button"
                               onClick={() => setExpandedCategories({ [catName]: !isOpen })}
-                              className="w-full flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all text-left"
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all text-left"
                             >
-                              <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">{catName}</span>
-                              <ChevronDown size={14} className={cn("text-slate-500 transition-transform duration-200", isOpen && "rotate-180")} />
+                              <span className="text-[10px] font-black text-slate-700 uppercase tracking-wider">{catName}</span>
+                              <ChevronDown size={12} className={cn("text-slate-500 transition-transform duration-200", isOpen && "rotate-180")} />
                             </button>
 
                             {/* Service Buttons Grid */}
@@ -2249,21 +2248,21 @@ export default function POS() {
                                       type="button"
                                       onClick={() => setSelectedLaundryService(s)}
                                       className={cn(
-                                        "p-3.5 text-left rounded-xl transition-all border flex flex-col justify-between gap-1.5 shadow-2xs relative overflow-hidden min-h-[64px] cursor-pointer",
+                                        "p-2 text-left rounded-lg transition-all border flex flex-col justify-between gap-0.5 shadow-2xs relative overflow-hidden min-h-[44px] cursor-pointer",
                                         isSelected
                                           ? "bg-blue-50 border-blue-500 ring-1 ring-blue-500 text-blue-900"
                                           : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700"
                                       )}
                                     >
                                       {isPromo && (
-                                        <span className="absolute right-0 top-0 bg-amber-500 text-white text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded-bl-md">
+                                        <span className="absolute right-0 top-0 bg-amber-500 text-white text-[6.5px] font-black uppercase px-1 py-0.5 rounded-bl-md">
                                           PROMO
                                         </span>
                                       )}
-                                      <span className="font-extrabold text-[12px] leading-tight pr-4 truncate max-w-full" title={s.name}>
+                                      <span className="font-extrabold text-[10px] leading-tight pr-4 truncate max-w-full" title={s.name}>
                                         {s.name.replace('/kg', '').replace('/kilo', '').replace(' (5+2 FREE)', '')}
                                       </span>
-                                      <span className="font-mono font-bold text-[11px] text-blue-600">
+                                      <span className="font-mono font-bold text-[10px] text-blue-600">
                                         ₱{s.price.toFixed(2)}/{isPerKg ? 'kg' : 'pcs'}
                                       </span>
                                     </button>

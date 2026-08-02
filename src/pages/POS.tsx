@@ -844,16 +844,16 @@ export default function POS() {
       const updated = [...laundryServicesList];
       const newWeight = updated[existingIdx].weight + weightVal;
       const isPromo = updated[existingIdx].isPromo5Plus2;
-      const newBilled = isPromo ? (newWeight <= 7 ? 5 : newWeight - 2) : newWeight;
+      const newBilled = isPromo ? (newWeight >= 7 ? newWeight - 2 : newWeight) : newWeight;
       updated[existingIdx].weight = newWeight;
       updated[existingIdx].billedWeight = newBilled;
-      updated[existingIdx].freeKilos = isPromo ? (newWeight - newBilled) : 0;
+      updated[existingIdx].freeKilos = isPromo && newWeight >= 7 ? (newWeight - newBilled) : 0;
       updated[existingIdx].subtotal = newBilled * updated[existingIdx].price;
       setLaundryServicesList(updated);
     } else {
-      const billedWeight = isPromo5Plus2 ? (weightVal <= 7 ? 5 : weightVal - 2) : weightVal;
+      const billedWeight = isPromo5Plus2 ? (weightVal >= 7 ? weightVal - 2 : weightVal) : weightVal;
       const sub = billedWeight * selectedLaundryService.price;
-      const freeKilos = isPromo5Plus2 ? (weightVal - billedWeight) : 0;
+      const freeKilos = isPromo5Plus2 && weightVal >= 7 ? (weightVal - billedWeight) : 0;
       setLaundryServicesList([
         ...laundryServicesList,
         {
@@ -927,9 +927,9 @@ export default function POS() {
           selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
           selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
           selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
-        const billedWeight = isPromo5Plus2 ? (weightVal <= 7 ? 5 : weightVal - 2) : weightVal;
+        const billedWeight = isPromo5Plus2 ? (weightVal >= 7 ? weightVal - 2 : weightVal) : weightVal;
         const sub = billedWeight * selectedLaundryService.price;
-        const freeKilos = isPromo5Plus2 ? (weightVal - billedWeight) : 0;
+        const freeKilos = isPromo5Plus2 && weightVal >= 7 ? (weightVal - billedWeight) : 0;
         activeList = [{
           id: selectedLaundryService.id,
           name: selectedLaundryService.name,

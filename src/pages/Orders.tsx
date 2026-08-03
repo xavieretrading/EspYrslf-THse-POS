@@ -1376,7 +1376,7 @@ export default function Orders() {
                     <div className="text-center section-block">
                       <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
                       <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
-                      <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p>
+                      {/* <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                     </div>
 
                     <div className="text-center section-block pt-1.5 pb-1">
@@ -1507,7 +1507,7 @@ export default function Orders() {
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                   </div>
 
                   {/* Receipt Header Title & Metadata */}
@@ -1593,7 +1593,7 @@ export default function Orders() {
                   </div>
 
                   {/* VAT Breakdown details */}
-                  <div className="section-block pt-1">
+                  {/* <div className="section-block pt-1">
                     <div className="flex justify-between row-item">
                       <span>VATable Sales</span>
                       <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>
@@ -1602,7 +1602,7 @@ export default function Orders() {
                       <span>VAT (12%)</span>
                       <span>₱{receiptCalculations.vatAmount.toFixed(2)}</span>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Dine In • Guests • Items summary */}
                   <div className="section-block pt-1 text-center">

@@ -519,7 +519,7 @@ export default function Redemption() {
                 </div>
                 <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                 <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
-                <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
+                {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
               </div>
 
               {/* Receipt Header Title */}

@@ -142,132 +142,132 @@ export default function Tables() {
   return (
     <>
       <div className="p-8 h-full flex flex-col bg-slate-50 print:hidden">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Table Management</h1>
-        <p className="text-slate-500">Manage tables and seating capacity for {activeBranch.name}.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 h-fit">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-slate-900">{editingId ? 'Edit Table' : 'Add New Table'}</h2>
-            {editingId && (
-              <button
-                onClick={cancelEdit}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-full border border-slate-100"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Table Name / Number</label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Table 12, VIP A"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Seating Capacity</label>
-              <input
-                type="number"
-                required
-                min="1"
-                value={capacity}
-                onChange={(e) => setCapacity(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
-              />
-            </div>
-            <button type="submit" className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
-              {editingId ? <Edit2 size={18} /> : <Plus size={18} />}
-              {editingId ? 'Update Table' : 'Add Table'}
-            </button>
-          </form>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900">Table Management</h1>
+          <p className="text-slate-500">Manage tables and seating capacity for {activeBranch.name}.</p>
         </div>
 
-        {/* Grid */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Current Tables</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {tables.map(table => (
-              <div
-                key={table.id}
-                className={cn(
-                  "p-4 rounded-2xl border flex flex-col items-center text-center gap-2 relative group transition-all",
-                  table.status === 'occupied'
-                    ? "bg-amber-50 border-amber-200"
-                    : "bg-slate-50 border-slate-200 hover:border-emerald-500"
-                )}
-              >
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEdit(table)}
-                    className="p-1.5 bg-white text-slate-500 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-100"
-                    title="Edit Table"
-                  >
-                    <Edit2 size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(table.id)}
-                    className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm border border-red-50 hover:bg-red-50"
-                    title="Delete Table"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Form */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 h-fit">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-slate-900">{editingId ? 'Edit Table' : 'Add New Table'}</h2>
+              {editingId && (
+                <button
+                  onClick={cancelEdit}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-full border border-slate-100"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Table Name / Number</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Table 12, VIP A"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Seating Capacity</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none"
+                />
+              </div>
+              <button type="submit" className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                {editingId ? <Edit2 size={18} /> : <Plus size={18} />}
+                {editingId ? 'Update Table' : 'Add Table'}
+              </button>
+            </form>
+          </div>
 
-                <div className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center mb-2",
-                  table.status === 'occupied' ? "bg-amber-100 text-amber-600" : "bg-white text-slate-400 shadow-sm"
-                )}>
-                  <Users size={20} />
-                </div>
-                <h3 className="font-bold text-slate-900">{table.name}</h3>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
-                    {table.capacity} Seats
-                  </span>
-                  <span className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider",
-                    table.status === 'occupied' ? "text-amber-600" : "text-emerald-600"
-                  )}>
-                    {table.status}
-                  </span>
-                </div>
-
-                {table.active_order_id && (
-                  <div className="mt-2 w-full flex gap-1">
+          {/* Grid */}
+          <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Current Tables</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {tables.map(table => (
+                <div
+                  key={table.id}
+                  className={cn(
+                    "p-4 rounded-2xl border flex flex-col items-center text-center gap-2 relative group transition-all",
+                    table.status === 'occupied'
+                      ? "bg-amber-50 border-amber-200"
+                      : "bg-slate-50 border-slate-200 hover:border-emerald-500"
+                  )}
+                >
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => handlePrintSummary(table.active_order_id!)}
-                      className="flex-1 py-1.5 bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
-                      title="Print Summary"
+                      onClick={() => handleEdit(table)}
+                      className="p-1.5 bg-white text-slate-500 rounded-lg shadow-sm hover:bg-slate-50 border border-slate-100"
+                      title="Edit Table"
                     >
-                      <Printer size={12} /> Summary
+                      <Edit2 size={14} />
                     </button>
                     <button
-                      onClick={() => handleBillOut(table.active_order_id!)}
-                      className="flex-1 py-1.5 bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                      onClick={() => handleDelete(table.id)}
+                      className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm border border-red-50 hover:bg-red-50"
+                      title="Delete Table"
                     >
-                      <Receipt size={12} /> Bill Out
+                      <Trash2 size={14} />
                     </button>
                   </div>
-                )}
-              </div>
-            ))}
-            {tables.length === 0 && (
-              <div className="col-span-full py-12 text-center text-slate-400">
-                No tables found for this branch. Add one to get started.
-              </div>
-            )}
+
+                  <div className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center mb-2",
+                    table.status === 'occupied' ? "bg-amber-100 text-amber-600" : "bg-white text-slate-400 shadow-sm"
+                  )}>
+                    <Users size={20} />
+                  </div>
+                  <h3 className="font-bold text-slate-900">{table.name}</h3>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded-md shadow-sm border border-slate-100">
+                      {table.capacity} Seats
+                    </span>
+                    <span className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider",
+                      table.status === 'occupied' ? "text-amber-600" : "text-emerald-600"
+                    )}>
+                      {table.status}
+                    </span>
+                  </div>
+
+                  {table.active_order_id && (
+                    <div className="mt-2 w-full flex gap-1">
+                      <button
+                        onClick={() => handlePrintSummary(table.active_order_id!)}
+                        className="flex-1 py-1.5 bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                        title="Print Summary"
+                      >
+                        <Printer size={12} /> Summary
+                      </button>
+                      <button
+                        onClick={() => handleBillOut(table.active_order_id!)}
+                        className="flex-1 py-1.5 bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Receipt size={12} /> Bill Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {tables.length === 0 && (
+                <div className="col-span-full py-12 text-center text-slate-400">
+                  No tables found for this branch. Add one to get started.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>      </div>
+        </div>      </div>
 
       {receiptData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
@@ -486,7 +486,7 @@ export default function Tables() {
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    <p>TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                   </div>
 
                   {/* Receipt Header Title & Metadata */}
@@ -550,7 +550,7 @@ export default function Tables() {
                   </div>
 
                   {/* VAT Breakdown details */}
-                  <div className="section-block pt-1">
+                  {/* <div className="section-block pt-1">
                     <div className="flex justify-between row-item">
                       <span>VATable Sales</span>
                       <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>
@@ -559,7 +559,7 @@ export default function Tables() {
                       <span>VAT (12%)</span>
                       <span>₱{receiptCalculations.vatAmount.toFixed(2)}</span>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Dine In • Guests • Items summary */}
                   <div className="section-block pt-1 text-center">

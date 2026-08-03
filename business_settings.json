@@ -4,7 +4,7 @@
   "tin": "899-352-898-00000",
   "service_charge_percentage": 0,
   "strict_item_locked": true,
-  "last_receipt_number": 825,
+  "last_receipt_number": 827,
   "receipt_mappings": {
     "1": 801,
     "2": 823,
@@ -15,6 +15,8 @@
     "7": 804,
     "8": 805,
     "9": 806,
+    "10": 826,
+    "11": 827,
     "12": 807,
     "13": 808,
     "14": 809,

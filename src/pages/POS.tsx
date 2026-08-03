@@ -199,6 +199,7 @@ export default function POS() {
   const [laundryPaymentMethod, setLaundryPaymentMethod] = useState<'cash' | 'gcash' | 'card'>('cash');
   const [laundryCashReceived, setLaundryCashReceived] = useState('');
   const [laundryGcashReference, setLaundryGcashReference] = useState('');
+  const [laundrySelectedDiscount, setLaundrySelectedDiscount] = useState<any>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [orderType, setOrderType] = useState<'dine-in' | 'takeout'>('dine-in');
@@ -710,7 +711,16 @@ export default function POS() {
     return selectedLaundryService.price;
   })();
 
-  const laundryGrandTotal = laundrySubtotal + dynamicAddonTotal;
+  const laundryGrandTotalBeforeDiscount = laundrySubtotal + dynamicAddonTotal;
+  const laundryDiscountAmount = (() => {
+    if (!laundrySelectedDiscount) return 0;
+    const val = parseFloat(laundrySelectedDiscount.value) || 0;
+    if (laundrySelectedDiscount.type === 'percentage') {
+      return +(laundryGrandTotalBeforeDiscount * val / 100).toFixed(2);
+    }
+    return Math.min(val, laundryGrandTotalBeforeDiscount);
+  })();
+  const laundryGrandTotal = laundryGrandTotalBeforeDiscount - laundryDiscountAmount;
 
   const handleKeypadPress = (val: string) => {
     if (val === 'C') {
@@ -885,21 +895,22 @@ export default function POS() {
   const resetLaundryForm = () => {
     setLaundryCustomerName('');
     setLaundryPhone('');
-    setSelectedLaundryService(null);
-    setLaundryServicesList([]);
     setLaundryIsWalkIn(false);
+    setSelectedLaundryService(null);
     setLaundryWeight('');
+    setLaundryServicesList([]);
+    setLaundrySelectedAddons({});
+    setLaundryAddonRush(false);
     setLaundryPrefWarmWater(false);
     setLaundryPrefColdWater(false);
     setLaundryPrefUnscented(false);
     setLaundryPrefSeparateWhite(false);
     setLaundryPrefSeparateColored(false);
     setLaundryPrefCustom('');
-    setLaundrySelectedAddons({});
-    setLaundryAddonRush(false);
     setLaundryPaymentMethod('cash');
     setLaundryCashReceived('');
     setLaundryGcashReference('');
+    setLaundrySelectedDiscount(null);
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     setLaundryPickupDate(tomorrow.toISOString().split('T')[0]);
@@ -988,7 +999,7 @@ export default function POS() {
       }
     });
 
-    const grandTotal = subtotalCost + addonTotal;
+    const grandTotal = subtotalCost + addonTotal - laundryDiscountAmount;
 
     const cashRec = parseFloat(laundryCashReceived) || 0;
     if (payImmediately && laundryPaymentMethod === 'cash' && cashRec < grandTotal) {
@@ -1097,8 +1108,8 @@ export default function POS() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            discount_id: null,
-            discount_amount: 0,
+            discount_id: laundrySelectedDiscount?.id || null,
+            discount_amount: laundryDiscountAmount,
             tax_amount: 0,
             service_charge: 0,
             total: grandTotal,
@@ -2405,6 +2416,26 @@ export default function POS() {
                       </div>
                     </div>
 
+                    {/* Discount Selector */}
+                    <div>
+                      <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans">
+                        Discount
+                      </h2>
+                      <select
+                        value={laundrySelectedDiscount?.id || ''}
+                        onChange={e => {
+                          const d = discounts.find((d: any) => d.id.toString() === e.target.value);
+                          setLaundrySelectedDiscount(d || null);
+                        }}
+                        className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-semibold text-slate-700 focus:border-blue-500"
+                      >
+                        <option value="">No Discount</option>
+                        {discounts.filter((d: any) => d.is_active !== 0).map((d: any) => (
+                          <option key={d.id} value={d.id}>{d.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
                     {/* Payment Method */}
                     <div>
                       <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5 font-sans">
@@ -2505,12 +2536,18 @@ export default function POS() {
                     <div className="bg-slate-900 text-white p-2 rounded-xl mb-1.5">
                       <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
                         <span>Subtotal ({laundryTotalWeight.toFixed(2)} kg)</span>
-                        <span>₱{laundrySubtotal.toFixed(2)}</span>
+                        <span>₱{laundryGrandTotalBeforeDiscount.toFixed(2)}</span>
                       </div>
                       {dynamicAddonTotal > 0 && (
                         <div className="flex justify-between items-center text-[9px] text-slate-400 font-semibold mb-0.5">
                           <span>Add-ons</span>
                           <span>₱{dynamicAddonTotal.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {laundryDiscountAmount > 0 && (
+                        <div className="flex justify-between items-center text-[9px] text-amber-400 font-semibold mb-0.5">
+                          <span>Discount ({laundrySelectedDiscount?.name})</span>
+                          <span>-₱{laundryDiscountAmount.toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between items-center border-t border-slate-800 pt-1 mt-1">

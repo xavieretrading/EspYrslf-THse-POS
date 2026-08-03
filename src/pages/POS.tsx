@@ -3546,8 +3546,12 @@ export default function POS() {
                   .printable-area, .printable-area * {
                     visibility: visible !important;
                   }
-                  .printable-area {
-                    position: absolute !important;
+                  .printable-area .printable-area-hidden,
+                  .printable-area [data-print-hidden="true"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                  }
+                  .printable-area {\r\n                    position: absolute !important;
                     left: 0 !important;
                     top: 0 !important;
                     width: 80mm !important;
@@ -3829,7 +3833,7 @@ export default function POS() {
                     </div>
                     <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    <p className="hidden">TIN: {settings?.tin || '899-352-898-00000'}</p>
+                    <p className="hidden print:hidden" data-print-hidden="true">TIN: {settings?.tin || '899-352-898-00000'}</p>
                   </div>
 
                   {/* Receipt Header Title & Metadata */}
@@ -3920,8 +3924,8 @@ export default function POS() {
                     )}
                   </div>
 
-                  {/* VAT Breakdown details hidden */}
-                  <div className="section-block pt-1 hidden">
+                  {/* VAT Breakdown - always hidden from printed receipts */}
+                  <div className="section-block pt-1 hidden print:hidden" data-print-hidden="true">
                     <div className="flex justify-between row-item">
                       <span>VATable Sales</span>
                       <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>

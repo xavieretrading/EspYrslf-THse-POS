@@ -1436,6 +1436,20 @@ export default function POS() {
       swalAlert('No Active Order', 'Please place the order first', 'warning');
       return;
     }
+
+    // Guard: block payment if there are unsaved items in the cart.
+    // Unsaved items are included in the cart total but NOT yet saved to the DB,
+    // which causes the charged total to exceed the actual order items on record.
+    const unsavedItems = cart.filter(item => !item._isSaved);
+    if (unsavedItems.length > 0) {
+      swalAlert(
+        'Unsaved Items',
+        `You have ${unsavedItems.length} item(s) not yet saved to the order.\n\nPlease press "Place Order" first to save them before proceeding to payment.`,
+        'warning'
+      );
+      return;
+    }
+
     if (parseFloat(amountTendered) < total || isNaN(parseFloat(amountTendered))) {
       swalAlert('Invalid Amount', 'Insufficient amount tendered', 'error');
       return;

@@ -1,5 +1,19 @@
 [
   {
+    "id": "17859075749127t8bd",
+    "timestamp": "2026-08-05T05:26:14.912Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Void Order",
+    "details": "Voided Order #29"
+  },
+  {
+    "id": "1785907541921dhr5o",
+    "timestamp": "2026-08-05T05:25:41.922Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "1785884626069ptilx",
     "timestamp": "2026-08-04T23:03:46.069Z",
     "user": "System Administrator",

@@ -396,6 +396,17 @@ app.post('/api/products', async (req, res) => {
   }
 
   if (error) return res.status(500).json({ error: error.message });
+
+  // Log stock transaction on creation if stock is set and not dummy/service stock (9999)
+  if (data?.id && stock && stock > 0 && stock !== 9999) {
+    await supabase.from('inventory_transactions_espresso').insert([{
+      product_id: data.id,
+      type: 'in',
+      quantity: stock,
+      remarks: 'Initial stock on product creation'
+    }]);
+  }
+
   res.json({ id: data?.id, success: true });
 });
 
@@ -411,6 +422,15 @@ app.put('/api/products/:id', async (req, res) => {
   if (is_sellable !== undefined) updates.is_sellable = is_sellable;
   if (unit !== undefined) updates.unit = unit;
   
+  // Fetch existing stock value if stock is being modified
+  let oldStock = 0;
+  if (stock !== undefined) {
+    const { data: currentProduct } = await supabase.from('products_espresso').select('stock').eq('id', req.params.id).single();
+    if (currentProduct) {
+      oldStock = currentProduct.stock || 0;
+    }
+  }
+
   let { error } = await supabase.from('products_espresso').update(updates).eq('id', req.params.id);
   
   if (error && error.message.includes('unit')) {
@@ -428,6 +448,18 @@ app.put('/api/products/:id', async (req, res) => {
   }
 
   if (error) return res.status(500).json({ error: error.message });
+
+  // Log stock transaction on edit if stock has changed and is not dummy/service stock (9999)
+  if (stock !== undefined && stock !== oldStock && stock !== 9999 && oldStock !== 9999) {
+    const diff = stock - oldStock;
+    await supabase.from('inventory_transactions_espresso').insert([{
+      product_id: parseInt(req.params.id, 10),
+      type: diff > 0 ? 'in' : 'out',
+      quantity: Math.abs(diff),
+      remarks: `Direct stock adjustment via product edit (from ${oldStock} to ${stock})`
+    }]);
+  }
+
   res.json({ success: true });
 });
 

@@ -226,6 +226,7 @@ export default function POS() {
   const [isLaundryDropdownOpen, setIsLaundryDropdownOpen] = useState(false);
   const [laundryServicesList, setLaundryServicesList] = useState<any[]>([]);
   const [laundryIsWalkIn, setLaundryIsWalkIn] = useState(false);
+  const [laundryIsEmployeePromo, setLaundryIsEmployeePromo] = useState(false);
   const [selectedStoreCredit, setSelectedStoreCredit] = useState<any>(null);
   const [showComputationDetails, setShowComputationDetails] = useState(false);
   const [expandedCartItemId, setExpandedCartItemId] = useState<string | number | null>(null);
@@ -696,18 +697,35 @@ export default function POS() {
   const currentSelectionSubtotal = (() => {
     if (!selectedLaundryService) return 0;
     const w = parseFloat(laundryWeight) || 0;
+    const isPromo5Plus2 = selectedLaundryService.name?.toLowerCase().includes('5+2') ||
+      selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
+      selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
+      selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
+    
+    const isEmployeeEligible = laundryIsEmployeePromo && 
+      (selectedLaundryService.name?.toLowerCase().includes('regular clothes') || 
+       selectedLaundryService.name?.toLowerCase().includes('5+2') || 
+       selectedLaundryService.name?.toLowerCase().includes('5 + 2')) && 
+      !selectedLaundryService.name?.toLowerCase().includes('towel') && 
+      !selectedLaundryService.name?.toLowerCase().includes('bedsheet');
+    
+    let price = selectedLaundryService.price;
+    if (isEmployeeEligible) {
+      price = 35;
+    }
+
     if (w > 0) {
-      const isPromo5Plus2 = selectedLaundryService.name?.toLowerCase().includes('5+2') ||
-        selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
-        selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
-        selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
+      if (isEmployeeEligible) {
+        const billedWeight = w < 7 ? 5 : (w - 2);
+        return billedWeight * price;
+      }
       if (isPromo5Plus2) {
         const billedWeight = w <= 7 ? 5 : (w - 2);
-        return billedWeight * selectedLaundryService.price;
+        return billedWeight * price;
       }
-      return w * selectedLaundryService.price;
+      return w * price;
     }
-    return selectedLaundryService.price;
+    return price;
   })();
 
   const laundryGrandTotal = laundrySubtotal + dynamicAddonTotal;
@@ -847,27 +865,56 @@ export default function POS() {
       selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
       selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
 
-    const existingIdx = laundryServicesList.findIndex(item => item.id === selectedLaundryService.id);
+    const isEmployeeEligible = laundryIsEmployeePromo && 
+      (selectedLaundryService.name?.toLowerCase().includes('regular clothes') || 
+       selectedLaundryService.name?.toLowerCase().includes('5+2') || 
+       selectedLaundryService.name?.toLowerCase().includes('5 + 2')) && 
+      !selectedLaundryService.name?.toLowerCase().includes('towel') && 
+      !selectedLaundryService.name?.toLowerCase().includes('bedsheet');
+
+    let price = selectedLaundryService.price;
+    let billedWeight = weightVal;
+    let freeKilos = 0;
+    let sName = selectedLaundryService.name;
+
+    if (isEmployeeEligible) {
+      price = 35;
+      billedWeight = weightVal < 7 ? 5 : (weightVal - 2);
+      freeKilos = weightVal < 7 ? 2 : 2;
+      sName = `${selectedLaundryService.name} (Employee Promo)`;
+    } else if (isPromo5Plus2) {
+      billedWeight = weightVal <= 7 ? 5 : (weightVal - 2);
+      freeKilos = weightVal >= 7 ? 2 : 0;
+    }
+
+    const existingIdx = laundryServicesList.findIndex(item => item.name === sName);
     if (existingIdx !== -1) {
       const updated = [...laundryServicesList];
       const newWeight = updated[existingIdx].weight + weightVal;
-      const isPromo = updated[existingIdx].isPromo5Plus2;
-      const newBilled = isPromo ? (newWeight >= 7 ? newWeight - 2 : newWeight) : newWeight;
+      let newBilled = newWeight;
+      let newFree = 0;
+
+      if (isEmployeeEligible) {
+        newBilled = newWeight < 7 ? 5 : (newWeight - 2);
+        newFree = newWeight < 7 ? 2 : 2;
+      } else if (isPromo5Plus2) {
+        newBilled = newWeight <= 7 ? 5 : (newWeight - 2);
+        newFree = newWeight >= 7 ? 2 : 0;
+      }
+
       updated[existingIdx].weight = newWeight;
       updated[existingIdx].billedWeight = newBilled;
-      updated[existingIdx].freeKilos = isPromo && newWeight >= 7 ? (newWeight - newBilled) : 0;
-      updated[existingIdx].subtotal = newBilled * updated[existingIdx].price;
+      updated[existingIdx].freeKilos = newFree;
+      updated[existingIdx].subtotal = newBilled * price;
       setLaundryServicesList(updated);
     } else {
-      const billedWeight = isPromo5Plus2 ? (weightVal >= 7 ? weightVal - 2 : weightVal) : weightVal;
-      const sub = billedWeight * selectedLaundryService.price;
-      const freeKilos = isPromo5Plus2 && weightVal >= 7 ? (weightVal - billedWeight) : 0;
+      const sub = billedWeight * price;
       setLaundryServicesList([
         ...laundryServicesList,
         {
           id: selectedLaundryService.id,
-          name: selectedLaundryService.name,
-          price: selectedLaundryService.price,
+          name: sName,
+          price: price,
           weight: weightVal,
           billedWeight: billedWeight,
           subtotal: sub,
@@ -888,6 +935,7 @@ export default function POS() {
     setSelectedLaundryService(null);
     setLaundryServicesList([]);
     setLaundryIsWalkIn(false);
+    setLaundryIsEmployeePromo(false);
     setLaundryWeight('');
     setLaundryPrefWarmWater(false);
     setLaundryPrefColdWater(false);
@@ -935,13 +983,34 @@ export default function POS() {
           selectedLaundryService.name?.toLowerCase().includes('5 + 2') ||
           selectedLaundryService.name?.toLowerCase().includes('regular clothes') ||
           selectedLaundryService.name?.toLowerCase().includes('towels & bedsheets');
-        const billedWeight = isPromo5Plus2 ? (weightVal >= 7 ? weightVal - 2 : weightVal) : weightVal;
-        const sub = billedWeight * selectedLaundryService.price;
-        const freeKilos = isPromo5Plus2 && weightVal >= 7 ? (weightVal - billedWeight) : 0;
+
+        const isEmployeeEligible = laundryIsEmployeePromo && 
+          (selectedLaundryService.name?.toLowerCase().includes('regular clothes') || 
+           selectedLaundryService.name?.toLowerCase().includes('5+2') || 
+           selectedLaundryService.name?.toLowerCase().includes('5 + 2')) && 
+          !selectedLaundryService.name?.toLowerCase().includes('towel') && 
+          !selectedLaundryService.name?.toLowerCase().includes('bedsheet');
+
+        let price = selectedLaundryService.price;
+        let billedWeight = weightVal;
+        let freeKilos = 0;
+        let sName = selectedLaundryService.name;
+
+        if (isEmployeeEligible) {
+          price = 35;
+          billedWeight = weightVal < 7 ? 5 : (weightVal - 2);
+          freeKilos = weightVal < 7 ? 2 : 2;
+          sName = `${selectedLaundryService.name} (Employee Promo)`;
+        } else if (isPromo5Plus2) {
+          billedWeight = weightVal <= 7 ? 5 : (weightVal - 2);
+          freeKilos = weightVal >= 7 ? 2 : 0;
+        }
+
+        const sub = billedWeight * price;
         activeList = [{
           id: selectedLaundryService.id,
-          name: selectedLaundryService.name,
-          price: selectedLaundryService.price,
+          name: sName,
+          price: price,
           weight: weightVal,
           billedWeight: billedWeight,
           subtotal: sub,
@@ -2141,28 +2210,44 @@ export default function POS() {
                       </div>
                     </div>
 
-                    {/* Walk-in checkbox */}
-                    <label className="inline-flex items-center gap-2 cursor-pointer select-none mt-1 font-sans">
-                      <input
-                        type="checkbox"
-                        checked={laundryIsWalkIn}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setLaundryIsWalkIn(checked);
-                          if (checked) {
-                            setLaundryCustomerName('Walk-in Customer');
-                            setLaundryPhone('');
-                          } else {
-                            setLaundryCustomerName('');
-                          }
-                        }}
-                        className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500 accent-blue-600"
-                      />
-                      <span className="text-[10px] font-bold text-slate-650 flex items-center gap-1">
-                        Walk-in Customer
-                        <span className="text-slate-400 cursor-pointer" title="Automatically formats order for anonymous walk-in client">ⓘ</span>
-                      </span>
-                    </label>
+                    <div className="flex flex-wrap items-center gap-4 mt-1 font-sans">
+                      {/* Walk-in checkbox */}
+                      <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={laundryIsWalkIn}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setLaundryIsWalkIn(checked);
+                            if (checked) {
+                              setLaundryCustomerName('Walk-in Customer');
+                              setLaundryPhone('');
+                            } else {
+                              setLaundryCustomerName('');
+                            }
+                          }}
+                          className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 focus:ring-blue-500 accent-blue-600"
+                        />
+                        <span className="text-[10px] font-bold text-slate-650 flex items-center gap-0.5">
+                          Walk-in Customer
+                          <span className="text-slate-400 cursor-pointer text-[8px]" title="Automatically formats order for anonymous walk-in client">ⓘ</span>
+                        </span>
+                      </label>
+
+                      {/* Employee Promo checkbox */}
+                      <label className="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={laundryIsEmployeePromo}
+                          onChange={(e) => setLaundryIsEmployeePromo(e.target.checked)}
+                          className="w-3.5 h-3.5 rounded text-amber-600 border-slate-300 focus:ring-amber-500 accent-amber-600"
+                        />
+                        <span className="text-[10px] font-bold text-slate-650 flex items-center gap-0.5">
+                          Employee Promo 👑
+                          <span className="text-slate-400 cursor-pointer text-[8px]" title="Regular clothes: ₱35/kg, forced minimum of 7kg (with 2kg free)">ⓘ</span>
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
 

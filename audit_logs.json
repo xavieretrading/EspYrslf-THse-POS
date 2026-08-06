@@ -1,5 +1,33 @@
 [
   {
+    "id": "1785986247577j72h4",
+    "timestamp": "2026-08-06T03:17:27.577Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Export Sales Report Excel",
+    "details": "Exported Shift Sales Report to Excel for 2026-08-01 to 2026-08-06"
+  },
+  {
+    "id": "1785986213342oznqw",
+    "timestamp": "2026-08-06T03:16:53.342Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Export Sales Report Excel",
+    "details": "Exported Z-Reading (Daily) to Excel for 2026-08-06 to 2026-08-06"
+  },
+  {
+    "id": "1785986200520vfkk9",
+    "timestamp": "2026-08-06T03:16:40.520Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785978197352c5st7",
+    "timestamp": "2026-08-06T01:03:17.352Z",
+    "user": "System Administrator",
+    "activity": "Print Single Shift Report",
+    "details": "Printed Shift Report for cashier Cashier 1 on 08/01/2026"
+  },
+  {
     "id": "17859075749127t8bd",
     "timestamp": "2026-08-05T05:26:14.912Z",
     "user": "JUNREL EJURANGO",

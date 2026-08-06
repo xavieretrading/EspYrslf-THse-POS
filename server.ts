@@ -1714,17 +1714,37 @@ app.put('/api/orders/:id/notes', async (req, res) => {
   }
 });
 
+// Helper function to dynamically recalculate order subtotal and total from actual items in DB
+async function recalculateOrderTotals(orderId: string | number) {
+  const { data: items } = await supabase
+    .from('order_items_espresso')
+    .select('price, quantity, is_complimentary, notes')
+    .eq('order_id', orderId);
+
+  let newSubtotal = 0;
+  if (items && items.length > 0) {
+    items.forEach((item: any) => {
+      const isComp = item.is_complimentary || item.notes?.includes('[COMPLIMENTARY');
+      if (!isComp) {
+        newSubtotal += (item.price || 0) * (item.quantity || 1);
+      }
+    });
+  }
+
+  await supabase
+    .from('orders_espresso')
+    .update({ subtotal: newSubtotal, total: newSubtotal })
+    .eq('id', orderId);
+
+  return newSubtotal;
+}
+
 // Add items to existing order
 app.post('/api/orders/:id/items', async (req, res) => {
   const orderId = req.params.id;
   const { items } = req.body;
   
-  let addedSubtotal = 0;
   const orderItems = items.map((item: any) => {
-    if (!item.is_complimentary) {
-      addedSubtotal += item.price * item.quantity;
-    }
-
     let finalNotes = item.notes || '';
     if (item.is_complimentary) {
         const details = {
@@ -1756,10 +1776,8 @@ app.post('/api/orders/:id/items', async (req, res) => {
     return res.status(500).json({ error: insertError.message });
   }
   
-  const { data: order } = await supabase.from('orders_espresso').select('subtotal').eq('id', orderId).single();
-  const newSubtotal = (order?.subtotal || 0) + addedSubtotal;
-  
-  await supabase.from('orders_espresso').update({ subtotal: newSubtotal, total: newSubtotal }).eq('id', orderId);
+  // Recalculate true subtotal & total directly from DB order items
+  await recalculateOrderTotals(orderId);
 
   res.json({ success: true });
 });
@@ -1769,21 +1787,12 @@ app.delete('/api/orders/:order_id/items/:item_id', async (req, res) => {
   const { order_id, item_id } = req.params;
 
   try {
-    // 1. Get the item to determine its total value
-    const { data: item } = await supabase.from('order_items_espresso').select('*').eq('id', item_id).single();
-    if (!item) return res.status(404).json({ error: 'Item not found' });
+    // 1. Delete the item
+    const { error: delError } = await supabase.from('order_items_espresso').delete().eq('id', item_id);
+    if (delError) return res.status(500).json({ error: delError.message });
 
-    const itemTotal = item.price * item.quantity;
-
-    // 2. Delete the item
-    await supabase.from('order_items_espresso').delete().eq('id', item_id);
-
-    // 3. Update the order subtotal
-    const { data: order } = await supabase.from('orders_espresso').select('subtotal, total').eq('id', order_id).single();
-    if (order) {
-        const newSubtotal = Math.max(0, order.subtotal - itemTotal);
-        await supabase.from('orders_espresso').update({ subtotal: newSubtotal, total: newSubtotal }).eq('id', order_id);
-    }
+    // 2. Recalculate the order subtotal & total directly from remaining DB order items
+    await recalculateOrderTotals(order_id);
 
     res.json({ success: true });
   } catch (err: any) {

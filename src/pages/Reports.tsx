@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FileText, Download, Calendar, Activity, ChevronRight, ChevronDown, Tag, Users, User, Medal, Ticket, Gift, Clock, Printer, Trash2, TableIcon } from 'lucide-react';
-import { format, subDays, startOfMonth, startOfDay } from 'date-fns';
+import { format, subDays, startOfMonth, startOfDay, startOfWeek } from 'date-fns';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
 import clsx from 'clsx';
@@ -459,6 +459,256 @@ export default function Reports() {
     XLSX.writeFile(wb, filename);
 
     logActivity(user.full_name || user.username || 'Staff', 'Export BIR Annexes', `Exported BIR Annexes E-1 to E-6 as Excel for ${period}`);
+  };
+
+  const handleSelectPreset = (preset: 'today' | 'week' | 'month') => {
+    const now = getManilaDate();
+    if (preset === 'today') {
+      setDateRange({
+        start: format(now, 'yyyy-MM-dd'),
+        end: format(now, 'yyyy-MM-dd')
+      });
+    } else if (preset === 'week') {
+      setDateRange({
+        start: format(startOfWeek(now, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+        end: format(now, 'yyyy-MM-dd')
+      });
+    } else if (preset === 'month') {
+      setDateRange({
+        start: format(startOfMonth(now), 'yyyy-MM-dd'),
+        end: format(now, 'yyyy-MM-dd')
+      });
+    }
+  };
+
+  const handleExportSalesReportExcel = () => {
+    if (!activeBranch) return;
+    const user = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
+    const period = `${dateRange.start} to ${dateRange.end}`;
+    const companyName = settings?.company_name || activeBranch?.name || 'AllSet POS';
+    const branchName = activeBranch?.name || '';
+    const reportLabel = REPORT_CATEGORIES.find(c => c.id === reportType)?.label || 'Sales Report';
+    const nowStr = format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss');
+    const grossSales = summary?.gross_sales || 0;
+    const totalDiscounts = summary?.total_discounts || 0;
+    const netSales = grossSales - totalDiscounts;
+
+    const htmlContent = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>${reportLabel.replace(/[^a-zA-Z0-9 ]/g, '')}</x:Name>
+                <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #1e293b; }
+          table { border-collapse: collapse; margin-bottom: 20px; width: 100%; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px 12px; }
+          .main-header { background-color: #0f172a; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 12px; }
+          .section-header { background-color: #1e293b; color: #ffffff; font-size: 13px; font-weight: bold; text-align: left; }
+          .sub-header { background-color: #334155; color: #ffffff; font-weight: bold; text-align: center; }
+          .accent-header { background-color: #4f46e5; color: #ffffff; font-weight: bold; }
+          .label { font-weight: 600; color: #475569; }
+          .num { text-align: right; font-family: monospace; font-size: 13px; }
+          .total-row { background-color: #ecfdf5; color: #047857; font-weight: bold; font-size: 14px; }
+          .short-row { color: #dc2626; font-weight: bold; }
+          .over-row { color: #059669; font-weight: bold; }
+          .meta-box { background-color: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; margin-bottom: 15px; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <tr>
+            <th colSpan="4" class="main-header">${companyName.toUpperCase()} - ${branchName.toUpperCase()}</th>
+          </tr>
+          <tr>
+            <th colSpan="4" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">
+              ${reportLabel.toUpperCase()}
+            </th>
+          </tr>
+        </table>
+
+        <div class="meta-box">
+          <b>Date Range / Period:</b> ${period} &nbsp;|&nbsp; 
+          <b>Generated On:</b> ${nowStr} &nbsp;|&nbsp; 
+          <b>User:</b> ${user.full_name || user.username || 'Staff'} &nbsp;|&nbsp;
+          <b>Z-Counter:</b> ${z_counter || 1}
+        </div>
+
+        <h3>1. SALES SUMMARY</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 300px;">DESCRIPTION</th>
+              <th style="width: 200px; text-align: right;">AMOUNT (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="label">Gross Sales</td>
+              <td class="num">₱${grossSales.toFixed(2)}</td>
+            </tr>
+            ${isLaundryBranch ? `
+            <tr>
+              <td style="padding-left: 25px; color: #64748b;">☕ Coffee Shop Sales Gross</td>
+              <td class="num">₱${(summary?.coffee_sales_total || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding-left: 25px; color: #64748b;">🧺 Laundry Services Gross</td>
+              <td class="num">₱${(summary?.laundry_sales_total || 0).toFixed(2)}</td>
+            </tr>
+            ` : ''}
+            <tr>
+              <td class="label" style="color: #dc2626;">- Total Discounts Applied</td>
+              <td class="num" style="color: #dc2626;">-(₱${totalDiscounts.toFixed(2)})</td>
+            </tr>
+            <tr class="total-row">
+              <td>NET SALES</td>
+              <td class="num"><b>₱${netSales.toFixed(2)}</b></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>2. PAYMENT METHOD BREAKDOWN</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 250px;">PAYMENT METHOD</th>
+              <th style="width: 150px; text-align: center;">TRANSACTION COUNT</th>
+              <th style="width: 200px; text-align: right;">TOTAL AMOUNT (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${payments && payments.length > 0 ? payments.map((p: any) => `
+              <tr>
+                <td style="font-weight: 600;">${p.method === 'credit_card' ? 'CARD' : p.method.toUpperCase()}</td>
+                <td style="text-align: center;">${p.count}</td>
+                <td class="num">₱${(p.amount || 0).toFixed(2)}</td>
+              </tr>
+            `).join('') : '<tr><td colSpan="3" style="text-align: center; color: #94a3b8;">No payment transactions recorded</td></tr>'}
+          </tbody>
+        </table>
+
+        <h3>3. VAT BREAKDOWN</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 300px;">VAT CATEGORY</th>
+              <th style="width: 200px; text-align: right;">AMOUNT (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="label">VATable Sales</td>
+              <td class="num">₱${(summary?.vatable_sales || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td class="label">VAT Exempt Sales</td>
+              <td class="num">₱${(summary?.vat_exempt_sales || 0).toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td class="label">Zero Rated Sales</td>
+              <td class="num">₱0.00</td>
+            </tr>
+            <tr class="total-row">
+              <td>TOTAL VAT AMOUNT (12%)</td>
+              <td class="num"><b>₱${(summary?.total_vat || 0).toFixed(2)}</b></td>
+            </tr>
+          </tbody>
+        </table>
+
+        ${shiftData && shiftData.length > 0 ? `
+        <h3>4. CASHIER SHIFT SUMMARY</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th>CASHIER NAME / SHIFT NO</th>
+              <th>TIME IN</th>
+              <th>TIME OUT</th>
+              <th style="text-align: right;">SHIFT SALES</th>
+              <th style="text-align: right;">START CASH</th>
+              <th style="text-align: right;">EXPECTED CASH</th>
+              <th style="text-align: right;">END CASH</th>
+              <th style="text-align: right;">OVER / SHORT</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${shiftData.map((s: any) => {
+              const cashierName = s.users?.full_name || s.users?.username || 'Cashier';
+              let shiftCash = 0;
+              if (s.orders) {
+                s.orders.forEach((o: any) => {
+                  if ((o.payment_method || 'CASH').toUpperCase() === 'CASH') shiftCash += (o.total || 0);
+                });
+              }
+              const expectedCash = (s.cash_in || 0) + shiftCash;
+              const diff = s.cash_out !== null && s.cash_out !== undefined ? s.cash_out - expectedCash : null;
+              const diffText = diff !== null ? (diff >= 0 ? `+₱${diff.toFixed(2)} (Over)` : `-₱${Math.abs(diff).toFixed(2)} (Short)`) : 'Active Shift';
+              const diffClass = diff !== null ? (diff >= 0 ? 'over-row' : 'short-row') : '';
+              return `
+                <tr>
+                  <td style="font-weight: bold;">${cashierName} (Shift #${s.id})</td>
+                  <td>${s.time_in ? format(new Date(s.time_in), 'MM/dd/yyyy hh:mm a') : ''}</td>
+                  <td>${s.time_out ? format(new Date(s.time_out), 'MM/dd/yyyy hh:mm a') : 'Active'}</td>
+                  <td class="num">₱${(s.total_sales || 0).toFixed(2)}</td>
+                  <td class="num">₱${(s.cash_in || 0).toFixed(2)}</td>
+                  <td class="num">₱${expectedCash.toFixed(2)}</td>
+                  <td class="num">${s.cash_out !== null && s.cash_out !== undefined ? `₱${s.cash_out.toFixed(2)}` : 'Active'}</td>
+                  <td class="num ${diffClass}">${diffText}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
+        ${voidedTransactions && voidedTransactions.length > 0 ? `
+        <h3>5. VOIDED TRANSACTIONS</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th>ORDER NO</th>
+              <th>INVOICE NO</th>
+              <th>CASHIER / STAFF</th>
+              <th>TIMESTAMP</th>
+              <th style="text-align: right;">AMOUNT (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${voidedTransactions.map((v: any) => `
+              <tr>
+                <td>#${v.id ? v.id.toString().padStart(6, '0') : ''}</td>
+                <td>${v.receipt_number !== undefined && v.receipt_number !== null ? '#' + v.receipt_number.toString().padStart(6, '0') : 'N/A'}</td>
+                <td>${v.users?.full_name || v.users?.username || 'Staff'}</td>
+                <td>${v.updated_at || v.created_at ? format(new Date(v.updated_at || v.created_at), 'MM/dd/yyyy hh:mm a') : ''}</td>
+                <td class="num" style="color: #dc2626; font-weight: bold;">₱${(v.total || 0).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Sales_Report_${reportType}_${dateRange.start}_to_${dateRange.end}.xls`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    logActivity(user.full_name || user.username || 'Staff', 'Export Sales Report Excel', `Exported ${reportLabel} to Excel for ${period}`);
   };
 
 
@@ -2111,9 +2361,52 @@ export default function Reports() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-              <Calendar size={18} className="text-slate-400 ml-2" />
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Quick Period Presets */}
+            {reportType !== 'Z' && reportType !== 'X' && (
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => handleSelectPreset('today')}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    dateRange.start === format(getManilaDate(), 'yyyy-MM-dd') && dateRange.end === format(getManilaDate(), 'yyyy-MM-dd')
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  )}
+                >
+                  This Day
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectPreset('week')}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    dateRange.start === format(startOfWeek(getManilaDate(), { weekStartsOn: 1 }), 'yyyy-MM-dd') && dateRange.end === format(getManilaDate(), 'yyyy-MM-dd')
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  )}
+                >
+                  This Week
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectPreset('month')}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    dateRange.start === format(startOfMonth(getManilaDate()), 'yyyy-MM-dd') && dateRange.end === format(getManilaDate(), 'yyyy-MM-dd')
+                      ? "bg-slate-900 text-white shadow-sm"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  )}
+                >
+                  This Month
+                </button>
+              </div>
+            )}
+
+            {/* Date Pickers */}
+            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <Calendar size={18} className="text-slate-400 ml-1" />
               <input
                 type="date"
                 value={dateRange.start}
@@ -2125,24 +2418,26 @@ export default function Reports() {
                     end: (reportType === 'Z' || reportType === 'X') ? val : prev.end
                   }));
                 }}
-                className="bg-transparent border-none outline-none text-sm font-medium text-slate-700"
+                className="bg-transparent border-none outline-none text-xs font-semibold text-slate-700 cursor-pointer"
+                title="Start Date"
               />
               {(reportType !== 'Z' && reportType !== 'X') && (
                 <>
-                  <span className="text-slate-400">-</span>
+                  <span className="text-slate-400 font-bold text-xs">-</span>
                   <input
                     type="date"
                     value={dateRange.end}
                     onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    className="bg-transparent border-none outline-none text-sm font-medium text-slate-700 mr-2"
+                    className="bg-transparent border-none outline-none text-xs font-semibold text-slate-700 mr-1 cursor-pointer"
+                    title="End Date"
                   />
                 </>
               )}
             </div>
 
             {reportType !== 'Z' && (
-              <div className="flex items-center gap-1 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <Clock size={16} className="text-slate-400 ml-2" />
+              <div className="flex items-center gap-1 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <Clock size={16} className="text-slate-400 ml-1" />
                 <span className="text-xs font-bold text-slate-400 select-none mr-1">Time:</span>
                 <input
                   type="time"
@@ -2155,18 +2450,18 @@ export default function Reports() {
                   type="time"
                   value={timeRange.end}
                   onChange={e => setTimeRange(prev => ({ ...prev, end: e.target.value }))}
-                  className="bg-transparent border-none outline-none text-xs font-semibold text-slate-700 w-16 mr-2"
+                  className="bg-transparent border-none outline-none text-xs font-semibold text-slate-700 w-16 mr-1"
                 />
               </div>
             )}
 
             {(reportType === 'SHIFT_SALES' || reportType === 'Y' || reportType === 'X') && (
-              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
-                <User size={18} className="text-slate-400 ml-2" />
+              <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <User size={18} className="text-slate-400 ml-1" />
                 <select
                   value={selectedUserId}
                   onChange={e => setSelectedUserId(e.target.value)}
-                  className="bg-transparent border-none outline-none text-sm font-medium text-slate-700 pr-2"
+                  className="bg-transparent border-none outline-none text-xs font-semibold text-slate-700 pr-1 cursor-pointer"
                 >
                   <option value="">All Users</option>
                   {users.map(u => (
@@ -2176,45 +2471,44 @@ export default function Reports() {
               </div>
             )}
 
+            {/* Export Sales Excel for Standard Reports */}
+            {['Z', 'Y', 'X', 'SHIFT_SALES', 'VOIDED', 'COMPLIMENTARY', 'VOUCHER_REDEMPTIONS', 'VOUCHER_PAYMENTS'].includes(reportType) && (
+              <button
+                type="button"
+                onClick={handleExportSalesReportExcel}
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm shadow-emerald-600/20 transition-all active:scale-95 cursor-pointer"
+                title="Export report into readable styled Excel file (.xls)"
+              >
+                <TableIcon size={16} />
+                Export Sales Excel (.xlsx)
+              </button>
+            )}
+
             {reportType === 'EJOURNAL' && (
               <button
+                type="button"
                 onClick={handleDownloadTxt}
-                className="flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs transition-all active:scale-95 cursor-pointer"
               >
-                <Download size={18} />
+                <Download size={16} />
                 Download Soft Copy (.txt)
               </button>
             )}
-            {/* {reportType === 'SHIFT_SALES' && (
-              <button
-                onClick={() => {
-                  let totalSC = 0;
-                  shiftData.forEach(s => {
-                    if (s.orders) {
-                      s.orders.forEach((o: any) => {
-                        totalSC += (o.service_charge || 0);
-                      });
-                    }
-                  });
-                  swalAlert('Service Charge Info', `Total Service Charge for selected period: ₱${totalSC.toFixed(2)}`, 'info');
-                }}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all active:scale-95"
-              >
-                <Activity size={18} />
-                Calculate Service Charge
-              </button>
-            )} */}
+
             {/* Export All BIR Annexes to Excel — shown for any BIR annex report */}
             {['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR'].includes(reportType) && (
               <button
+                type="button"
                 onClick={handleExportAllAnnexes}
-                className="flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold shadow-md shadow-violet-600/20 transition-all active:scale-95"
+                className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-xs shadow-sm shadow-violet-600/20 transition-all active:scale-95 cursor-pointer"
               >
-                <Download size={18} />
+                <Download size={16} />
                 Export All Annexes (.xlsx)
               </button>
             )}
-            {/* <div className="flex items-center gap-2">
+
+            {/* Print Controls */}
+            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 ml-1">
               <div className="flex items-center gap-1 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
                 <Printer size={15} className="text-slate-400 ml-1" />
                 <select
@@ -2229,13 +2523,14 @@ export default function Reports() {
                 </select>
               </div>
               <button
+                type="button"
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 transition-all active:scale-95"
+                className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                <Printer size={18} />
+                <Printer size={16} />
                 Print Report
               </button>
-            </div> */}
+            </div>
           </div>
         </div>
 

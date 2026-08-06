@@ -9,13 +9,12 @@ import * as XLSX from 'xlsx';
 import { logActivity } from '../lib/audit';
 import { swalAlert } from '../lib/swal';
 
-type ReportType = 'Z' | 'Y' | 'X' | 'BIR_SALES_SUMMARY' | 'SENIOR_CITIZEN' | 'PWD' | 'NATIONAL_ATHLETES' | 'SOLO_PARENT' | 'MEDAL_OF_VALOR' | 'REGULAR_DISCOUNT' | 'EJOURNAL' | 'VOUCHER_PAYMENTS' | 'VOUCHER_REDEMPTIONS' | 'COMPLIMENTARY' | 'SHIFT_SALES' | 'VOIDED';
+type ReportType = 'Z' | 'Y' | 'X' | 'BIR_SALES_SUMMARY' | 'SENIOR_CITIZEN' | 'PWD' | 'NATIONAL_ATHLETES' | 'SOLO_PARENT' | 'MEDAL_OF_VALOR' | 'REGULAR_DISCOUNT' | 'EJOURNAL' | 'VOUCHER_PAYMENTS' | 'VOUCHER_REDEMPTIONS' | 'COMPLIMENTARY' | 'VOIDED';
 
 const REPORT_CATEGORIES: { id: ReportType; label: string; icon: any }[] = [
   { id: 'X', label: 'X-Reading (Interim Snapshot)', icon: FileText },
   { id: 'Z', label: 'Z-Reading (Daily)', icon: Activity },
   { id: 'Y', label: 'Y-Reading (Period)', icon: Calendar },
-  { id: 'SHIFT_SALES', label: 'Shift Sales Report', icon: Clock },
   { id: 'VOIDED', label: 'Voided Transactions Report', icon: Trash2 },
   { id: 'BIR_SALES_SUMMARY', label: 'BIR Sales Summary Report', icon: FileText },
   { id: 'COMPLIMENTARY', label: 'Complimentary Report', icon: Gift },
@@ -544,7 +543,40 @@ export default function Reports() {
           <b>Z-Counter:</b> ${z_counter || 1}
         </div>
 
-        <h3>1. SALES SUMMARY</h3>
+        <h3>1. DAILY SALES BREAKDOWN (DAY-BY-DAY)</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 150px;">DATE</th>
+              <th style="width: 120px; text-align: center;">TRANSACTIONS</th>
+              <th style="width: 160px; text-align: right;">GROSS SUBTOTAL (₱)</th>
+              <th style="width: 160px; text-align: right;">DISCOUNTS (₱)</th>
+              <th style="width: 160px; text-align: right;">NET SALES (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data?.dailySales && data.dailySales.length > 0 ? data.dailySales.map((d: any) => `
+              <tr>
+                <td style="font-weight: 600; font-family: monospace;">${d.date}</td>
+                <td style="text-align: center;">${d.count || 1}</td>
+                <td class="num">₱${(d.gross || d.total || 0).toFixed(2)}</td>
+                <td class="num" style="color: #dc2626;">-₱${(d.discounts || 0).toFixed(2)}</td>
+                <td class="num" style="color: #047857; font-weight: bold;">₱${(d.net || d.total || 0).toFixed(2)}</td>
+              </tr>
+            `).join('') : '<tr><td colSpan="5" style="text-align: center; color: #94a3b8;">No daily sales recorded</td></tr>'}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td>TOTALS</td>
+              <td style="text-align: center;">${summary?.total_transactions || 0}</td>
+              <td class="num">₱${grossSales.toFixed(2)}</td>
+              <td class="num" style="color: #dc2626;">-₱${totalDiscounts.toFixed(2)}</td>
+              <td class="num"><b>₱${netSales.toFixed(2)}</b></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <h3>2. SALES SUMMARY</h3>
         <table>
           <thead>
             <tr class="section-header">
@@ -777,287 +809,240 @@ export default function Reports() {
 
   const { summary, discounts, payments, accumulated_grand_total, z_counter } = data;
 
-  const renderZYReport = () => (
-    <div className="print:p-0">
-      <div className="text-center mb-4 print:mb-2">
+  const renderZYReport = () => {
+    const dailyList = data?.dailySales || [];
+    const totalDailyGross = dailyList.reduce((s: number, d: any) => s + (d.gross || d.total || 0), 0);
+    const totalDailyDisc = dailyList.reduce((s: number, d: any) => s + (d.discounts || 0), 0);
+    const totalDailyNet = dailyList.reduce((s: number, d: any) => s + (d.net || d.total || 0), 0);
+    const totalDailyTxns = dailyList.reduce((s: number, d: any) => s + (d.count || 0), 0);
 
-        {reportType === 'X' && (
-          <div className="mt-2 text-center text-xs font-bold text-rose-600 border-2 border-rose-200 bg-rose-50 py-1.5 px-3 rounded-lg print:border-black print:bg-transparent print:text-black">
-
-          </div>
-        )}
-        <div className="mt-4 text-left space-y-1.5 print:mt-2 print:space-y-1">
-          <div className="flex justify-between">
-            <span className="text-slate-600 print:text-black">Generated On:</span>
-            <span className="text-slate-900 font-bold text-right print:text-black">{format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600 print:text-black">Report Period:</span>
-            <span className="text-slate-900 font-bold text-right print:text-black">
-              {reportType === 'Z'
-                ? format(safeDate(dateRange.start), 'MM/dd/yyyy')
-                : `${format(safeDate(dateRange.start), 'MM/dd/yyyy')} - ${format(safeDate(dateRange.end), 'MM/dd/yyyy')}`
-              }
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600 print:text-black">{reportType === 'Z' ? 'Z-Counter' : 'Y-Counter'}:</span>
-            <span className="text-slate-900 font-bold text-right print:text-black">{z_counter.toString().padStart(6, '0')}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4 text-slate-800 print:space-y-2 print:text-black">
-        <div>
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">Sales Summary</div>
-          <div className="flex justify-between items-center py-1">
-            <span>Gross Sales</span>
-            <span>₱{(summary?.gross_sales || 0).toFixed(2)}</span>
-          </div>
-          {isLaundryBranch && (
-            <div className="pl-4 border-l-2 border-emerald-500 my-1 py-0.5 space-y-1 text-xs text-slate-500 print:text-black font-sans">
-              <div className="flex justify-between items-center">
-                <span>☕ Coffee Shop Gross</span>
-                <span>₱{(summary?.coffee_sales_total || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>🧺 Laundry Gross</span>
-                <span>₱{(summary?.laundry_sales_total || 0).toFixed(2)}</span>
-              </div>
+    return (
+      <div className="w-full bg-white p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-xs font-sans text-slate-800">
+        
+        {/* Excel Header Banner */}
+        <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-t-2xl shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700 pb-3 mb-3">
+            <div>
+              <h2 className="text-lg sm:text-xl font-black tracking-tight uppercase">
+                {settings?.company_name || activeBranch?.name || 'ESPRESSO YOURSELF & TEA HOUSE'}
+              </h2>
+              <p className="text-xs text-slate-300 font-medium">{activeBranch?.address || 'Branch Address'}</p>
             </div>
-          )}
-          <div className="flex justify-between items-center py-1 text-red-600 print:text-black">
-            <span>- Total Discounts</span>
-            <span>(₱{(summary?.total_discounts || 0).toFixed(2)})</span>
-          </div>
-          <div className="flex justify-between items-center py-1 font-bold">
-            <span>Net Sales</span>
-            <span>₱{((summary?.gross_sales || 0) - (summary?.total_discounts || 0)).toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div className="mt-6 print:mt-3">
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">Payment Method Breakdown</div>
-          {payments?.length > 0 ? payments.map((p: any, idx: number) => {
-            let label = p.method === 'credit_card' ? 'CARD' : p.method.toUpperCase();
-            return (
-              <div key={idx} className="flex justify-between items-center py-1">
-                <span>{label} <span className="text-slate-400 text-xs print:text-black">x{p.count}</span></span>
-                <span>₱{(p.amount || 0).toFixed(2)}</span>
-              </div>
-            );
-          }) : (
-            <div className="text-center text-slate-400 italic py-2 print:text-black">No payments found</div>
-          )}
-        </div>
-
-        <div className="mt-6 print:mt-3">
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">VAT Breakdown</div>
-          <div className="flex justify-between items-center py-1">
-            <span>Vatable Sales</span>
-            <span>₱{(summary?.vatable_sales || 0).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span>VAT Exempt Sales</span>
-            <span>₱{(summary?.vat_exempt_sales || 0).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span>Zero Rated Sales</span>
-            <span>₱0.00</span>
-          </div>
-          <div className="flex justify-between items-center py-1 font-bold mt-2 pt-2 border-t border-slate-200 print:border-black print:mt-1 print:pt-1">
-            <span>VAT Amount (12%)</span>
-            <span>₱{(summary?.total_vat || 0).toFixed(2)}</span>
-          </div>
-        </div>
-
-        <div className="mt-6 print:mt-3">
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">Discounts Applied</div>
-          {discounts?.length > 0 ? discounts.map((d: any, idx: number) => (
-            <div key={idx} className="flex justify-between items-center py-1">
-              <span>{d.name.substring(0, 15)} <span className="text-slate-400 text-xs print:text-black">x{d.count}</span></span>
-              <span className="text-red-600 print:text-black">₱{(d.amount || 0).toFixed(2)}</span>
+            <div className="bg-emerald-500 text-slate-950 font-black px-4 py-1.5 rounded-xl text-xs sm:text-sm uppercase tracking-wider self-start md:self-center shadow-xs">
+              {reportType === 'Z' ? 'Z-READING REPORT (DAILY EXCEL VIEW)' : reportType === 'Y' ? 'Y-READING REPORT (PERIOD EXCEL VIEW)' : 'X-READING REPORT (INTERIM EXCEL VIEW)'}
             </div>
-          )) : (
-            <div className="text-center text-slate-400 italic py-2 print:text-black">No discounts</div>
-          )}
-        </div>
+          </div>
 
-        <div className="mt-6 print:mt-3">
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">Cashier Shift Summaries</div>
-          {shiftData && shiftData.length > 0 ? (
-            <div className="space-y-4">
-              {shiftData.map((s: any, idx: number) => {
-                let shiftSales = 0;
-                let shiftCash = 0;
-                let shiftCard = 0;
-                let shiftVouchers = 0;
-                let shiftComplimentary = 0;
-
-                if (s.orders) {
-                  s.orders.forEach((o: any) => {
-                    const pm = (o.payment_method || 'CASH').toUpperCase();
-                    let voucherPoints = 0;
-                    let compVal = 0;
-                    if (o.order_items) {
-                      o.order_items.forEach((item: any) => {
-                        if (item.notes?.includes('Complimentary') || item.notes?.includes('[COMPLIMENTARY')) {
-                          compVal += (item.price || 0) * (item.quantity || 1);
-                        } else {
-                          voucherPoints += (item.points_used || 0) * (item.quantity || 1);
-                        }
-                      });
-                    }
-
-                    if (pm === 'CASH') {
-                      shiftCash += (o.total || 0);
-                      shiftSales += (o.total || 0);
-                    } else if (pm === 'CREDIT_CARD' || pm === 'CARD') {
-                      shiftCard += (o.total || 0);
-                      shiftSales += (o.total || 0);
-                    } else if (pm === 'VOUCHER') {
-                      shiftVouchers += voucherPoints;
-                    } else if (pm === 'COMPLIMENTARY') {
-                      shiftComplimentary += voucherPoints;
-                    }
-                  });
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-semibold text-slate-300">
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">Report Period</span>
+              <span className="text-white font-bold">
+                {reportType === 'Z'
+                  ? format(safeDate(dateRange.start), 'MM/dd/yyyy')
+                  : `${format(safeDate(dateRange.start), 'MM/dd/yyyy')} - ${format(safeDate(dateRange.end), 'MM/dd/yyyy')}`
                 }
-
-                const cashierName = s.users?.full_name || s.users?.username || 'Unknown Cashier';
-                const formatTime = (isoString: string) => {
-                  try {
-                    return format(new Date(isoString), 'MM/dd/yyyy hh:mm a');
-                  } catch (e) {
-                    return '';
-                  }
-                };
-                const formattedTimeIn = formatTime(s.time_in);
-                const formattedTimeOut = s.time_out ? formatTime(s.time_out) : 'Active';
-                const expectedCash = (s.cash_in || 0) + shiftCash;
-                const difference = s.cash_out !== null && s.cash_out !== undefined ? s.cash_out - expectedCash : null;
-
-                return (
-                  <div key={s.id || idx} className="border-b border-dotted border-slate-200 pb-3 last:border-b-0 print:border-black text-xs">
-                    <div className="flex justify-between font-bold text-sm">
-                      <span>{cashierName} (Shift #{s.id})</span>
-                      <span className="text-slate-500 font-normal text-xs print:text-black">
-                        {formattedTimeIn} - {formattedTimeOut}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2 text-[11px] leading-tight">
-                      <div className="bg-slate-50 p-2 rounded-lg print:border print:border-black print:bg-transparent">
-                        <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider print:text-black mb-0.5">Sales PHP (Cash/Card)</span>
-                        <span className="font-bold">₱{shiftSales.toFixed(2)}</span>
-                        {shiftCard > 0 && <span className="text-[9px] block text-slate-400 print:text-black">(Cash: ₱{shiftCash.toFixed(2)}, Card: ₱{shiftCard.toFixed(2)})</span>}
-                      </div>
-                      <div className="bg-slate-50 p-2 rounded-lg print:border print:border-black print:bg-transparent">
-                        <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider print:text-black mb-0.5">Other Methods</span>
-                        <span className="font-bold block">Vouchers: {shiftVouchers} PTS</span>
-                        <span className="font-bold block">Complimentary: {shiftComplimentary} PTS</span>
-                      </div>
-                      <div className="bg-slate-50 p-2 rounded-lg print:border print:border-black print:bg-transparent">
-                        <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider print:text-black mb-0.5">Drawer Expected</span>
-                        <div className="text-[9px]">
-                          <span>Start Cash: ₱{(s.cash_in || 0).toFixed(2)}</span>
-                          <br />
-                          <span>+ Cash Sales: ₱{shiftCash.toFixed(2)}</span>
-                        </div>
-                        <span className="font-bold block border-t border-slate-200 mt-1 pt-1 print:border-black">Expected: ₱{expectedCash.toFixed(2)}</span>
-                      </div>
-                      <div className="bg-slate-50 p-2 rounded-lg print:border print:border-black print:bg-transparent">
-                        <span className="text-slate-400 block text-[9px] uppercase font-bold tracking-wider print:text-black mb-0.5">Drawer Actual & Diff</span>
-                        <span className="block font-bold">End Cash: {s.cash_out !== null && s.cash_out !== undefined ? `₱${s.cash_out.toFixed(2)}` : 'Active'}</span>
-                        {difference !== null && (
-                          <span className={clsx(
-                            "font-black text-[10px] block mt-1",
-                            difference >= 0 ? "text-emerald-600 print:text-black" : "text-rose-600 print:text-black"
-                          )}>
-                            {difference >= 0 ? `+₱${difference.toFixed(2)} (Over)` : `-₱${Math.abs(difference).toFixed(2)} (Short)`}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              </span>
             </div>
-          ) : (
-            <div className="text-center text-slate-400 italic py-2 print:text-black">No cashier shifts on this day</div>
-          )}
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">Generated Date/Time</span>
+              <span className="text-white font-bold">{format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss')}</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">Counter Ref</span>
+              <span className="text-white font-bold">{reportType === 'Z' ? 'Z-Counter' : 'Y-Counter'} #{z_counter.toString().padStart(6, '0')}</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase text-slate-400 block tracking-wider">Branch</span>
+              <span className="text-white font-bold">{activeBranch?.name}</span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-6 print:mt-3">
-          <div className="border-b border-dashed border-slate-300 mb-2 pb-1 font-bold uppercase print:border-black print:mb-1">Voided Transactions</div>
-          <div className="flex justify-between items-center py-1">
-            <span>Voided Transactions Count</span>
-            <span className="font-semibold">{summary?.total_voided_transactions || 0}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span>Voided Amount (Cash/Card)</span>
-            <span className="font-semibold text-rose-600 print:text-black">₱{(summary?.total_voided_amount || 0).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span>Voided Voucher Points</span>
-            <span className="font-semibold">{summary?.voided_vouchers_total_pts || 0} PTS</span>
-          </div>
+        {/* Excel Spreadsheet View Tables Container */}
+        <div className="p-3 sm:p-4 bg-slate-50 border-x border-b border-slate-200 rounded-b-2xl space-y-5">
 
-          {/* Detailed list of voided transactions in Z-report if any */}
-          {data?.voided_orders && data.voided_orders.length > 0 && (
-            <div className="mt-2 space-y-1.5 border-t border-dotted border-slate-200 pt-2 print:border-black">
-              {data.voided_orders.map((vo: any) => {
-                const formatTime = (isoString: string) => {
-                  try {
-                    return format(new Date(isoString), 'hh:mm a');
-                  } catch (e) {
-                    return '';
-                  }
-                };
-                return (
-                  <div key={vo.id} className="flex justify-between items-center text-xs text-slate-500 print:text-black py-1 border-b border-dashed border-slate-100 last:border-b-0">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-800">Order #{vo.id.toString().padStart(6, '0')}</span>
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">
-                        {vo.receipt_number !== undefined && vo.receipt_number !== null ? `Invoice #{vo.receipt_number.toString().padStart(6, '0')}` : 'Invoice: Open'}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium text-slate-700">
-                        {vo.payment_method?.toUpperCase() === 'VOUCHER'
-                          ? `${vo.voucher_points_sum || 0} PTS`
-                          : `₱${(vo.total || 0).toFixed(2)}`
-                        } [{vo.payment_method?.toUpperCase()}]
-                      </div>
-                      <div className="text-[10px] text-slate-400">({formatTime(vo.updated_at)})</div>
-                    </div>
-                  </div>
-                );
-              })}
+          {/* TABLE 1: DAILY SALES BREAKDOWN TABLE (DAY-BY-DAY EXCEL SPREADSHEET GRID) */}
+          <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+            <div className="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between font-black text-xs uppercase tracking-wider">
+              <span className="flex items-center gap-2">
+                <TableIcon size={14} className="text-emerald-400" />
+                1. Daily Sales Breakdown (Day-By-Day Spreadsheet)
+              </span>
+              <span className="text-[10px] bg-slate-700 px-2.5 py-0.5 rounded-full text-slate-200 font-bold">{dailyList.length} Days Recorded</span>
             </div>
-          )}
-        </div>
 
-        <div className="mt-6 bg-slate-100 p-4 rounded-xl border border-slate-200 print:bg-transparent print:p-0 print:border-none print:mt-3">
-          <div className="flex justify-between items-center mb-2 font-bold uppercase text-slate-600 border-b border-slate-300 pb-2 print:text-black print:border-black print:mb-1 print:pb-1">Record State</div>
-          <div className="flex justify-between items-center py-1">
-            <span>Beg. Invoice No.</span>
-            <span className="font-bold">{summary?.min_or ? summary.min_or.toString().padStart(8, '0') : '00000000'}</span>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-medium border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider">
+                    <th className="py-2.5 px-4 border-r border-slate-300">Date</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-center">Transactions</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Gross Subtotal (₱)</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Discounts (₱)</th>
+                    <th className="py-2.5 px-4 text-right">Net Sales (₱)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {dailyList.length > 0 ? dailyList.map((d: any, idx: number) => {
+                    const gross = d.gross || d.total || 0;
+                    const disc = d.discounts || 0;
+                    const net = d.net || d.total || 0;
+                    return (
+                      <tr key={d.date || idx} className="hover:bg-slate-50 transition-colors odd:bg-white even:bg-slate-50/50">
+                        <td className="py-2 px-4 border-r border-slate-200 font-mono font-bold text-slate-800">{d.date}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-center font-bold text-slate-700">{d.count || 1}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-slate-800">₱{gross.toFixed(2)}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-rose-600 font-semibold">{disc > 0 ? `-₱${disc.toFixed(2)}` : '₱0.00'}</td>
+                        <td className="py-2 px-4 text-right font-mono font-bold text-emerald-700">₱{net.toFixed(2)}</td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-slate-400 italic">No daily sales transactions recorded for this period.</td>
+                    </tr>
+                  )}
+                </tbody>
+                {dailyList.length > 0 && (
+                  <tfoot>
+                    <tr className="bg-emerald-50 text-emerald-950 border-t-2 border-slate-400 font-black text-xs">
+                      <td className="py-3 px-4 border-r border-emerald-200 uppercase tracking-wider">PERIOD TOTALS</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-center">{totalDailyTxns || summary?.total_transactions || 0}</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono">₱{(summary?.gross_sales || totalDailyGross).toFixed(2)}</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono text-rose-700">-₱{(summary?.total_discounts || totalDailyDisc).toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right font-mono text-emerald-700 text-sm">₱{((summary?.gross_sales || totalDailyGross) - (summary?.total_discounts || totalDailyDisc)).toFixed(2)}</td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
           </div>
-          <div className="flex justify-between items-center py-1">
-            <span>End. Invoice No.</span>
-            <span className="font-bold">{summary?.max_or ? summary.max_or.toString().padStart(8, '0') : '00000000'}</span>
+
+          {/* TABLE 2: SALES & FINANCIAL SUMMARY TABLE */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+              <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between font-black text-xs uppercase tracking-wider">
+                <span>2. Financial Revenue Summary</span>
+              </div>
+              <table className="w-full text-xs font-medium border-collapse">
+                <tbody className="divide-y divide-slate-200">
+                  <tr className="bg-white">
+                    <td className="py-2.5 px-4 font-bold text-slate-700 border-r border-slate-200">Gross Sales</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">₱{(summary?.gross_sales || 0).toFixed(2)}</td>
+                  </tr>
+                  {isLaundryBranch && (
+                    <>
+                      <tr className="bg-slate-50/50">
+                        <td className="py-2 px-4 text-slate-600 pl-6 border-r border-slate-200">☕ Coffee Shop Sales Gross</td>
+                        <td className="py-2 px-4 text-right font-mono text-slate-700">₱{(summary?.coffee_sales_total || 0).toFixed(2)}</td>
+                      </tr>
+                      <tr className="bg-slate-50/50">
+                        <td className="py-2 px-4 text-slate-600 pl-6 border-r border-slate-200">🧺 Laundry Services Gross</td>
+                        <td className="py-2 px-4 text-right font-mono text-slate-700">₱{(summary?.laundry_sales_total || 0).toFixed(2)}</td>
+                      </tr>
+                    </>
+                  )}
+                  <tr className="bg-rose-50/30">
+                    <td className="py-2.5 px-4 font-bold text-rose-700 border-r border-slate-200">- Total Discounts Applied</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-rose-700">-(₱{(summary?.total_discounts || 0).toFixed(2)})</td>
+                  </tr>
+                  <tr className="bg-emerald-50 text-emerald-950 font-black text-sm border-t-2 border-slate-300">
+                    <td className="py-3 px-4 border-r border-emerald-200 uppercase tracking-wider">NET SALES REVENUE</td>
+                    <td className="py-3 px-4 text-right font-mono text-emerald-700">₱{((summary?.gross_sales || 0) - (summary?.total_discounts || 0)).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* TABLE 3: PAYMENT METHOD BREAKDOWN */}
+            <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+              <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between font-black text-xs uppercase tracking-wider">
+                <span>3. Payment Method Breakdown</span>
+              </div>
+              <table className="w-full text-xs font-medium border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider">
+                    <th className="py-2 px-4 border-r border-slate-300">Payment Method</th>
+                    <th className="py-2 px-4 border-r border-slate-300 text-center">Txn Count</th>
+                    <th className="py-2 px-4 text-right">Total Amount (₱)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {payments?.length > 0 ? payments.map((p: any, idx: number) => {
+                    let label = p.method === 'credit_card' ? 'CARD' : p.method.toUpperCase();
+                    return (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-2 px-4 border-r border-slate-200 font-bold text-slate-800">{label}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-center font-semibold text-slate-600">{p.count}</td>
+                        <td className="py-2 px-4 text-right font-mono font-bold text-slate-900">₱{(p.amount || 0).toFixed(2)}</td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan={3} className="py-6 text-center text-slate-400 italic">No payments recorded</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="flex justify-between items-center py-1">
-            <span>Transactions</span>
-            <span className="font-bold">{summary?.total_transactions || 0}</span>
+
+          {/* TABLE 4 & 5: DISCOUNTS & VOIDED TRANSACTIONS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+              <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between font-black text-xs uppercase tracking-wider">
+                <span>4. Discounts Applied Breakdown</span>
+              </div>
+              <table className="w-full text-xs font-medium border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider">
+                    <th className="py-2 px-4 border-r border-slate-300">Discount Type</th>
+                    <th className="py-2 px-4 border-r border-slate-300 text-center">Count</th>
+                    <th className="py-2 px-4 text-right">Discount Amount (₱)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {discounts?.length > 0 ? discounts.map((d: any, idx: number) => (
+                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2 px-4 border-r border-slate-200 font-bold text-slate-800">{d.name}</td>
+                      <td className="py-2 px-4 border-r border-slate-200 text-center font-semibold text-slate-600">{d.count}</td>
+                      <td className="py-2 px-4 text-right font-mono font-bold text-rose-600">₱{(d.amount || 0).toFixed(2)}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="py-6 text-center text-slate-400 italic">No discounts applied</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+              <div className="bg-slate-800 text-white px-4 py-2 flex items-center justify-between font-black text-xs uppercase tracking-wider">
+                <span>5. Voided Transactions Summary</span>
+              </div>
+              <table className="w-full text-xs font-medium border-collapse">
+                <tbody className="divide-y divide-slate-200">
+                  <tr className="bg-white">
+                    <td className="py-2.5 px-4 font-bold text-slate-700 border-r border-slate-200">Voided Transactions Count</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-slate-900">{summary?.total_voided_transactions || 0}</td>
+                  </tr>
+                  <tr className="bg-white">
+                    <td className="py-2.5 px-4 font-bold text-slate-700 border-r border-slate-200">Total Voided Amount</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-bold text-rose-600">₱{(summary?.total_voided_amount || 0).toFixed(2)}</td>
+                  </tr>
+                  <tr className="bg-white">
+                    <td className="py-2.5 px-4 font-bold text-slate-700 border-r border-slate-200">Accumulated Grand Total</td>
+                    <td className="py-2.5 px-4 text-right font-mono font-black text-slate-900 text-sm">₱{(accumulated_grand_total || 0).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div className="flex justify-between items-start py-1 mt-4 pt-4 border-t border-slate-300 font-bold text-lg print:mt-2 print:pt-2 print:border-black print:text-[12px] flex-col sm:flex-row sm:items-center">
-            <span>Accumulated Grand Total:</span>
-            <span className="sm:ml-auto">₱{(accumulated_grand_total || 0).toFixed(2)}</span>
-          </div>
+
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // SHARED BIR HEADER BLOCK (all annexes E-1 to E-5)

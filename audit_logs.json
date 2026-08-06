@@ -1,5 +1,61 @@
 [
   {
+    "id": "1785993210461tvo0c",
+    "timestamp": "2026-08-06T05:13:30.461Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Macchiato"
+  },
+  {
+    "id": "1785993176938jevz0",
+    "timestamp": "2026-08-06T05:12:56.938Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Latte"
+  },
+  {
+    "id": "1785993141992hkge6",
+    "timestamp": "2026-08-06T05:12:21.992Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Hot Chocolate"
+  },
+  {
+    "id": "1785993126687xh5n5",
+    "timestamp": "2026-08-06T05:12:06.687Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Wild Rose Tea"
+  },
+  {
+    "id": "178599310646343h2d",
+    "timestamp": "2026-08-06T05:11:46.463Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Spanish Latte"
+  },
+  {
+    "id": "178599279119379bgs",
+    "timestamp": "2026-08-06T05:06:31.193Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Butter Licious"
+  },
+  {
+    "id": "17859927589118z4yx",
+    "timestamp": "2026-08-06T05:05:58.911Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: ACT II - Butter Lovers Flavour"
+  },
+  {
+    "id": "17859898987761k56e",
+    "timestamp": "2026-08-06T04:18:18.776Z",
+    "user": "System Administrator",
+    "activity": "Delete Product",
+    "details": "Deleted product: Espresso"
+  },
+  {
     "id": "1785988524660sab7e",
     "timestamp": "2026-08-06T03:55:24.661Z",
     "user": "Cashier 1",

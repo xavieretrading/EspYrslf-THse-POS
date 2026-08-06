@@ -2958,7 +2958,7 @@ app.get('/api/reports/sales', async (req, res) => {
   const discountStats: Record<string, { amount: number, count: number }> = {};
   const paymentStats: Record<string, { amount: number, count: number }> = {};
   
-  const dailyMap: Record<string, number> = {};
+  const dailyDetailedMap: Record<string, { gross: number; discounts: number; net: number; count: number }> = {};
 
   paidOrders.forEach((o: any) => {
     total_sales += o.total || 0;
@@ -3001,13 +3001,20 @@ app.get('/api/reports/sales', async (req, res) => {
       discountStats[name].count += 1;
     }
 
-    // Daily Map - use operating day
+    // Daily Detailed Map - use operating day
     const dObj = new Date(o.updated_at);
     const [h, m] = reportStartTime.split(':').map(Number);
     dObj.setHours(dObj.getHours() - h);
     dObj.setMinutes(dObj.getMinutes() - m);
     const d = dObj.toISOString().split('T')[0];
-    dailyMap[d] = (dailyMap[d] || 0) + o.total;
+
+    if (!dailyDetailedMap[d]) {
+      dailyDetailedMap[d] = { gross: 0, discounts: 0, net: 0, count: 0 };
+    }
+    dailyDetailedMap[d].gross += (o.subtotal || 0);
+    dailyDetailedMap[d].discounts += (o.discount_amount || 0);
+    dailyDetailedMap[d].net += (o.total || 0);
+    dailyDetailedMap[d].count += 1;
   });
 
   // Calculate voided orders statistics
@@ -3047,7 +3054,6 @@ app.get('/api/reports/sales', async (req, res) => {
         return;
       }
       
-      // We calculate grand total up to the end of the report window for the given date
       const endBoundary = new Date(`${eDate}T${reportEndTime}:00`);
       if (isNextDayEnd) {
         endBoundary.setDate(endBoundary.getDate() + 1);
@@ -3055,8 +3061,6 @@ app.get('/api/reports/sales', async (req, res) => {
       
       if (utDate <= endBoundary) {
         accumulated_grand_total += o.total;
-        // Approximation for Z-counter: count unique 'operating days'
-        // An operating day is basically Date(utDate - startTime)
         const d = new Date(utDate);
         const [h, m] = reportStartTime.split(':').map(Number);
         d.setHours(d.getHours() - h);
@@ -3078,10 +3082,16 @@ app.get('/api/reports/sales', async (req, res) => {
     count: paymentStats[method].count
   }));
 
-  const dailySales = Object.keys(dailyMap)
-    .map(date => ({ date, total: dailyMap[date] }))
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 30);
+  const dailySales = Object.entries(dailyDetailedMap)
+    .map(([date, stats]) => ({
+      date,
+      total: stats.net,
+      gross: stats.gross,
+      discounts: stats.discounts,
+      net: stats.net,
+      count: stats.count
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 
   res.json({
     summary: {

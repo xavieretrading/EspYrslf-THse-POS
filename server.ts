@@ -3744,6 +3744,9 @@ async function startServer() {
     
     // Sync settings from Supabase database
     await syncSettingsFromSupabase();
+
+    // Ensure Barbershop Branch exists with default services
+    await ensureBarbershopBranch();
     
     // Check for required tables on startup to warn if schema is missing
     const tablesToCheck = ['branches_espresso', 'categories_espresso', 'products_espresso', 'tables_espresso', 'orders_espresso', 'order_items_espresso', 'voucher_items_espresso', 'voucher_redemptions_espresso', 'shifts_espresso'];
@@ -3758,6 +3761,95 @@ async function startServer() {
       }
     }
   });
+}
+
+async function ensureBarbershopBranch() {
+  try {
+    const branchName = "Slick and Dapper, Salon and Barbershop - Cebu Branch";
+    const { data: existing } = await supabase
+      .from('branches_espresso')
+      .select('id')
+      .ilike('name', '%Slick%Dapper%')
+      .maybeSingle();
+
+    let branchId = existing?.id;
+
+    if (!branchId) {
+      console.log('Seeding Barbershop Branch: Slick and Dapper, Salon and Barbershop - Cebu Branch...');
+      const { data: inserted, error: bError } = await supabase
+        .from('branches_espresso')
+        .insert([{
+          name: branchName,
+          address: "Cebu City",
+          is_bir_compliant: 1
+        }])
+        .select()
+        .single();
+
+      if (bError) {
+        console.error('Failed to create Barbershop branch:', bError.message);
+        return;
+      }
+      branchId = inserted.id;
+    }
+
+    if (branchId) {
+      // Check if products exist for this branch
+      const { count } = await supabase
+        .from('products_espresso')
+        .select('*', { count: 'exact', head: true })
+        .eq('branch_id', branchId);
+
+      if (!count || count === 0) {
+        console.log(`Seeding default Barbershop services for branch ID ${branchId}...`);
+        
+        const catMap = new Map();
+        const defaultCats = [
+          'Haircuts & Styling',
+          'Beard & Shaving',
+          'Hair Treatments & Color',
+          'Grooming Packages',
+          'Retail Haircare & Pomade'
+        ];
+
+        for (const cName of defaultCats) {
+          const { data: cData } = await supabase
+            .from('categories_espresso')
+            .insert([{ name: cName, branch_id: branchId, division: 'barbershop' }])
+            .select()
+            .single();
+          if (cData) catMap.set(cName, cData.id);
+        }
+
+        const defaultServices = [
+          { name: 'Executive Haircut & Massage', price: 350, category: 'Haircuts & Styling', stock: 999 },
+          { name: 'Fade Cut & Line Up', price: 380, category: 'Haircuts & Styling', stock: 999 },
+          { name: 'Junior Haircut (Kids)', price: 280, category: 'Haircuts & Styling', stock: 999 },
+          { name: 'Hot Towel Shave & Sculpt', price: 250, category: 'Beard & Shaving', stock: 999 },
+          { name: 'Beard Trim & Mustache Shaping', price: 200, category: 'Beard & Shaving', stock: 999 },
+          { name: 'Hair Color & Highlights', price: 850, category: 'Hair Treatments & Color', stock: 999 },
+          { name: 'Hair Spa & Scalp Treatment', price: 499, category: 'Hair Treatments & Color', stock: 999 },
+          { name: 'Full Gentleman Package (Cut + Shave + Spa)', price: 999, category: 'Grooming Packages', stock: 999 },
+          { name: 'Slick Matte Clay Pomade (100g)', price: 450, category: 'Retail Haircare & Pomade', stock: 50 },
+          { name: 'Dapper Shine Hair Gel (150ml)', price: 320, category: 'Retail Haircare & Pomade', stock: 50 }
+        ];
+
+        const prodInserts = defaultServices.map(s => ({
+          name: s.name,
+          price: s.price,
+          cost: Math.round(s.price * 0.4),
+          stock: s.stock,
+          branch_id: branchId,
+          category_id: catMap.get(s.category) || null
+        }));
+
+        await supabase.from('products_espresso').insert(prodInserts);
+        console.log('Successfully seeded default Barbershop services!');
+      }
+    }
+  } catch (err: any) {
+    console.error('Error in ensureBarbershopBranch:', err.message);
+  }
 }
 
 startServer();

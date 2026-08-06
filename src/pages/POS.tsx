@@ -9,6 +9,7 @@ import { useSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import Swal from 'sweetalert2';
+import BarbershopView from '../components/barbershop/BarbershopView';
 
 export const getProductImage = (name: string) => {
   return '';
@@ -1940,6 +1941,15 @@ export default function POS() {
   };
 
   const receiptCalculations = getReceiptCalculations(receiptData, settings);
+
+  const isBarbershopBranch = activeBranch?.name?.toLowerCase().includes('barbershop') ||
+                             activeBranch?.name?.toLowerCase().includes('salon') ||
+                             activeBranch?.name?.toLowerCase().includes('slick') ||
+                             activeBranch?.name?.toLowerCase().includes('dapper');
+
+  if (isBarbershopBranch) {
+    return <BarbershopView activeBranch={activeBranch} currentUser={currentUser} settings={settings} />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 relative">

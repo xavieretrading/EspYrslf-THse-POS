@@ -3789,9 +3789,9 @@ export default function POS() {
             </style>
 
             {['customer'].map((type, index) => {
-              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
-              const isVoucherOrCompOrder = (receiptData.subtotal === 0 || !receiptData.subtotal) && rawSubtotal > 0 && (receiptData.payment_method?.toUpperCase() === 'COMPLIMENTARY' || receiptData.payment_method?.toUpperCase() === 'VOUCHER');
-              const displaySubtotal = isVoucherOrCompOrder ? rawSubtotal : (receiptData.subtotal || 0);
+              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
+              const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
+              const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
 
               // Parse laundry metadata if any
               let laundryDetails: any = null;
@@ -4042,7 +4042,7 @@ export default function POS() {
 
                     <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
                       <span>TOTAL</span>
-                      <span>₱{(receiptData.total || 0).toFixed(2)}</span>
+                      <span>₱{calcTotal.toFixed(2)}</span>
                     </div>
                     {receiptData.status !== 'open' && (
                       <>

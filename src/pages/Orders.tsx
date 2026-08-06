@@ -1026,69 +1026,61 @@ export default function Orders() {
               </div>
             </div>
 
-            <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
-              <div className="flex justify-between text-slate-500 text-sm">
-                <span>Subtotal</span>
-                <span>₱{selectedOrder.subtotal?.toFixed(2)}</span>
-              </div>
-              {selectedOrder.discount_amount > 0 && (
-                selectedOrder.discount_name && (
-                  selectedOrder.discount_name.includes('VAT Exempt') ||
-                  selectedOrder.discount_name.includes('Senior') ||
-                  selectedOrder.discount_name.includes('PWD')
-                ) ? (
-                  <>
-                    <div className="flex justify-between text-amber-600 text-sm">
-                      <span>VAT Exemption</span>
-                      <span>-₱{getReceiptCalculations(selectedOrder).vatRelief.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-amber-600 text-sm">
-                      <span>Discount (Senior/PWD 20%)</span>
-                      <span>-₱{getReceiptCalculations(selectedOrder).scDiscount.toFixed(2)}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between text-amber-600 text-sm">
-                    <span>Discount ({selectedOrder.discount_name || 'Promo'})</span>
-                    <span>-₱{selectedOrder.discount_amount?.toFixed(2)}</span>
-                  </div>
-                )
-              )}
-              <div className="flex justify-between text-slate-500 text-sm">
-                <span>VAT (12%)</span>
-                <span>
-                  ₱{(selectedOrder.status === 'open'
-                    ? (((selectedOrder.subtotal || 0) - (selectedOrder.discount_amount || 0)) - (((selectedOrder.subtotal || 0) - (selectedOrder.discount_amount || 0)) / 1.12))
-                    : (selectedOrder.tax_amount || 0)
-                  ).toFixed(2)}
-                </span>
-              </div>
-              {((selectedOrder.status === 'open' && (settings?.service_charge_percentage || 0) > 0) || selectedOrder.service_charge > 0) && (
-                <div className="flex justify-between text-slate-500 text-sm font-bold">
-                  <span>Service Charge ({selectedOrder.status === 'open' ? settings?.service_charge_percentage : 0}%)</span>
-                  <span>
-                    ₱{(selectedOrder.status === 'open'
-                      ? (selectedOrder.subtotal || 0) * ((settings?.service_charge_percentage || 0) / 100)
-                      : selectedOrder.service_charge
-                    ).toFixed(2)}
-                  </span>
-                </div>
-              )}
+            {(() => {
+              const realSubtotal = selectedOrder.items && selectedOrder.items.length > 0
+                ? selectedOrder.items.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || item.unit_price || 0) * (item.quantity || 1))), 0)
+                : (selectedOrder.subtotal || 0);
+              const realDiscount = selectedOrder.discount_amount || 0;
+              const realTotal = Math.max(0, realSubtotal - realDiscount);
+              const realVat = (realTotal - (realTotal / 1.12));
 
-              <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                <span className="font-bold text-slate-900 text-lg">Total</span>
-                <span className="font-bold text-slate-900 text-2xl mb-1">
-                  {selectedOrder.payment_method?.toUpperCase() === 'VOUCHER' ? (
-                    `${selectedOrder.items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
-                  ) : (
-                    `₱${(selectedOrder.status === 'open'
-                      ? ((selectedOrder.subtotal || 0) - (selectedOrder.discount_amount || 0)) + ((selectedOrder.subtotal || 0) * ((settings?.service_charge_percentage || 0) / 100))
-                      : selectedOrder.total
-                    ).toFixed(2)}`
+              return (
+                <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
+                  <div className="flex justify-between text-slate-500 text-sm">
+                    <span>Subtotal</span>
+                    <span>₱{realSubtotal.toFixed(2)}</span>
+                  </div>
+                  {realDiscount > 0 && (
+                    selectedOrder.discount_name && (
+                      selectedOrder.discount_name.includes('VAT Exempt') ||
+                      selectedOrder.discount_name.includes('Senior') ||
+                      selectedOrder.discount_name.includes('PWD')
+                    ) ? (
+                      <>
+                        <div className="flex justify-between text-amber-600 text-sm">
+                          <span>VAT Exemption</span>
+                          <span>-₱{getReceiptCalculations(selectedOrder).vatRelief.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-amber-600 text-sm">
+                          <span>Discount (Senior/PWD 20%)</span>
+                          <span>-₱{getReceiptCalculations(selectedOrder).scDiscount.toFixed(2)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="flex justify-between text-amber-600 text-sm">
+                        <span>Discount ({selectedOrder.discount_name || 'Promo'})</span>
+                        <span>-₱{realDiscount.toFixed(2)}</span>
+                      </div>
+                    )
                   )}
-                </span>
-              </div>
-            </div>
+                  <div className="flex justify-between text-slate-500 text-sm">
+                    <span>VAT (12%)</span>
+                    <span>₱{realVat.toFixed(2)}</span>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
+                    <span className="font-bold text-slate-900 text-lg">Total</span>
+                    <span className="font-bold text-slate-900 text-2xl mb-1">
+                      {selectedOrder.payment_method?.toUpperCase() === 'VOUCHER' ? (
+                        `${selectedOrder.items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
+                      ) : (
+                        `₱${realTotal.toFixed(2)}`
+                      )}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
@@ -1349,9 +1341,9 @@ export default function Orders() {
 
 
             {(() => {
-              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
-              const isVoucherOrCompOrder = (receiptData.subtotal === 0 || !receiptData.subtotal) && rawSubtotal > 0 && (receiptData.payment_method?.toUpperCase() === 'COMPLIMENTARY' || receiptData.payment_method?.toUpperCase() === 'VOUCHER');
-              const displaySubtotal = isVoucherOrCompOrder ? rawSubtotal : (receiptData.subtotal || 0);
+              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
+              const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
+              const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
               const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
 
               // Parse laundry metadata if any
@@ -1576,7 +1568,7 @@ export default function Orders() {
 
                     <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
                       <span>TOTAL</span>
-                      <span>₱{(receiptData.total || 0).toFixed(2)}</span>
+                      <span>₱{calcTotal.toFixed(2)}</span>
                     </div>
                     {receiptData.status !== 'open' && (
                       <>

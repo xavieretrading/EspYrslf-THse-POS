@@ -787,7 +787,13 @@ export default function Orders() {
                     {order.payment_method?.toUpperCase() === 'VOUCHER' ? (
                       `${order.items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
                     ) : (
-                      `₱${(order.total || 0).toFixed(2)}`
+                      `₱${(() => {
+                        const realSub = order.items && order.items.length > 0
+                          ? order.items.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0)
+                          : (order.subtotal || 0);
+                        const realTot = Math.max(0, realSub - (order.discount_amount || 0));
+                        return realTot.toFixed(2);
+                      })()}`
                     )}
                   </div>
                   <div className="text-sm text-slate-500">{order.items.length} items</div>
@@ -888,13 +894,13 @@ export default function Orders() {
                           <button
                             onClick={() => handleToggleClaimStatus(selectedOrder, parsed)}
                             className={cn(
-                              "w-full py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all mt-2 border flex items-center justify-center gap-1.5",
+                              "w-full py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 mt-1",
                               isClaimed
-                                ? "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                                : "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-sm shadow-emerald-600/10"
+                                ? "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                                : "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-sm"
                             )}
                           >
-                            {isClaimed ? "Mark as Unclaimed" : "Mark as Picked Up / Claimed"}
+                            {isClaimed ? "Mark as Unclaimed" : "Mark as Claimed"}
                           </button>
                         </div>
                       );
@@ -1032,7 +1038,6 @@ export default function Orders() {
                 : (selectedOrder.subtotal || 0);
               const realDiscount = selectedOrder.discount_amount || 0;
               const realTotal = Math.max(0, realSubtotal - realDiscount);
-              const realVat = (realTotal - (realTotal / 1.12));
 
               return (
                 <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
@@ -1063,10 +1068,6 @@ export default function Orders() {
                       </div>
                     )
                   )}
-                  <div className="flex justify-between text-slate-500 text-sm">
-                    <span>VAT (12%)</span>
-                    <span>₱{realVat.toFixed(2)}</span>
-                  </div>
 
                   <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
                     <span className="font-bold text-slate-900 text-lg">Total</span>

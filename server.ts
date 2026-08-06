@@ -1376,9 +1376,34 @@ app.get('/api/orders/history', async (req, res) => {
       const branch = Array.isArray(order.branches) ? order.branches[0] : order.branches;
       const oItemsRaw = order.order_items || [];
       const oItems = Array.isArray(oItemsRaw) ? oItemsRaw : [oItemsRaw];
+
+      let realSubtotal = order.subtotal || 0;
+      let realTotal = order.total || 0;
+
+      if (oItems.length > 0) {
+        const calculatedItemSubtotal = oItems.reduce((sum: number, oi: any) => {
+          const isComp = oi.is_complimentary || (oi.notes && oi.notes.includes('[COMPLIMENTARY'));
+          const pr = oi.price || (oi.products ? (Array.isArray(oi.products) ? oi.products[0]?.price : oi.products?.price) : 0) || 0;
+          return sum + (isComp ? 0 : (pr * (oi.quantity || 1)));
+        }, 0);
+
+        if (calculatedItemSubtotal > 0) {
+          realSubtotal = calculatedItemSubtotal;
+          realTotal = Math.max(0, calculatedItemSubtotal - (order.discount_amount || 0));
+          
+          if (Math.abs((order.total || 0) - realTotal) > 0.01) {
+            order.subtotal = realSubtotal;
+            order.total = realTotal;
+            // Sync database asynchronously
+            supabase.from('orders_espresso').update({ subtotal: realSubtotal, total: realTotal }).eq('id', order.id).then(() => {});
+          }
+        }
+      }
       
       return {
         ...order,
+        subtotal: realSubtotal,
+        total: realTotal,
         table_name: table?.name,
         discount_name: discount?.name,
         branch_name: branch?.name,

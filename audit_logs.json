@@ -1,5 +1,26 @@
 [
   {
+    "id": "1785988524660sab7e",
+    "timestamp": "2026-08-06T03:55:24.661Z",
+    "user": "Cashier 1",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1785987940563dg91l",
+    "timestamp": "2026-08-06T03:45:40.563Z",
+    "user": "System Administrator",
+    "activity": "Delete User",
+    "details": "Deleted user earl@gmail.com1"
+  },
+  {
+    "id": "17859879349650qlkj",
+    "timestamp": "2026-08-06T03:45:34.965Z",
+    "user": "System Administrator",
+    "activity": "Delete User",
+    "details": "Deleted user Jun-Waiter"
+  },
+  {
     "id": "1785986247577j72h4",
     "timestamp": "2026-08-06T03:17:27.577Z",
     "user": "JUNREL EJURANGO",

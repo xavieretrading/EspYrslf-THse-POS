@@ -210,7 +210,7 @@ export default function POS() {
   const [paxCount, setPaxCount] = useState<number>(1);
   const [discountPaxCount, setDiscountPaxCount] = useState<number>(1);
   const [amountTendered, setAmountTendered] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'gcash' | 'maya' | 'voucher' | 'store_credit'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'gcash' | 'rcbc' | 'voucher' | 'store_credit'>('cash');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [storeCreditQuery, setStoreCreditQuery] = useState('');
   const [storeCreditsList, setStoreCreditsList] = useState<any[]>([]);
@@ -3505,10 +3505,10 @@ export default function POS() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => { setPaymentMethod('maya'); setSelectedStoreCredit(null); }}
+                          onClick={() => { setPaymentMethod('rcbc'); setSelectedStoreCredit(null); }}
                           className={cn(
                             "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                            paymentMethod === 'maya' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            paymentMethod === 'rcbc' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                           )}
                         >
                           <Smartphone size={18} />

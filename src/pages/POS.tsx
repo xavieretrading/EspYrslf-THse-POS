@@ -1109,7 +1109,7 @@ export default function POS() {
         itemsPayload.push({
           product_id: addon.id,
           quantity: addon.quantity || 1,
-          price: addon.price * (addon.quantity || 1),
+          price: addon.price,
           notes: `Laundry Add-on: ${addon.name} (x${addon.quantity || 1})`
         });
       });

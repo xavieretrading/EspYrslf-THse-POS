@@ -1,5 +1,33 @@
 [
   {
+    "id": "1786292426079jw0rt",
+    "timestamp": "2026-08-09T16:20:26.079Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Inventory Update",
+    "details": "ADJUSTMENT: Berry Loaf x 0. Remarks: to zero"
+  },
+  {
+    "id": "17862923970229yok4",
+    "timestamp": "2026-08-09T16:19:57.022Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Inventory Update",
+    "details": "IN: Berry Loaf x 0. Remarks: ad"
+  },
+  {
+    "id": "17862923706934qtkx",
+    "timestamp": "2026-08-09T16:19:30.693Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Inventory Update",
+    "details": "IN: Berry Loaf x 0. Remarks: add to zero\n"
+  },
+  {
+    "id": "1786292249991b790z",
+    "timestamp": "2026-08-09T16:17:29.991Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
     "id": "1785996088220tb01u",
     "timestamp": "2026-08-06T06:01:28.220Z",
     "user": "System Administrator",

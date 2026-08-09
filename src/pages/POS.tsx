@@ -1943,9 +1943,9 @@ export default function POS() {
   const receiptCalculations = getReceiptCalculations(receiptData, settings);
 
   const isBarbershopBranch = activeBranch?.name?.toLowerCase().includes('barbershop') ||
-                             activeBranch?.name?.toLowerCase().includes('salon') ||
-                             activeBranch?.name?.toLowerCase().includes('slick') ||
-                             activeBranch?.name?.toLowerCase().includes('dapper');
+    activeBranch?.name?.toLowerCase().includes('salon') ||
+    activeBranch?.name?.toLowerCase().includes('slick') ||
+    activeBranch?.name?.toLowerCase().includes('dapper');
 
   if (isBarbershopBranch) {
     return <BarbershopView activeBranch={activeBranch} currentUser={currentUser} settings={settings} />;
@@ -3512,7 +3512,7 @@ export default function POS() {
                           )}
                         >
                           <Smartphone size={18} />
-                          <span className="text-[10px] font-bold mt-1">Maya</span>
+                          <span className="text-[10px] font-bold mt-1">RCBC</span>
                         </button>
                       </div>
 

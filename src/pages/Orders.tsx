@@ -925,14 +925,9 @@ export default function Orders() {
                   </button>
                 )}
 
-                {selectedOrder.status === 'open' && (
-                  <button onClick={() => handleReprint(selectedOrder)} className="flex-1 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg text-sm font-bold flex flex-col items-center justify-center transition-colors">
-                    <Printer size={18} className="mb-1" />
-                    Summary
-                  </button>
-                )}
 
-                {(selectedOrder.status === 'paid' || selectedOrder.status === 'refunded' || selectedOrder.status === 'voided') && (
+
+                {(selectedOrder.status === 'paid' || selectedOrder.status === 'refunded' || selectedOrder.status === 'voided') && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
                   <button onClick={() => handleReprint(selectedOrder)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold flex flex-col items-center justify-center transition-colors">
                     <Printer size={18} className="mb-1" />
                     Reprint

@@ -1,5 +1,12 @@
 [
   {
+    "id": "1786328477790h2u5n",
+    "timestamp": "2026-08-10T02:21:17.790Z",
+    "user": "Cashier 1",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "1786292426079jw0rt",
     "timestamp": "2026-08-09T16:20:26.079Z",
     "user": "JUNREL EJURANGO",

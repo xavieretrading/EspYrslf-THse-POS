@@ -968,11 +968,12 @@ export default function Inventory() {
                   <thead className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10">
                     <tr>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Timestamp</th>
-                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Product ID</th>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Product Name</th>
-                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Direction</th>
-                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Log count</th>
-                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Remarks / Document Reference</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Type</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Beginning</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Quantity</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Ending</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Remarks / Reference</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
@@ -989,8 +990,10 @@ export default function Inventory() {
                               minute: '2-digit'
                             }) : 'N/A'}
                           </td>
-                          <td className="p-4 font-mono text-slate-400 text-xs">#{tx.product_id || 'N/A'}</td>
-                          <td className="p-4 font-bold text-slate-900">{prodName}</td>
+                          <td className="p-4 font-bold text-slate-900">
+                            {prodName}
+                            <span className="block text-[10px] text-slate-400 font-mono font-normal">ID: #{tx.product_id || 'N/A'}</span>
+                          </td>
                           <td className="p-4 text-center">
                             <span className={cn(
                               "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
@@ -1001,11 +1004,17 @@ export default function Inventory() {
                               {tx.type}
                             </span>
                           </td>
+                          <td className="p-4 text-right font-mono text-slate-500">
+                            {tx.beginning_stock !== undefined ? tx.beginning_stock : '---'}
+                          </td>
                           <td className={cn(
                             "p-4 text-right font-black font-mono",
                             tx.type === 'in' ? "text-emerald-600" : tx.type === 'out' ? "text-rose-600" : "text-indigo-600"
                           )}>
                             {tx.type === 'in' ? '+' : tx.type === 'out' ? '-' : ''}{tx.quantity || 0} Units
+                          </td>
+                          <td className="p-4 text-right font-black font-mono text-slate-800">
+                            {tx.ending_stock !== undefined ? tx.ending_stock : '---'}
                           </td>
                           <td className="p-4 text-slate-600 font-medium max-w-xs truncate" title={tx.remarks}>
                             {tx.remarks || '---'}
@@ -1015,7 +1024,7 @@ export default function Inventory() {
                     })}
                     {filteredReports.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-12 text-center text-slate-400 font-medium italic">
+                        <td colSpan={7} className="p-12 text-center text-slate-400 font-medium italic">
                           No transactions found on the local ledger matching filters.
                         </td>
                       </tr>

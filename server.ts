@@ -2237,7 +2237,7 @@ app.get('/api/inventory/transactions', async (req, res) => {
     
     let query = supabase
       .from('inventory_transactions_espresso')
-      .select('*, products:products_espresso!inner(name, branch_id)')
+      .select('*, products:products_espresso!inner(name, branch_id, stock)')
       .order('created_at', { ascending: false });
 
     if (branch_id) {
@@ -2246,6 +2246,62 @@ app.get('/api/inventory/transactions', async (req, res) => {
 
     const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });
+
+    const currentStocksMap: Record<number, number> = {};
+    if (data) {
+      data.forEach((tx: any) => {
+        if (tx.products && tx.product_id) {
+          currentStocksMap[tx.product_id] = tx.products.stock || 0;
+        }
+      });
+    }
+
+    if (data) {
+      // Group by product_id
+      const groups: Record<number, any[]> = {};
+      data.forEach((tx: any) => {
+        const pid = tx.product_id;
+        if (pid) {
+          if (!groups[pid]) groups[pid] = [];
+          groups[pid].push(tx);
+        }
+      });
+
+      // Compute stocks for each product group
+      Object.keys(groups).forEach(pidStr => {
+        const pid = Number(pidStr);
+        const group = groups[pid];
+        
+        // Sort oldest first (ascending)
+        group.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+        let runningStock = 0;
+        const computed: { beg: number; end: number }[] = [];
+
+        group.forEach(tx => {
+          const beg = runningStock;
+          let end = runningStock;
+          if (tx.type === 'in') {
+            end = beg + (tx.quantity || 0);
+          } else if (tx.type === 'out') {
+            end = beg - (tx.quantity || 0);
+          } else if (tx.type === 'adjustment') {
+            end = tx.quantity || 0;
+          }
+          computed.push({ beg, end });
+          runningStock = end;
+        });
+
+        const actualStock = currentStocksMap[pid] || 0;
+        const discrepancy = actualStock - runningStock;
+
+        group.forEach((tx, idx) => {
+          tx.beginning_stock = computed[idx].beg + discrepancy;
+          tx.ending_stock = computed[idx].end + discrepancy;
+        });
+      });
+    }
+
     res.json(data || []);
   } catch (e: any) {
     res.status(500).json({ error: e.message });

@@ -1269,6 +1269,8 @@ app.post('/api/orders', async (req, res) => {
   const { error: itemError } = await supabase.from('order_items_espresso').insert(orderItems);
   if (itemError) {
     console.error('Order items insert error:', itemError.message);
+    // Rollback: delete parent order row if items failed to save
+    await supabase.from('orders_espresso').delete().eq('id', orderId);
     return res.status(500).json({ error: 'Failed to insert order items: ' + itemError.message });
   }
 

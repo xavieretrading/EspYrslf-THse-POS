@@ -974,6 +974,8 @@ export default function POS() {
       return;
     }
 
+    setIsProcessingPayment(true);
+
     let activeList = [...laundryServicesList];
     const hasAddons = laundryAddonRush || Object.values(laundrySelectedAddons).some((qty: any) => qty > 0);
 
@@ -1034,6 +1036,7 @@ export default function POS() {
         // Allow checkout of only addons
       } else {
         swalAlert('Empty Cart', 'Please select a laundry service or add-ons first.', 'warning');
+        setIsProcessingPayment(false);
         return;
       }
     }
@@ -1072,6 +1075,7 @@ export default function POS() {
     const cashRec = parseFloat(laundryCashReceived) || 0;
     if (payImmediately && laundryPaymentMethod === 'cash' && cashRec < grandTotal) {
       swalAlert('Invalid Payment', 'Cash received is less than grand total amount', 'error');
+      setIsProcessingPayment(false);
       return;
     }
 
@@ -1081,9 +1085,10 @@ export default function POS() {
       : `Are you sure you want to save this laundry order for ${laundryCustomerName || 'Walk-In'}?`;
 
     const isConfirm = await swalConfirm(confirmMessage);
-    if (!isConfirm) return;
-
-    setIsProcessingPayment(true);
+    if (!isConfirm) {
+      setIsProcessingPayment(false);
+      return;
+    }
     try {
       const firstValidProduct = products.find(p => p.branch_id === activeBranch?.id) || products[0];
 

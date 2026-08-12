@@ -252,14 +252,15 @@ app.put('/api/terminals/:id', async (req, res) => {
 
 app.delete('/api/terminals/:id', async (req, res) => {
   const id = req.params.id;
-  const { error } = await supabase.from('pos_terminals_espresso').delete().eq('id', id);
+  // Soft-delete: mark inactive instead of removing
+  const { error } = await supabase.from('pos_terminals_espresso').update({ is_active: 0 }).eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
 
 // Branches
 app.get('/api/branches', async (req, res) => {
-  const { data, error } = await supabase.from('branches_espresso').select('*');
+  const { data, error } = await supabase.from('branches_espresso').select('*').neq('is_active', false);
   if (error) return res.status(500).json({ error: error.message });
   const filtered = (data || []).filter((b: any) => b.name !== '__SYSTEM_CONFIG__');
   res.json(filtered);
@@ -287,40 +288,10 @@ app.put('/api/branches/:id', async (req, res) => {
 app.delete('/api/branches/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    // 1. Clean up KDS/Orders
-    const { data: orders } = await supabase.from('orders_espresso').select('id').eq('branch_id', id);
-    if (orders && orders.length > 0) {
-      const orderIds = orders.map((o: any) => o.id);
-      await supabase.from('order_items_espresso').delete().in('order_id', orderIds);
-    }
-    await supabase.from('orders_espresso').delete().eq('branch_id', id);
-
-    // 2. Clean up Inventory Transactions
-    const { data: prods } = await supabase.from('products_espresso').select('id').eq('branch_id', id);
-    if (prods && prods.length > 0) {
-      const prodIds = prods.map((p: any) => p.id);
-      await supabase.from('inventory_transactions_espresso').delete().in('product_id', prodIds);
-    }
-
-    // 3. Clean up dependent tables
-    await supabase.from('products_espresso').delete().eq('branch_id', id);
-    await supabase.from('categories_espresso').delete().eq('branch_id', id);
-    await supabase.from('tables_espresso').delete().eq('branch_id', id);
-    await supabase.from('shifts_espresso').delete().eq('branch_id', id);
-    await supabase.from('terminals_espresso').delete().eq('branch_id', id);
-    await supabase.from('voucher_items_espresso').delete().eq('branch_id', id);
-    await supabase.from('business_settings_espresso').delete().eq('branch_id', id);
-    await supabase.from('discounts_espresso').delete().eq('branch_id', id);
-    await supabase.from('grand_accumulating_total_espresso').delete().eq('branch_id', id);
-    await supabase.from('z_readings_espresso').delete().eq('branch_id', id);
-
-    // 4. Update users branch_id to null instead of deleting them to prevent lockouts
-    await supabase.from('users_espresso').update({ branch_id: null }).eq('branch_id', id);
-
-    // 5. Finally delete the branch
-    const { error } = await supabase.from('branches_espresso').delete().eq('id', id);
+    // Soft-delete: mark branch inactive. All branch data (orders, products, categories)
+    // is preserved in the database and is NOT deleted.
+    const { error } = await supabase.from('branches_espresso').update({ is_active: false }).eq('id', id);
     if (error) return res.status(500).json({ error: error.message });
-
     res.json({ success: true });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
@@ -330,7 +301,7 @@ app.delete('/api/branches/:id', async (req, res) => {
 // Categories
 app.get('/api/categories', async (req, res) => {
   const { branch_id } = req.query;
-  let query = supabase.from('categories_espresso').select('*');
+  let query = supabase.from('categories_espresso').select('*').neq('is_active', 0);
   if (branch_id) query = query.eq('branch_id', branch_id);
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
@@ -347,13 +318,14 @@ app.post('/api/categories', async (req, res) => {
 app.delete('/api/categories/:id', async (req, res) => {
   const id = req.params.id;
   
-  // Check if products exist in category
+  // Check if active products exist in category
   const { count } = await supabase.from('products_espresso').select('*', { count: 'exact', head: true }).eq('category_id', id).eq('is_active', 1);
   if (count && count > 0) {
-      return res.status(400).json({ error: 'Cannot delete category that has active products. Please move or delete the products first.' });
+      return res.status(400).json({ error: 'Cannot deactivate a category that still has active products. Please move or deactivate the products first.' });
   }
 
-  const { error } = await supabase.from('categories_espresso').delete().eq('id', id);
+  // Soft-delete: mark inactive instead of removing
+  const { error } = await supabase.from('categories_espresso').update({ is_active: 0 }).eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
@@ -532,7 +504,7 @@ app.post('/api/products/:id/recipe', async (req, res) => {
 // Tables
 app.get('/api/tables', async (req, res) => {
   const { branch_id } = req.query;
-  let query = supabase.from('tables_espresso').select('*, orders:orders_espresso(id, status)');
+  let query = supabase.from('tables_espresso').select('*, orders:orders_espresso(id, status)').neq('is_active', 0);
   if (branch_id) query = query.eq('branch_id', branch_id);
   
   const { data, error } = await query;
@@ -566,7 +538,8 @@ app.put('/api/tables/:id', async (req, res) => {
 });
 
 app.delete('/api/tables/:id', async (req, res) => {
-  const { error } = await supabase.from('tables_espresso').delete().eq('id', parseInt(req.params.id));
+  // Soft-delete: mark inactive instead of removing
+  const { error } = await supabase.from('tables_espresso').update({ is_active: 0 }).eq('id', parseInt(req.params.id));
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
 });
@@ -1746,13 +1719,15 @@ app.put('/api/orders/:id/notes', async (req, res) => {
 
 // Helper function to dynamically recalculate order subtotal and total from actual items in DB
 async function recalculateOrderTotals(orderId: string | number) {
+  // Only count active (non-soft-deleted) items
   const { data: items } = await supabase
     .from('order_items_espresso')
     .select('price, quantity, is_complimentary, notes')
-    .eq('order_id', orderId);
+    .eq('order_id', orderId)
+    .neq('is_active', 0);
 
   if (!items || items.length === 0) {
-    // If no items remain, fetch table_id to free up the table
+    // If no active items remain, free up the table
     const { data: order } = await supabase
       .from('orders_espresso')
       .select('table_id')
@@ -1763,8 +1738,8 @@ async function recalculateOrderTotals(orderId: string | number) {
       await supabase.from('tables_espresso').update({ status: 'available' }).eq('id', order.table_id);
     }
 
-    // Automatically delete the empty order to clean up
-    await supabase.from('orders_espresso').delete().eq('id', orderId);
+    // Soft-delete the empty order instead of hard-deleting
+    await supabase.from('orders_espresso').update({ status: 'voided' }).eq('id', orderId);
     return 0;
   }
 
@@ -1827,16 +1802,16 @@ app.post('/api/orders/:id/items', async (req, res) => {
   res.json({ success: true });
 });
 
-// Delete item from existing order
+// Remove item from existing order (soft-delete: marked inactive, not removed)
 app.delete('/api/orders/:order_id/items/:item_id', async (req, res) => {
   const { order_id, item_id } = req.params;
 
   try {
-    // 1. Delete the item
-    const { error: delError } = await supabase.from('order_items_espresso').delete().eq('id', item_id);
+    // 1. Soft-delete the item
+    const { error: delError } = await supabase.from('order_items_espresso').update({ is_active: 0 }).eq('id', item_id);
     if (delError) return res.status(500).json({ error: delError.message });
 
-    // 2. Recalculate the order subtotal & total directly from remaining DB order items
+    // 2. Recalculate the order subtotal & total from remaining active items
     await recalculateOrderTotals(order_id);
 
     res.json({ success: true });

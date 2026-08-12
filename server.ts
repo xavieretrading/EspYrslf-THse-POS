@@ -329,14 +329,17 @@ app.delete('/api/branches/:id', async (req, res) => {
 
 // Categories
 app.get('/api/categories', async (req, res) => {
-  const { data, error } = await supabase.from('categories_espresso').select('*');
+  const { branch_id } = req.query;
+  let query = supabase.from('categories_espresso').select('*');
+  if (branch_id) query = query.eq('branch_id', branch_id);
+  const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
 
 app.post('/api/categories', async (req, res) => {
-  const { name, division } = req.body;
-  const { data, error } = await supabase.from('categories_espresso').insert([{ name, division: division || 'coffee' }]).select().single();
+  const { name, division, branch_id } = req.body;
+  const { data, error } = await supabase.from('categories_espresso').insert([{ name, division: division || 'coffee', branch_id: branch_id || null }]).select().single();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ id: data.id, success: true });
 });

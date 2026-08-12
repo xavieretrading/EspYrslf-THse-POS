@@ -148,7 +148,7 @@ export default function Inventory() {
     try {
       const [invRes, catRes] = await Promise.all([
         fetch(`/api/inventory?branch_id=${activeBranch.id}`),
-        fetch('/api/categories')
+        fetch(`/api/categories?branch_id=${activeBranch.id}`)
       ]);
       if (invRes.ok) {
         const data = await invRes.json();
@@ -159,10 +159,7 @@ export default function Inventory() {
       }
       if (catRes.ok) {
         const catData = await catRes.json();
-        const uniqueCats = (catData || []).filter((cat: Category, index: number, self: Category[]) =>
-          self.findIndex(t => t.name === cat.name) === index
-        );
-        setCategories(uniqueCats);
+        setCategories(catData || []);
       }
 
       // Fetch details
@@ -363,7 +360,7 @@ export default function Inventory() {
     const res = await fetch('/api/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newCategoryName, division: newCategoryDivision })
+      body: JSON.stringify({ name: newCategoryName, division: newCategoryDivision, branch_id: activeBranch?.id })
     });
     if (res.ok) {
       setNewCategoryName('');

@@ -408,19 +408,18 @@ export default function POS() {
     if (!activeBranch) return;
     Promise.all([
       fetch(`/api/products?branch_id=${activeBranch.id}`).then(res => res.json()),
-      fetch('/api/categories').then(res => res.json()),
+      fetch(`/api/categories?branch_id=${activeBranch.id}`).then(res => res.json()),
       fetch(`/api/tables?branch_id=${activeBranch.id}`).then(res => res.json()),
       fetch('/api/discounts').then(res => res.json()),
       fetch(`/api/terminals?branch_id=${activeBranch.id}`).then(res => res.json()),
-      fetch('/api/categories').then(res => res.json()),
+      fetch(`/api/categories?branch_id=${activeBranch.id}`).then(res => res.json()),
     ]).then(([p, c, t, d, terms, cats]) => {
       setProducts(p);
 
-      // Filter categories to only those that have products in the current branch and unique by name
+      // Filter categories to only those that have products in the current branch
       const activeCategoryNames = new Set(p.map((prod: any) => prod.category_name).filter(Boolean));
-      const filteredCategories = (cats || []).filter((cat: any, index: number, self: any[]) =>
-        activeCategoryNames.has(cat.name) &&
-        self.findIndex(t => t.name === cat.name) === index
+      const filteredCategories = (cats || []).filter((cat: any) =>
+        activeCategoryNames.has(cat.name)
       );
       setCategories(filteredCategories);
       setTables(t);
@@ -1351,7 +1350,7 @@ export default function POS() {
     try {
       const [viRes, catRes] = await Promise.all([
         fetch('/api/voucher-items'),
-        fetch('/api/categories')
+        fetch(`/api/categories?branch_id=${activeBranch.id}`)
       ]);
       const viData = await viRes.json();
       const cats = await catRes.json();

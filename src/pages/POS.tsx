@@ -4906,7 +4906,7 @@ export default function POS() {
                               CONTINUE ORDER
                             </button>
                           )}
-                          {selectedModalOrder.status !== 'open' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+                          {selectedModalOrder.status !== 'open' && (currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'cashier') && (
                             <button
                               onClick={() => handleReprintFromModal(selectedModalOrder, 'receipt')}
                               className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-black transition-all border border-indigo-200"
@@ -4916,7 +4916,7 @@ export default function POS() {
                               RECEIPT
                             </button>
                           )}
-                          {selectedModalOrder.items?.some((i: any) => i.notes?.includes('Voucher') || i.notes?.includes('(Voucher)')) && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+                          {selectedModalOrder.items?.some((i: any) => i.notes?.includes('Voucher') || i.notes?.includes('(Voucher)')) && (currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'cashier') && (
                             <button
                               onClick={() => handleReprintFromModal(selectedModalOrder, 'voucher')}
                               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-black transition-all border border-emerald-200"
@@ -4926,7 +4926,7 @@ export default function POS() {
                               VOUCHER
                             </button>
                           )}
-                          {selectedModalOrder.items?.some((i: any) => i.is_complimentary) && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+                          {selectedModalOrder.items?.some((i: any) => i.is_complimentary) && (currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.role === 'cashier') && (
                             <button
                               onClick={() => handleReprintFromModal(selectedModalOrder, 'complimentary')}
                               className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl text-xs font-black transition-all border border-amber-200"

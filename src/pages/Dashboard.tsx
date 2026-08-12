@@ -358,10 +358,42 @@ export default function Dashboard() {
                   <XAxis dataKey="date" stroke="#94a3b8" fontSize={10} />
                   <YAxis tickFormatter={(val) => `₱${val >= 1000 ? (val/1000).toFixed(0) + 'k' : val}`} stroke="#94a3b8" fontSize={10} />
                   <Tooltip
-                    formatter={(value: any) => [`₱${Number(value).toFixed(2)}`, 'Daily Total']}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '11px', fontWeight: 'bold' }}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 border border-slate-200 rounded-xl shadow-md text-xs font-bold text-slate-700 space-y-1">
+                            <p className="text-slate-500 font-mono text-[10px] mb-1.5">{label}</p>
+                            <div className="flex items-center gap-6 justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f59e0b' }}></span>
+                                <span>Coffee Shop:</span>
+                              </div>
+                              <span className="font-mono text-slate-900">₱{Number(data.coffee || 0).toFixed(2)}</span>
+                            </div>
+                            {isLaundryBranch && (
+                              <div className="flex items-center gap-6 justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6' }}></span>
+                                  <span>Laundry:</span>
+                                </div>
+                                <span className="font-mono text-slate-900">₱{Number(data.laundry || 0).toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-6 justify-between border-t border-slate-100 pt-1.5 mt-1 text-slate-900 font-black">
+                              <span>Daily Total:</span>
+                              <span className="font-mono">₱{Number(data.total || 0).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
-                  <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="coffee" fill="#f59e0b" stackId="a" name="Coffee Shop" radius={!isLaundryBranch ? [4, 4, 0, 0] : undefined} />
+                  {isLaundryBranch && (
+                    <Bar dataKey="laundry" fill="#3b82f6" stackId="a" name="Laundry" radius={[4, 4, 0, 0]} />
+                  )}
                 </BarChart>
               </ResponsiveContainer>
             ) : (

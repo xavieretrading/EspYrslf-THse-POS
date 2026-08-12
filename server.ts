@@ -1748,15 +1748,30 @@ async function recalculateOrderTotals(orderId: string | number) {
     .select('price, quantity, is_complimentary, notes')
     .eq('order_id', orderId);
 
-  let newSubtotal = 0;
-  if (items && items.length > 0) {
-    items.forEach((item: any) => {
-      const isComp = item.is_complimentary || item.notes?.includes('[COMPLIMENTARY');
-      if (!isComp) {
-        newSubtotal += (item.price || 0) * (item.quantity || 1);
-      }
-    });
+  if (!items || items.length === 0) {
+    // If no items remain, fetch table_id to free up the table
+    const { data: order } = await supabase
+      .from('orders_espresso')
+      .select('table_id')
+      .eq('id', orderId)
+      .single();
+
+    if (order && order.table_id) {
+      await supabase.from('tables_espresso').update({ status: 'available' }).eq('id', order.table_id);
+    }
+
+    // Automatically delete the empty order to clean up
+    await supabase.from('orders_espresso').delete().eq('id', orderId);
+    return 0;
   }
+
+  let newSubtotal = 0;
+  items.forEach((item: any) => {
+    const isComp = item.is_complimentary || item.notes?.includes('[COMPLIMENTARY');
+    if (!isComp) {
+      newSubtotal += (item.price || 0) * (item.quantity || 1);
+    }
+  });
 
   await supabase
     .from('orders_espresso')
@@ -3016,7 +3031,7 @@ app.get('/api/reports/sales', async (req, res) => {
   const discountStats: Record<string, { amount: number, count: number }> = {};
   const paymentStats: Record<string, { amount: number, count: number }> = {};
   
-  const dailyDetailedMap: Record<string, { gross: number; discounts: number; net: number; count: number }> = {};
+  const dailyDetailedMap: Record<string, { gross: number; discounts: number; net: number; count: number; coffee: number; laundry: number }> = {};
 
   paidOrders.forEach((o: any) => {
     total_sales += o.total || 0;
@@ -3025,13 +3040,18 @@ app.get('/api/reports/sales', async (req, res) => {
     total_vat += o.tax_amount || 0;
     total_service_charge += o.service_charge || 0;
 
+    let orderCoffeeSales = 0;
+    let orderLaundrySales = 0;
+
     const oItems = o.order_items || [];
     oItems.forEach((oi: any) => {
       const itemTotal = (oi.price || 0) * (oi.quantity || 1);
       if (oi.division === 'laundry') {
         laundry_sales_total += itemTotal;
+        orderLaundrySales += itemTotal;
       } else {
         coffee_sales_total += itemTotal;
+        orderCoffeeSales += itemTotal;
       }
     });
     
@@ -3067,11 +3087,20 @@ app.get('/api/reports/sales', async (req, res) => {
     const d = dObj.toISOString().split('T')[0];
 
     if (!dailyDetailedMap[d]) {
-      dailyDetailedMap[d] = { gross: 0, discounts: 0, net: 0, count: 0 };
+      dailyDetailedMap[d] = { gross: 0, discounts: 0, net: 0, count: 0, coffee: 0, laundry: 0 };
     }
-    dailyDetailedMap[d].gross += (o.subtotal || 0);
+    
+    const orderGross = o.subtotal || 0;
+    const orderNet = o.total || 0;
+    const ratio = orderGross > 0 ? (orderNet / orderGross) : 1;
+    const orderCoffeeNet = orderCoffeeSales * ratio;
+    const orderLaundryNet = orderLaundrySales * ratio;
+
+    dailyDetailedMap[d].gross += orderGross;
     dailyDetailedMap[d].discounts += (o.discount_amount || 0);
-    dailyDetailedMap[d].net += (o.total || 0);
+    dailyDetailedMap[d].net += orderNet;
+    dailyDetailedMap[d].coffee += orderCoffeeNet;
+    dailyDetailedMap[d].laundry += orderLaundryNet;
     dailyDetailedMap[d].count += 1;
   });
 
@@ -3147,6 +3176,8 @@ app.get('/api/reports/sales', async (req, res) => {
       gross: stats.gross,
       discounts: stats.discounts,
       net: stats.net,
+      coffee: stats.coffee,
+      laundry: stats.laundry,
       count: stats.count
     }))
     .sort((a, b) => a.date.localeCompare(b.date));

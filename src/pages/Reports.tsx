@@ -492,6 +492,10 @@ export default function Reports() {
     const totalDiscounts = summary?.total_discounts || 0;
     const netSales = grossSales - totalDiscounts;
 
+    const dailyList = data?.dailySales || [];
+    const totalDailyCoffee = dailyList.reduce((s: number, d: any) => s + (d.coffee || 0), 0);
+    const totalDailyLaundry = dailyList.reduce((s: number, d: any) => s + (d.laundry || 0), 0);
+
     const htmlContent = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
@@ -549,9 +553,9 @@ export default function Reports() {
             <tr class="section-header">
               <th style="width: 150px;">DATE</th>
               <th style="width: 120px; text-align: center;">TRANSACTIONS</th>
-              <th style="width: 160px; text-align: right;">GROSS SUBTOTAL (₱)</th>
-              <th style="width: 160px; text-align: right;">DISCOUNTS (₱)</th>
-              <th style="width: 160px; text-align: right;">NET SALES (₱)</th>
+              <th style="width: 160px; text-align: right;">COFFEE SALES (₱)</th>
+              <th style="width: 160px; text-align: right;">LAUNDRY SALES (₱)</th>
+              <th style="width: 160px; text-align: right;">TOTAL SALES (₱)</th>
             </tr>
           </thead>
           <tbody>
@@ -559,8 +563,8 @@ export default function Reports() {
               <tr>
                 <td style="font-weight: 600; font-family: monospace;">${d.date}</td>
                 <td style="text-align: center;">${d.count || 1}</td>
-                <td class="num">₱${(d.gross || d.total || 0).toFixed(2)}</td>
-                <td class="num" style="color: #dc2626;">-₱${(d.discounts || 0).toFixed(2)}</td>
+                <td class="num">₱${(d.coffee || 0).toFixed(2)}</td>
+                <td class="num">₱${(d.laundry || 0).toFixed(2)}</td>
                 <td class="num" style="color: #047857; font-weight: bold;">₱${(d.net || d.total || 0).toFixed(2)}</td>
               </tr>
             `).join('') : '<tr><td colSpan="5" style="text-align: center; color: #94a3b8;">No daily sales recorded</td></tr>'}
@@ -569,8 +573,8 @@ export default function Reports() {
             <tr class="total-row">
               <td>TOTALS</td>
               <td style="text-align: center;">${summary?.total_transactions || 0}</td>
-              <td class="num">₱${grossSales.toFixed(2)}</td>
-              <td class="num" style="color: #dc2626;">-₱${totalDiscounts.toFixed(2)}</td>
+              <td class="num">₱${totalDailyCoffee.toFixed(2)}</td>
+              <td class="num">₱${totalDailyLaundry.toFixed(2)}</td>
               <td class="num"><b>₱${netSales.toFixed(2)}</b></td>
             </tr>
           </tfoot>
@@ -732,7 +736,7 @@ export default function Reports() {
       </html>
     `;
 
-    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -815,6 +819,8 @@ export default function Reports() {
     const totalDailyDisc = dailyList.reduce((s: number, d: any) => s + (d.discounts || 0), 0);
     const totalDailyNet = dailyList.reduce((s: number, d: any) => s + (d.net || d.total || 0), 0);
     const totalDailyTxns = dailyList.reduce((s: number, d: any) => s + (d.count || 0), 0);
+    const totalDailyCoffee = dailyList.reduce((s: number, d: any) => s + (d.coffee || 0), 0);
+    const totalDailyLaundry = dailyList.reduce((s: number, d: any) => s + (d.laundry || 0), 0);
 
     return (
       <div className="w-full bg-white p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-xs font-sans text-slate-800">
@@ -877,22 +883,22 @@ export default function Reports() {
                   <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider">
                     <th className="py-2.5 px-4 border-r border-slate-300">Date</th>
                     <th className="py-2.5 px-4 border-r border-slate-300 text-center">Transactions</th>
-                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Gross Subtotal (₱)</th>
-                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Discounts (₱)</th>
-                    <th className="py-2.5 px-4 text-right">Net Sales (₱)</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Coffee Sales (₱)</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Laundry Sales (₱)</th>
+                    <th className="py-2.5 px-4 text-right">Total Sales (₱)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {dailyList.length > 0 ? dailyList.map((d: any, idx: number) => {
-                    const gross = d.gross || d.total || 0;
-                    const disc = d.discounts || 0;
+                    const coffee = d.coffee || 0;
+                    const laundry = d.laundry || 0;
                     const net = d.net || d.total || 0;
                     return (
                       <tr key={d.date || idx} className="hover:bg-slate-50 transition-colors odd:bg-white even:bg-slate-50/50">
                         <td className="py-2 px-4 border-r border-slate-200 font-mono font-bold text-slate-800">{d.date}</td>
                         <td className="py-2 px-4 border-r border-slate-200 text-center font-bold text-slate-700">{d.count || 1}</td>
-                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-slate-800">₱{gross.toFixed(2)}</td>
-                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-rose-600 font-semibold">{disc > 0 ? `-₱${disc.toFixed(2)}` : '₱0.00'}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-amber-600 font-semibold">₱{coffee.toFixed(2)}</td>
+                        <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-blue-600 font-semibold">₱{laundry.toFixed(2)}</td>
                         <td className="py-2 px-4 text-right font-mono font-bold text-emerald-700">₱{net.toFixed(2)}</td>
                       </tr>
                     );
@@ -907,9 +913,9 @@ export default function Reports() {
                     <tr className="bg-emerald-50 text-emerald-950 border-t-2 border-slate-400 font-black text-xs">
                       <td className="py-3 px-4 border-r border-emerald-200 uppercase tracking-wider">PERIOD TOTALS</td>
                       <td className="py-3 px-4 border-r border-emerald-200 text-center">{totalDailyTxns || summary?.total_transactions || 0}</td>
-                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono">₱{(summary?.gross_sales || totalDailyGross).toFixed(2)}</td>
-                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono text-rose-700">-₱{(summary?.total_discounts || totalDailyDisc).toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right font-mono text-emerald-700 text-sm">₱{((summary?.gross_sales || totalDailyGross) - (summary?.total_discounts || totalDailyDisc)).toFixed(2)}</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono text-amber-700">₱{totalDailyCoffee.toFixed(2)}</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono text-blue-700">₱{totalDailyLaundry.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-right font-mono text-emerald-700 text-sm">₱{totalDailyNet.toFixed(2)}</td>
                     </tr>
                   </tfoot>
                 )}

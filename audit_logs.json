@@ -1,5 +1,61 @@
 [
   {
+    "id": "17865348329757egwh",
+    "timestamp": "2026-08-12T11:40:32.975Z",
+    "user": "Cashier 1",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1786524758444k0ijb",
+    "timestamp": "2026-08-12T08:52:38.444Z",
+    "user": "System Administrator",
+    "activity": "Export Sales Report Excel",
+    "details": "Exported Y-Reading (Period) to Excel for 2026-08-01 to 2026-08-12"
+  },
+  {
+    "id": "1786520176499bgzi8",
+    "timestamp": "2026-08-12T07:36:16.499Z",
+    "user": "System Administrator",
+    "activity": "Shift Started",
+    "details": "Shift started with cash amount: ₱2000"
+  },
+  {
+    "id": "1786518121503b3d29",
+    "timestamp": "2026-08-12T07:02:01.503Z",
+    "user": "System Administrator",
+    "activity": "Edit Product",
+    "details": "Updated product: Concept Blend"
+  },
+  {
+    "id": "1786518112028mpqip",
+    "timestamp": "2026-08-12T07:01:52.028Z",
+    "user": "System Administrator",
+    "activity": "Add Product",
+    "details": "Created product: Concept Blend"
+  },
+  {
+    "id": "1786331080448nk7u9",
+    "timestamp": "2026-08-10T03:04:40.448Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #72. Total: ₱1345.00"
+  },
+  {
+    "id": "1786329596068nxuh0",
+    "timestamp": "2026-08-10T02:39:56.068Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
+    "id": "1786329331417yqe6q",
+    "timestamp": "2026-08-10T02:35:31.417Z",
+    "user": "Cashier 1",
+    "activity": "Checkout",
+    "details": "Completed Payment for Order #67. Total: ₱420.00"
+  },
+  {
     "id": "1786328477790h2u5n",
     "timestamp": "2026-08-10T02:21:17.790Z",
     "user": "Cashier 1",

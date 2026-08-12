@@ -1,11 +1,11 @@
 {
-  "company_name": "S1p and Sp1n Laundry Shop",
-  "address": "BLk 20, Lot 57, Montclair U-1, Second Floor, De Sylca 1 Bldg, Mandug Road Buhangin Davao, Buhangin, Philippines",
+  "company_name": "Espresso Yourself and Tea House - Cebu",
+  "address": "Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City",
   "tin": "899-352-898-00000",
   "service_charge_percentage": 0,
   "strict_item_locked": true,
   "last_receipt_number": 796,
   "receipt_mappings": {
-    "77": 796
+    "92": 796
   }
 }

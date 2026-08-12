@@ -34,6 +34,7 @@ type Order = {
   table_name?: string;
   order_type?: string;
   payment_method?: string;
+  reference_number?: string;
   notes?: string;
   order_number?: number;
   items: OrderItem[];
@@ -759,6 +760,19 @@ export default function Orders() {
                         {(order.order_type === 'takeout' && order.payment_method !== 'Voucher' && !order.items.some(i => i.notes?.includes('(Voucher)'))) ? 'Takeaway' : 'Walk-In'}
                       </span>
                     )}
+                    {order.status === 'paid' && order.payment_method && (
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border",
+                        order.payment_method.toLowerCase() === 'cash' ? "bg-slate-50 border-slate-200 text-slate-600" :
+                        order.payment_method.toLowerCase() === 'gcash' ? "bg-blue-50 border-blue-200 text-blue-600" :
+                        order.payment_method.toLowerCase() === 'credit_card' ? "bg-purple-50 border-purple-200 text-purple-600" :
+                        order.payment_method.toLowerCase() === 'voucher' ? "bg-amber-50 border-amber-200 text-amber-600" :
+                        "bg-slate-50 border-slate-200 text-slate-600"
+                      )}>
+                        {order.payment_method.toUpperCase() === 'CREDIT_CARD' ? 'CARD' : order.payment_method.toUpperCase()}
+                        {order.reference_number ? ` | REF: ${order.reference_number}` : ''}
+                      </span>
+                    )}
                   </div>
                   <div className="text-sm text-slate-500 flex items-center gap-2 mt-1">
                     <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -1040,6 +1054,15 @@ export default function Orders() {
                     <span>Subtotal</span>
                     <span>₱{realSubtotal.toFixed(2)}</span>
                   </div>
+                  {selectedOrder.status === 'paid' && selectedOrder.payment_method && (
+                    <div className="flex justify-between text-slate-500 text-sm">
+                      <span>Payment Method</span>
+                      <span className="font-bold text-slate-700 uppercase">
+                        {selectedOrder.payment_method}
+                        {selectedOrder.reference_number ? ` (Ref: ${selectedOrder.reference_number})` : ''}
+                      </span>
+                    </div>
+                  )}
                   {realDiscount > 0 && (
                     selectedOrder.discount_name && (
                       selectedOrder.discount_name.includes('VAT Exempt') ||

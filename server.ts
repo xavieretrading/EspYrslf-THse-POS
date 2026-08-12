@@ -1868,6 +1868,7 @@ app.post('/api/orders/:id/pay', async (req, res) => {
     discount_child_name: discount_child_name || null,
     discount_child_birthdate: discount_child_birthdate || null,
     discount_child_age: discount_child_age !== undefined && discount_child_age !== '' ? Number(discount_child_age) : null,
+    reference_number: reference_number || null,
     updated_at: new Date().toISOString()
   };
 
@@ -1875,6 +1876,13 @@ app.post('/api/orders/:id/pay', async (req, res) => {
 
   if (error && (error.message.includes("'service_charge' column") || error.message.includes("column \"service_charge\""))) {
     delete updatePayload.service_charge;
+    const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+    error = retryError;
+  }
+
+  // Gracefully fallback if table does not contain reference_number column yet
+  if (error && error.message.includes("reference_number")) {
+    delete updatePayload.reference_number;
     const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
     error = retryError;
   }

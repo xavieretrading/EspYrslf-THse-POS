@@ -1300,7 +1300,10 @@ app.get('/api/orders/history', async (req, res) => {
       case 'custom': {
         const { start_date, end_date } = req.query;
         if (start_date && end_date) {
-            return d >= new Date(start_date as string) && d <= new Date(end_date as string);
+            const start = new Date(start_date as string);
+            const end = new Date(end_date as string);
+            end.setUTCHours(23, 59, 59, 999);
+            return d >= start && d <= end;
         }
         return true;
       }

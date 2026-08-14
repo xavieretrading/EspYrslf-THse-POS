@@ -1281,29 +1281,39 @@ app.get('/api/orders/history', async (req, res) => {
   const { data, error } = await query;
   if (error) return res.status(500).json({ error: error.message });
 
-  const now = new Date();
+  const manilaOffset = 8 * 60 * 60 * 1000;
   
   const filterDate = (dateStr: string) => {
     if (filter === 'vouchers') return true; 
     
     const d = new Date(dateStr);
     switch(filter) {
-      case 'today':
-        return d.toDateString() === now.toDateString();
-      case 'week': {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        return d >= startOfWeek;
+      case 'today': {
+        const orderDateStr = new Date(d.getTime() + manilaOffset).toISOString().split('T')[0];
+        const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+        return orderDateStr === todayStr;
       }
-      case 'month':
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      case 'week': {
+        const nowManila = new Date(Date.now() + manilaOffset);
+        const startOfWeekManila = new Date(nowManila);
+        startOfWeekManila.setUTCDate(nowManila.getUTCDate() - nowManila.getUTCDay());
+        startOfWeekManila.setUTCHours(0, 0, 0, 0);
+        
+        const dManila = new Date(d.getTime() + manilaOffset);
+        return dManila >= startOfWeekManila;
+      }
+      case 'month': {
+        const nowManila = new Date(Date.now() + manilaOffset);
+        const dManila = new Date(d.getTime() + manilaOffset);
+        return dManila.getUTCMonth() === nowManila.getUTCMonth() && 
+               dManila.getUTCFullYear() === nowManila.getUTCFullYear();
+      }
       case 'custom': {
         const { start_date, end_date } = req.query;
         if (start_date && end_date) {
-            const start = new Date(start_date as string);
-            const end = new Date(end_date as string);
-            end.setUTCHours(23, 59, 59, 999);
-            return d >= start && d <= end;
+            const startBoundary = new Date(`${start_date}T00:00:00+08:00`);
+            const endBoundary = new Date(`${end_date}T23:59:59.999+08:00`);
+            return d >= startBoundary && d <= endBoundary;
         }
         return true;
       }
@@ -2912,20 +2922,51 @@ app.get('/api/reports/sales', async (req, res) => {
     }
   }
 
+  // Helper for Manila timezone operating day
+  const getManilaOperatingDay = (isoStr: string, startTime = '06:00') => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      const parts = formatter.formatToParts(new Date(isoStr));
+      const map: Record<string, string> = {};
+      parts.forEach(p => map[p.type] = p.value);
+      
+      const [sh, sm] = startTime.split(':').map(Number);
+      let hour = parseInt(map.hour, 10);
+      if (hour === 24) hour = 0;
+      
+      const mDate = new Date(parseInt(map.year, 10), parseInt(map.month, 10) - 1, parseInt(map.day, 10), hour, parseInt(map.minute, 10));
+      mDate.setHours(mDate.getHours() - sh);
+      mDate.setMinutes(mDate.getMinutes() - sm);
+
+      const y = mDate.getFullYear();
+      const m = String(mDate.getMonth() + 1).padStart(2, '0');
+      const day = String(mDate.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    } catch (e) {
+      const d = new Date(isoStr);
+      return d.toISOString().split('T')[0];
+    }
+  };
+
   // Filter dates manually to ensure timezone safety and respect operating hours
   const filteredOrders = orders.filter((o: any) => {
     if (!start_date && !end_date) return true;
     
-    // Convert order updated_at to Manila Date
-    const utDate = new Date(o.updated_at);
-    // We want to check if utDate is between [start_date T startTime] and [end_date T endTime]
-    // If endTime < startTime, the end range for a 'day' is actually D+1 T endTime
-    
+    const utDate = new Date(o.updated_at || o.created_at);
     const sDate = start_date as string;
     const eDate = end_date as string;
 
-    const startBoundary = new Date(`${sDate}T${reportStartTime}:00`);
-    let endBoundary = new Date(`${eDate}T${reportEndTime}:00`);
+    const startBoundary = new Date(`${sDate}T${reportStartTime}:00+08:00`);
+    let endBoundary = new Date(`${eDate}T${reportEndTime}:00+08:00`);
     if (isNextDayEnd) {
       endBoundary.setDate(endBoundary.getDate() + 1);
     }
@@ -2983,12 +3024,13 @@ app.get('/api/reports/sales', async (req, res) => {
       voucherPointsSum += points * (oi.quantity || 1);
       return {
         ...oi,
-        name: product?.name,
+        name: product?.name || oi.name || oi.product_name || 'Item',
+        category: product?.categories?.name || 'General',
         price: oi.price,
         quantity: oi.quantity,
         id: oi.id,
         points_used: points,
-        division: product?.categories?.division || 'coffee',
+        division: product?.categories?.division || oi.division || 'coffee',
         ...comp
       };
     });
@@ -3019,8 +3061,9 @@ app.get('/api/reports/sales', async (req, res) => {
   
   const discountStats: Record<string, { amount: number, count: number }> = {};
   const paymentStats: Record<string, { amount: number, count: number }> = {};
+  const itemsSoldMap: Record<string, { product_id: any; name: string; category: string; division: string; unit_price: number; quantity: number; total_amount: number; comp_count: number }> = {};
   
-  const dailyDetailedMap: Record<string, { gross: number; discounts: number; net: number; count: number; coffee: number; laundry: number }> = {};
+  const dailyDetailedMap: Record<string, { gross: number; discounts: number; net: number; count: number; coffee: number; laundry: number; itemsMap: Record<string, any> }> = {};
 
   paidOrders.forEach((o: any) => {
     total_sales += o.total || 0;
@@ -3032,9 +3075,21 @@ app.get('/api/reports/sales', async (req, res) => {
     let orderCoffeeSales = 0;
     let orderLaundrySales = 0;
 
+    // Daily Detailed Map - use operating day in Manila timezone
+    const d = getManilaOperatingDay(o.updated_at || o.created_at, reportStartTime);
+
+    if (!dailyDetailedMap[d]) {
+      dailyDetailedMap[d] = { gross: 0, discounts: 0, net: 0, count: 0, coffee: 0, laundry: 0, itemsMap: {} };
+    }
+
     const oItems = o.order_items || [];
     oItems.forEach((oi: any) => {
       const itemTotal = (oi.price || 0) * (oi.quantity || 1);
+      const itemName = oi.name || oi.product_name || 'Item';
+      const itemKey = `${oi.product_id || itemName}_${oi.price || 0}`;
+      const catName = oi.category || (oi.division === 'laundry' ? 'Laundry' : 'Coffee & Beverages');
+      const divName = oi.division || 'coffee';
+
       if (oi.division === 'laundry') {
         laundry_sales_total += itemTotal;
         orderLaundrySales += itemTotal;
@@ -3042,6 +3097,40 @@ app.get('/api/reports/sales', async (req, res) => {
         coffee_sales_total += itemTotal;
         orderCoffeeSales += itemTotal;
       }
+
+      // Aggregate overall items sold
+      if (!itemsSoldMap[itemKey]) {
+        itemsSoldMap[itemKey] = {
+          product_id: oi.product_id,
+          name: itemName,
+          category: catName,
+          division: divName,
+          unit_price: oi.price || 0,
+          quantity: 0,
+          total_amount: 0,
+          comp_count: 0
+        };
+      }
+      itemsSoldMap[itemKey].quantity += (oi.quantity || 1);
+      itemsSoldMap[itemKey].total_amount += itemTotal;
+      if (oi.is_complimentary) {
+        itemsSoldMap[itemKey].comp_count += (oi.quantity || 1);
+      }
+
+      // Aggregate day-by-day items
+      if (!dailyDetailedMap[d].itemsMap[itemKey]) {
+        dailyDetailedMap[d].itemsMap[itemKey] = {
+          product_id: oi.product_id,
+          name: itemName,
+          category: catName,
+          division: divName,
+          unit_price: oi.price || 0,
+          quantity: 0,
+          total_amount: 0
+        };
+      }
+      dailyDetailedMap[d].itemsMap[itemKey].quantity += (oi.quantity || 1);
+      dailyDetailedMap[d].itemsMap[itemKey].total_amount += itemTotal;
     });
     
     if (o.tax_amount === 0 && o.discount_amount > 0) {
@@ -3066,17 +3155,6 @@ app.get('/api/reports/sales', async (req, res) => {
       if (!discountStats[name]) discountStats[name] = { amount: 0, count: 0 };
       discountStats[name].amount += o.discount_amount;
       discountStats[name].count += 1;
-    }
-
-    // Daily Detailed Map - use operating day
-    const dObj = new Date(o.updated_at);
-    const [h, m] = reportStartTime.split(':').map(Number);
-    dObj.setHours(dObj.getHours() - h);
-    dObj.setMinutes(dObj.getMinutes() - m);
-    const d = dObj.toISOString().split('T')[0];
-
-    if (!dailyDetailedMap[d]) {
-      dailyDetailedMap[d] = { gross: 0, discounts: 0, net: 0, count: 0, coffee: 0, laundry: 0 };
     }
     
     const orderGross = o.subtotal || 0;
@@ -3123,25 +3201,21 @@ app.get('/api/reports/sales', async (req, res) => {
   
   if (allOrders) {
     allOrders.forEach((o: any) => {
-      const utDate = new Date(o.updated_at);
+      const utDate = new Date(o.updated_at || o.created_at);
       const eDate = end_date as string || start_date as string;
       if (!eDate) {
         accumulated_grand_total += o.total;
         return;
       }
       
-      const endBoundary = new Date(`${eDate}T${reportEndTime}:00`);
+      const endBoundary = new Date(`${eDate}T${reportEndTime}:00+08:00`);
       if (isNextDayEnd) {
         endBoundary.setDate(endBoundary.getDate() + 1);
       }
       
       if (utDate <= endBoundary) {
         accumulated_grand_total += o.total;
-        const d = new Date(utDate);
-        const [h, m] = reportStartTime.split(':').map(Number);
-        d.setHours(d.getHours() - h);
-        d.setMinutes(d.getMinutes() - m);
-        uniqueDates.add(d.toISOString().split('T')[0]);
+        uniqueDates.add(getManilaOperatingDay(o.updated_at || o.created_at, reportStartTime));
       }
     });
   }
@@ -3158,8 +3232,11 @@ app.get('/api/reports/sales', async (req, res) => {
     count: paymentStats[method].count
   }));
 
+  const items_sold = Object.values(itemsSoldMap)
+    .sort((a, b) => b.total_amount - a.total_amount || b.quantity - a.quantity);
+
   const dailySales = Object.entries(dailyDetailedMap)
-    .map(([date, stats]) => ({
+    .map(([date, stats]: [string, any]) => ({
       date,
       total: stats.net,
       gross: stats.gross,
@@ -3167,7 +3244,8 @@ app.get('/api/reports/sales', async (req, res) => {
       net: stats.net,
       coffee: stats.coffee,
       laundry: stats.laundry,
-      count: stats.count
+      count: stats.count,
+      items: Object.values(stats.itemsMap || {}).sort((a: any, b: any) => b.quantity - a.quantity)
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
@@ -3185,6 +3263,7 @@ app.get('/api/reports/sales', async (req, res) => {
     },
     discounts,
     payments,
+    items_sold,
     accumulated_grand_total,
     z_counter: uniqueDates.size || 1,
     dailySales,

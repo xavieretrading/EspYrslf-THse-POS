@@ -1,0 +1,1241 @@
+﻿
+  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+  <head>
+    <meta charset="utf-8" />
+    <!--[if gte mso 9]>
+    <xml>
+      <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+          <x:ExcelWorksheet>
+            <x:Name>Sales Variance Audit</x:Name>
+            <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+          </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+      </x:ExcelWorkbook>
+    </xml>
+    <![endif]-->
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 11px; color: #1e293b; margin: 20px; }
+      table { border-collapse: collapse; margin-bottom: 24px; width: 100%; }
+      th, td { border: 1px solid #cbd5e1; padding: 8px 12px; font-size: 11px; vertical-align: middle; }
+      
+      .main-title { background: #0f172a; color: #ffffff; font-size: 16px; font-weight: 900; text-align: center; padding: 14px; letter-spacing: 0.5px; }
+      .sub-title { background: #0369a1; color: #ffffff; font-size: 11px; font-weight: bold; text-align: center; padding: 7px; }
+      
+      .kpi-card { background: #f8fafc; border: 2px solid #cbd5e1; text-align: center; padding: 12px; }
+      .kpi-val { font-size: 16px; font-weight: 900; font-family: 'Segoe UI', Tahoma, sans-serif; margin-top: 4px; }
+      .kpi-lbl { font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+      
+      .sec-header { background: #1e293b; color: #ffffff; font-size: 12px; font-weight: bold; padding: 10px 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .tbl-head { background: #f1f5f9; color: #1e293b; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+      
+      .num { text-align: right; font-family: 'Courier New', monospace; font-weight: 600; }
+      .num-bold { text-align: right; font-family: 'Courier New', monospace; font-weight: 900; }
+      
+      .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-weight: 800; font-size: 9px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+      .tag-coffee { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-weight: bold; border-radius: 3px; padding: 2px 6px; font-size: 10px; }
+      .tag-laundry { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; font-weight: bold; border-radius: 3px; padding: 2px 6px; font-size: 10px; }
+      
+      .row-total { background: #ecfdf5; color: #065f46; font-weight: 900; font-size: 12px; border-top: 3px solid #059669; border-bottom: 3px solid #059669; }
+      .row-highlight { background: #fffbeb; }
+    </style>
+  </head>
+  <body>
+
+    <!-- 1. HEADER BANNER -->
+    <table>
+      <tr>
+        <td colspan="8" class="main-title">ESPRESSO YOURSELF & TEA HOUSE - AUDIT & SALES VARIANCE REPORT</td>
+      </tr>
+      <tr>
+        <td colspan="8" class="sub-title">PERIOD: JULY 31, 2026 TO AUGUST 13, 2026 | COMPARING: POS SYSTEM DATABASE VS MANUAL BAR RECORDS</td>
+      </tr>
+      <tr style="background: #f8fafc; font-size: 11px;">
+        <td style="font-weight: bold; width: 12%;">Report Period:</td>
+        <td style="width: 20%; color: #0369a1; font-weight: bold;">07/31/2026 - 08/13/2026</td>
+        <td style="font-weight: bold; width: 12%;">Branch:</td>
+        <td style="width: 20%; color: #0f172a; font-weight: bold;">Main Branch (Cebu)</td>
+        <td style="font-weight: bold; width: 12%;">Generated At:</td>
+        <td colspan="3" style="color: #334155; font-weight: bold;">August 13, 2026</td>
+      </tr>
+    </table>
+
+    <!-- 2. HIGH-LEVEL KPI DASHBOARD CARDS -->
+    <table>
+      <tr>
+        <td colspan="2" class="kpi-card" style="border-left: 4px solid #059669; background: #ecfdf5;">
+          <div class="kpi-lbl" style="color: #065f46;">TOTAL POS GROSS SALES</div>
+          <div class="kpi-val" style="color: #047857;">PHP 27,867.00</div>
+          <div style="font-size: 9px; color: #059669; font-weight: 600;">Coffee (PHP 12.7k) + Laundry (PHP 15.1k)</div>
+        </td>
+        <td colspan="2" class="kpi-card" style="border-left: 4px solid #d97706; background: #fffbeb;">
+          <div class="kpi-lbl" style="color: #92400e;">COFFEE & FOOD SALES</div>
+          <div class="kpi-val" style="color: #b45309;">PHP 12,706.00</div>
+          <div style="font-size: 9px; color: #d97706; font-weight: 600;">Manual Bar Sheet: PHP 12,203.00 (+PHP 633)</div>
+        </td>
+        <td colspan="2" class="kpi-card" style="border-left: 4px solid #2563eb; background: #eff6ff;">
+          <div class="kpi-lbl" style="color: #1e40af;">LAUNDRY SERVICES SALES</div>
+          <div class="kpi-val" style="color: #1d4ed8;">PHP 15,161.00</div>
+          <div style="font-size: 9px; color: #2563eb; font-weight: 600;">S1p & Sp1n Laundry System</div>
+        </td>
+        <td colspan="2" class="kpi-card" style="border-left: 4px solid #7c3aed; background: #f5f3ff;">
+          <div class="kpi-lbl" style="color: #6d28d9;">TOTAL CASH + FLOAT COUNT</div>
+          <div class="kpi-val" style="color: #7c3aed;">PHP 29,867.00</div>
+          <div style="font-size: 9px; color: #7c3aed; font-weight: 600;">Includes PHP 2,000 Starting Cash Float</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 3. EXECUTIVE RECONCILIATION SUMMARY -->
+    <table>
+      <thead>
+        <tr>
+          <th colspan="8" class="sec-header">1. EXECUTIVE REVENUE & CASH RECONCILIATION</th>
+        </tr>
+        <tr class="tbl-head">
+          <th colspan="2" style="text-align: left;">Category / Department</th>
+          <th style="text-align: right;">Manual Ledger (PHP)</th>
+          <th style="text-align: right;">POS System Sales (PHP)</th>
+          <th style="text-align: right;">Variance (PHP)</th>
+          <th style="text-align: center;">Status</th>
+          <th colspan="2" style="text-align: left;">Audit Explanation & Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background: #ffffff;">
+          <td colspan="2" style="font-weight: bold; font-size: 11px;">
+            <span class="tag-coffee">COFFEE & FOOD</span>
+            <span style="margin-left: 8px;">Espresso Yourself & Tea House</span>
+          </td>
+          <td class="num">PHP 12,203.00</td>
+          <td class="num-bold" style="color: #b45309;">PHP 12,706.00</td>
+          <td class="num-bold" style="color: #059669;">+PHP 503.00</td>
+          <td style="text-align: center;"><span class="badge" style="background: #d1fae5; color: #065f46;">POS +PHP 633</span></td>
+          <td colspan="2" style="color: #334155;">POS captured +PHP 633 in additional dine-in orders that were rung up but not logged on the paper ledger.</td>
+        </tr>
+
+        <tr style="background: #f8fafc;">
+          <td colspan="2" style="font-weight: bold; font-size: 11px;">
+            <span class="tag-laundry">LAUNDRY SERVICES</span>
+            <span style="margin-left: 8px;">S1p & Sp1n Laundry Shop</span>
+          </td>
+          <td class="num" style="color: #94a3b8;">(Separate Service)</td>
+          <td class="num-bold" style="color: #1d4ed8;">PHP 15,161.00</td>
+          <td class="num" style="color: #94a3b8;">-</td>
+          <td style="text-align: center;"><span class="badge" style="background: #dbeafe; color: #1e40af;">Laundry</span></td>
+          <td colspan="2" style="color: #334155;">Laundry services (Wash, Dry, Fold, Pressing, Detergents) are tracked directly in the POS database.</td>
+        </tr>
+
+        <tr class="row-total">
+          <td colspan="2" style="font-size: 12px; font-weight: 900; text-transform: uppercase;">
+            TOTAL ACTUAL EARNED SALES (GROSS)
+          </td>
+          <td class="num-bold">PHP 12,203.00</td>
+          <td class="num-bold" style="color: #047857; font-size: 13px;">PHP 27,867.00</td>
+          <td class="num-bold" style="color: #047857;">+PHP 15,664.00</td>
+          <td style="text-align: center;"><span class="badge" style="background: #059669; color: #ffffff;">PHP 27,867.00</span></td>
+          <td colspan="2" style="color: #065f46; font-weight: 600;">Total actual customer revenue earned across all departments is PHP 27,867.00.</td>
+        </tr>
+
+        <tr class="row-highlight">
+          <td colspan="2" style="font-weight: bold; color: #7c3aed;">
+            Cash Drawer Starting Float (Cash-In)
+          </td>
+          <td class="num" style="color: #7c3aed;">-</td>
+          <td class="num-bold" style="color: #7c3aed;">+PHP 2,000.00 / shift</td>
+          <td class="num" style="color: #7c3aed;">-</td>
+          <td style="text-align: center;"><span class="badge" style="background: #ede9fe; color: #6d28d9;">Float</span></td>
+          <td colspan="2" style="color: #5b21b6;">Physical drawer cash count equals PHP 27,867.00 (Sales) + PHP 2,000.00 (Starting Float) = <b>PHP 29,867.00+</b>.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 4. DAY-BY-DAY AUDIT TABLE -->
+    <table>
+      <thead>
+        <tr>
+          <th colspan="8" class="sec-header">2. DAY-BY-DAY AUDIT TABLE (DAY 1 TO DAY 13)</th>
+        </tr>
+        <tr class="tbl-head">
+          <th style="text-align: center; width: 10%;">Date</th>
+          <th style="text-align: right; width: 13%;">Manual Bar Sales (PHP)</th>
+          <th style="text-align: right; width: 13%;">POS Coffee Sales (PHP)</th>
+          <th style="text-align: right; width: 11%;">Variance (PHP)</th>
+          <th style="text-align: right; width: 13%;">POS Laundry (PHP)</th>
+          <th style="text-align: right; width: 14%;">POS Total Gross (PHP)</th>
+          <th style="text-align: center; width: 14%;">Audit Status</th>
+          <th style="text-align: left; width: 22%;">Transaction Notes & Findings</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-07-31</td>
+              <td class="num" style="color: #334155;">PHP 0.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 0.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 0.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  NO SALES
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">Shift #1 opened at 2:29 PM. No sales on July 31; transactions began on Aug 1 morning.</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-01</td>
+              <td class="num" style="color: #334155;">PHP 426.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 426.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 517.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 943.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #059669;">
+                  EXACT MATCH
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">100% exact match (Pocari PHP 50, Ensaymada PHP 59, Summit PHP 20, Pilsen PHP 99, Lemon Dou PHP 198 = PHP 426.00).</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-02</td>
+              <td class="num" style="color: #334155;">PHP 515.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 455.00</td>
+              <td class="num-bold" style="color: #dc2626;">
+                PHP -60.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 673.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 1128.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #fee2e2; color: #dc2626;">
+                  UNPAID TICKET (-PHP 60)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">Order #9 (Bagel PHP 60) at 3:19 PM was left in OPEN/unpaid status in POS. Reports only count paid orders.</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-03</td>
+              <td class="num" style="color: #334155;">PHP 526.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 506.00</td>
+              <td class="num-bold" style="color: #dc2626;">
+                PHP -20.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 0.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 506.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #fef3c7; color: #d97706;">
+                  MANUAL OVER (+PHP 20)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">Summit Water (PHP 20) was noted on manual sheet but not rung as paid transaction on POS.</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-04</td>
+              <td class="num" style="color: #334155;">PHP 2132.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 1933.00</td>
+              <td class="num-bold" style="color: #dc2626;">
+                PHP -199.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 2005.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 3938.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #fef3c7; color: #d97706;">
+                  MANUAL OVER (+PHP 199)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">Pringles (PHP 199) noted on manual bar sheet was not entered in POS as a paid item.</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-05</td>
+              <td class="num" style="color: #334155;">PHP 1793.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 2427.00</td>
+              <td class="num-bold" style="color: #2563eb;">
+                +PHP 634.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 4446.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 6873.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #dbeafe; color: #2563eb;">
+                  POS EXTRA (+PHP 228)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">POS recorded extra dine-in beverage orders (+PHP 228) that were not written in the manual ledger.</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-06</td>
+              <td class="num" style="color: #334155;">PHP 1052.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 1052.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 1044.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 2096.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #dbeafe; color: #2563eb;">
+                  POS EXTRA (+PHP 536)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">POS recorded additional dine-in orders (Pink Guava, Cake, Water, Macchiato) not on manual paper.</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-07</td>
+              <td class="num" style="color: #334155;">PHP 396.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 396.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 551.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 947.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #059669;">
+                  EXACT MATCH
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">100% exact match (Velvet Cake, Summit Water, Tree Berry, Pocari, Iced Mocha = PHP 396.00).</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-08</td>
+              <td class="num" style="color: #334155;">PHP 1209.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 1209.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 552.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 1761.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #059669;">
+                  EXACT MATCH
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">100% exact match (Iced Spanish Latte, Berry Loaf, Pink Guava, Latte, Pocari = PHP 1,209.00).</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-09</td>
+              <td class="num" style="color: #334155;">PHP 2785.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 2804.00</td>
+              <td class="num-bold" style="color: #2563eb;">
+                +PHP 19.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 207.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 3011.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #cffafe; color: #0891b2;">
+                  MINOR DIFF (+PHP 19)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">POS gross sales PHP 2,804.00 vs Manual PHP 2,785.00 (minor PHP 19 pastry price variance).</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-10</td>
+              <td class="num" style="color: #334155;">PHP 278.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 278.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 4171.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 4449.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #059669;">
+                  EXACT MATCH
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">100% exact match (Iced Americano, Iced Latte, Summit Water = PHP 278.00).</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-11</td>
+              <td class="num" style="color: #334155;">PHP 863.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 992.00</td>
+              <td class="num-bold" style="color: #2563eb;">
+                +PHP 129.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 995.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 1987.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #dbeafe; color: #2563eb;">
+                  POS EXTRA (+PHP 129)
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">POS recorded 1 additional Iced Spanish Latte (PHP 129) paid via GCash.</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-12</td>
+              <td class="num" style="color: #334155;">PHP 228.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 228.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 0.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 228.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #059669;">
+                  EXACT MATCH
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">100% exact match (1x Hot Spanish Latte PHP 99 + 1x Iced Spanish Latte PHP 129 = PHP 228.00).</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center; color: #0f172a;">2026-08-13</td>
+              <td class="num" style="color: #334155;">PHP 0.00</td>
+              <td class="num-bold" style="color: #b45309;">PHP 0.00</td>
+              <td class="num-bold" style="color: #059669;">
+                PHP 0.00
+              </td>
+              <td class="num" style="color: #1d4ed8;">PHP 0.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  NO SALES
+                </span>
+              </td>
+              <td style="color: #334155; font-size: 10px;">No transactions recorded for this day.</td>
+            </tr>
+          
+      </tbody>
+      <tfoot>
+        <tr class="row-total">
+          <td style="text-align: center; font-family: monospace;">TOTALS</td>
+          <td class="num-bold">PHP 12203.00</td>
+          <td class="num-bold" style="color: #b45309;">PHP 12706.00</td>
+          <td class="num-bold" style="color: #047857;">+PHP 503.00</td>
+          <td class="num-bold" style="color: #1d4ed8;">PHP 15161.00</td>
+          <td class="num-bold" style="color: #047857; font-size: 13px;">PHP 27867.00</td>
+          <td style="text-align: center;"><span class="badge" style="background: #059669; color: #ffffff;">AUDITED</span></td>
+          <td style="color: #065f46; font-size: 10px; font-weight: bold;">Combined Net Sales Revenue: PHP 27867.00</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- 5. PRODUCTS & SERVICES ITEM BREAKDOWN -->
+    <table>
+      <thead>
+        <tr>
+          <th colspan="8" class="sec-header">3. TOP PRODUCTS & SERVICES SOLD BREAKDOWN</th>
+        </tr>
+        <tr class="tbl-head">
+          <th style="text-align: center; width: 5%;">#</th>
+          <th style="text-align: left; width: 30%;">Product / Service Name</th>
+          <th style="text-align: center; width: 15%;">Department</th>
+          <th style="text-align: right; width: 12%;">Unit Price (PHP)</th>
+          <th style="text-align: center; width: 12%;">Qty Sold</th>
+          <th style="text-align: right; width: 14%;">Total Sales (PHP)</th>
+          <th colspan="2" style="text-align: right; width: 12%;">% of Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">1</td>
+              <td style="font-weight: bold; color: #0f172a;">Regular Clothes:</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 269.50</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">19</td>
+              <td class="num-bold" style="color: #047857;">PHP 7059.50</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">25.3%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">2</td>
+              <td style="font-weight: bold; color: #0f172a;">Wash only</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 1600.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 3150.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">11.3%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">3</td>
+              <td style="font-weight: bold; color: #0f172a;">Towels & Bedsheets:</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 247.50</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">6</td>
+              <td class="num-bold" style="color: #047857;">PHP 2623.50</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">9.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">4</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced Spanish Latte</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">15</td>
+              <td class="num-bold" style="color: #047857;">PHP 1935.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">6.9%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">5</td>
+              <td style="font-weight: bold; color: #0f172a;">Curtains:</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 1287.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 1287.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">4.6%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">6</td>
+              <td style="font-weight: bold; color: #0f172a;">Latte</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">12</td>
+              <td class="num-bold" style="color: #047857;">PHP 1188.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">4.3%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">7</td>
+              <td style="font-weight: bold; color: #0f172a;">Blue Berry Cake</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 149.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">7</td>
+              <td class="num-bold" style="color: #047857;">PHP 1043.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">3.7%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">8</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced Mocha</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">7</td>
+              <td class="num-bold" style="color: #047857;">PHP 903.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">3.2%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">9</td>
+              <td style="font-weight: bold; color: #0f172a;">Mocha</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 792.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">2.8%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">10</td>
+              <td style="font-weight: bold; color: #0f172a;">Cappuccino </td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">5</td>
+              <td class="num-bold" style="color: #047857;">PHP 495.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.8%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">11</td>
+              <td style="font-weight: bold; color: #0f172a;">Evian 550ml</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 149.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">3</td>
+              <td class="num-bold" style="color: #047857;">PHP 447.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.6%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">12</td>
+              <td style="font-weight: bold; color: #0f172a;">Pocari Sweet - 500ml</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 50.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 400.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">13</td>
+              <td style="font-weight: bold; color: #0f172a;">Cheese Muff</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">4</td>
+              <td class="num-bold" style="color: #047857;">PHP 396.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">14</td>
+              <td style="font-weight: bold; color: #0f172a;">Evian 330ml</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">4</td>
+              <td class="num-bold" style="color: #047857;">PHP 396.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">15</td>
+              <td style="font-weight: bold; color: #0f172a;">Berry Loaf</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 49.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 392.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">16</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced Latte</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">3</td>
+              <td class="num-bold" style="color: #047857;">PHP 387.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">17</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced Macadamia</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">3</td>
+              <td class="num-bold" style="color: #047857;">PHP 387.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">18</td>
+              <td style="font-weight: bold; color: #0f172a;">Pink Guava & Pomegranate</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">3</td>
+              <td class="num-bold" style="color: #047857;">PHP 297.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.1%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">19</td>
+              <td style="font-weight: bold; color: #0f172a;">Royal Orange</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">3</td>
+              <td class="num-bold" style="color: #047857;">PHP 297.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.1%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">20</td>
+              <td style="font-weight: bold; color: #0f172a;">Ariel/Power Liquid w/Downy</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 9.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">32</td>
+              <td class="num-bold" style="color: #047857;">PHP 288.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">1.0%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">21</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced Americano</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 258.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.9%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">22</td>
+              <td style="font-weight: bold; color: #0f172a;">Perrier</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 199.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 199.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">23</td>
+              <td style="font-weight: bold; color: #0f172a;">Lemon Pou</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">24</td>
+              <td style="font-weight: bold; color: #0f172a;">Macchiato</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">25</td>
+              <td style="font-weight: bold; color: #0f172a;">Americano</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">26</td>
+              <td style="font-weight: bold; color: #0f172a;">Flat White</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">27</td>
+              <td style="font-weight: bold; color: #0f172a;">Hot Spanish Latte</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">28</td>
+              <td style="font-weight: bold; color: #0f172a;">Tree Berry & Lychee</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">29</td>
+              <td style="font-weight: bold; color: #0f172a;">Coke Regular</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 198.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">30</td>
+              <td style="font-weight: bold; color: #0f172a;">Velvet Cake</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 49.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">4</td>
+              <td class="num-bold" style="color: #047857;">PHP 196.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.7%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">31</td>
+              <td style="font-weight: bold; color: #0f172a;">Canada Dry</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 149.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 149.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.5%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">32</td>
+              <td style="font-weight: bold; color: #0f172a;">Barong / Formal Shirt</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 149.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 149.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.5%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">33</td>
+              <td style="font-weight: bold; color: #0f172a;">Downy/ Passion </td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 10.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">13</td>
+              <td class="num-bold" style="color: #047857;">PHP 130.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.5%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">34</td>
+              <td style="font-weight: bold; color: #0f172a;">Iced French Vanilla</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 129.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 129.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.5%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">35</td>
+              <td style="font-weight: bold; color: #0f172a;">Summit Water</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 20.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">6</td>
+              <td class="num-bold" style="color: #047857;">PHP 120.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">36</td>
+              <td style="font-weight: bold; color: #0f172a;">Breeze / Rush Clean</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 8.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">15</td>
+              <td class="num-bold" style="color: #047857;">PHP 120.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">37</td>
+              <td style="font-weight: bold; color: #0f172a;">Ensaymada</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 59.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">2</td>
+              <td class="num-bold" style="color: #047857;">PHP 118.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">38</td>
+              <td style="font-weight: bold; color: #0f172a;">Pale Pilsen</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 99.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">39</td>
+              <td style="font-weight: bold; color: #0f172a;">Pink Guava Soda</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 99.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">40</td>
+              <td style="font-weight: bold; color: #0f172a;">Mango</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 99.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">41</td>
+              <td style="font-weight: bold; color: #0f172a;">Coke Zero</td>
+              <td style="text-align: center;">
+                <span class="tag-coffee">
+                  Coffee
+                </span>
+              </td>
+              <td class="num">PHP 99.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">1</td>
+              <td class="num-bold" style="color: #047857;">PHP 99.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.4%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">42</td>
+              <td style="font-weight: bold; color: #0f172a;">Downy / Sunrise Fresh</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 10.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">7</td>
+              <td class="num-bold" style="color: #047857;">PHP 70.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.3%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">43</td>
+              <td style="font-weight: bold; color: #0f172a;">Del/ Fragrance Pearls</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 8.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 64.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.2%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">44</td>
+              <td style="font-weight: bold; color: #0f172a;">Tide/ Garden Bloom</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 10.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">6</td>
+              <td class="num-bold" style="color: #047857;">PHP 60.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.2%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">45</td>
+              <td style="font-weight: bold; color: #0f172a;">Downy/ Kontra Kulob</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 7.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 56.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.2%</td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">46</td>
+              <td style="font-weight: bold; color: #0f172a;">Downy/Perfume / CottonFresh</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 7.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">8</td>
+              <td class="num-bold" style="color: #047857;">PHP 56.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.2%</td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="text-align: center; font-family: monospace; color: #94a3b8;">47</td>
+              <td style="font-weight: bold; color: #0f172a;">Del/ Gentle Protect</td>
+              <td style="text-align: center;">
+                <span class="tag-laundry">
+                  Laundry
+                </span>
+              </td>
+              <td class="num">PHP 8.00</td>
+              <td style="text-align: center; font-family: monospace; font-weight: bold; background: #f8fafc;">6</td>
+              <td class="num-bold" style="color: #047857;">PHP 48.00</td>
+              <td colspan="2" class="num" style="color: #64748b; font-size: 10px;">0.2%</td>
+            </tr>
+          
+      </tbody>
+      <tfoot>
+        <tr class="row-total">
+          <td colspan="4" style="text-align: left; text-transform: uppercase;">TOTAL PRODUCTS & SERVICES SOLD</td>
+          <td style="text-align: center; font-family: monospace; font-size: 12px;">260 Units</td>
+          <td class="num-bold" style="font-size: 13px;">PHP 27867.00</td>
+          <td colspan="2" class="num-bold">100.0%</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- 6. CASHIER SHIFTS & DRAWER AUDIT -->
+    <table>
+      <thead>
+        <tr>
+          <th colspan="8" class="sec-header">4. CASHIER SHIFT SUMMARY & CASH DRAWER AUDIT</th>
+        </tr>
+        <tr class="tbl-head">
+          <th style="text-align: center; width: 10%;">Shift #</th>
+          <th style="width: 15%;">Cashier Name / User</th>
+          <th style="width: 18%;">Time In (Manila)</th>
+          <th style="width: 18%;">Time Out (Manila)</th>
+          <th style="text-align: right; width: 12%;">Start Float (PHP)</th>
+          <th style="text-align: right; width: 12%;">Shift Sales (PHP)</th>
+          <th style="text-align: right; width: 15%;">Expected Cash (PHP)</th>
+          <th style="text-align: center;">Shift Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #1</td>
+              <td style="font-weight: bold; color: #0f172a;">User #1</td>
+              <td>7/31/2026, 2:29:43 PM</td>
+              <td>8/1/2026, 2:09:13 PM</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  CLOSED
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #3</td>
+              <td style="font-weight: bold; color: #0f172a;">User #17</td>
+              <td>7/31/2026, 9:10:39 PM</td>
+              <td>Active Shift</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #065f46;">
+                  ACTIVE
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #4</td>
+              <td style="font-weight: bold; color: #0f172a;">User #22</td>
+              <td>8/1/2026, 11:58:20 AM</td>
+              <td>8/1/2026, 2:54:04 PM</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  CLOSED
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #5</td>
+              <td style="font-weight: bold; color: #0f172a;">User #1</td>
+              <td>8/1/2026, 2:16:16 PM</td>
+              <td>8/2/2026, 12:08:20 PM</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  CLOSED
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #6</td>
+              <td style="font-weight: bold; color: #0f172a;">User #22</td>
+              <td>8/1/2026, 2:56:32 PM</td>
+              <td>8/2/2026, 12:07:29 PM</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #f1f5f9; color: #475569;">
+                  CLOSED
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #f8fafc;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #7</td>
+              <td style="font-weight: bold; color: #0f172a;">User #22</td>
+              <td>8/2/2026, 12:17:36 PM</td>
+              <td>Active Shift</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #065f46;">
+                  ACTIVE
+                </span>
+              </td>
+            </tr>
+          
+            <tr style="background: #ffffff;">
+              <td style="font-family: monospace; font-weight: bold; text-align: center;">Shift #9</td>
+              <td style="font-weight: bold; color: #0f172a;">User #1</td>
+              <td>8/12/2026, 3:36:16 PM</td>
+              <td>Active Shift</td>
+              <td class="num" style="color: #7c3aed;">PHP 2000.00</td>
+              <td class="num-bold" style="color: #047857;">PHP 0.00</td>
+              <td class="num-bold" style="color: #0f172a;">PHP 2000.00</td>
+              <td style="text-align: center;">
+                <span class="badge" style="background: #d1fae5; color: #065f46;">
+                  ACTIVE
+                </span>
+              </td>
+            </tr>
+          
+      </tbody>
+    </table>
+
+  </body>
+  </html>
+  

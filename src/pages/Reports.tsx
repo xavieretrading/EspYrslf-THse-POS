@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Download, Calendar, Activity, ChevronRight, ChevronDown, Tag, Users, User, Medal, Ticket, Gift, Clock, Printer, Trash2, TableIcon } from 'lucide-react';
+import { FileText, Download, Calendar, Activity, ChevronRight, ChevronDown, Tag, Users, User, Medal, Ticket, Gift, Clock, Printer, Trash2, TableIcon, ShoppingBag, Search } from 'lucide-react';
 import { format, subDays, startOfMonth, startOfDay, startOfWeek } from 'date-fns';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
@@ -55,6 +55,8 @@ export default function Reports() {
     summary: {} as any,
     discounts: [] as any[],
     payments: [] as any[],
+    items_sold: [] as any[],
+    dailySales: [] as any[],
     accumulated_grand_total: 0,
     z_counter: 0
   });
@@ -68,6 +70,8 @@ export default function Reports() {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [complimentarySearch, setComplimentarySearch] = useState('');
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemDivisionFilter, setItemDivisionFilter] = useState<'all' | 'coffee' | 'laundry'>('all');
   const [printSize, setPrintSize] = useState<'80mm' | 'A4' | 'legal'>('80mm');
 
   const fetchReports = () => {
@@ -496,6 +500,10 @@ export default function Reports() {
     const totalDailyCoffee = dailyList.reduce((s: number, d: any) => s + (d.coffee || 0), 0);
     const totalDailyLaundry = dailyList.reduce((s: number, d: any) => s + (d.laundry || 0), 0);
 
+    const itemsSold = data?.items_sold || [];
+    const totalUnitsSold = itemsSold.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
+    const totalItemsAmount = itemsSold.reduce((s: number, it: any) => s + (it.total_amount || 0), 0);
+
     const htmlContent = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
@@ -514,15 +522,15 @@ export default function Reports() {
         <![endif]-->
         <style>
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 12px; color: #1e293b; }
-          table { border-collapse: collapse; margin-bottom: 20px; width: 100%; }
+          table { border-collapse: collapse; margin-bottom: 22px; width: 100%; }
           th, td { border: 1px solid #cbd5e1; padding: 8px 12px; }
           .main-header { background-color: #0f172a; color: #ffffff; font-size: 16px; font-weight: bold; text-align: center; padding: 12px; }
-          .section-header { background-color: #1e293b; color: #ffffff; font-size: 13px; font-weight: bold; text-align: left; }
+          .section-header { background-color: #1e293b; color: #ffffff; font-size: 12px; font-weight: bold; text-align: left; }
           .sub-header { background-color: #334155; color: #ffffff; font-weight: bold; text-align: center; }
           .accent-header { background-color: #4f46e5; color: #ffffff; font-weight: bold; }
           .label { font-weight: 600; color: #475569; }
           .num { text-align: right; font-family: monospace; font-size: 13px; }
-          .total-row { background-color: #ecfdf5; color: #047857; font-weight: bold; font-size: 14px; }
+          .total-row { background-color: #ecfdf5; color: #047857; font-weight: bold; font-size: 13px; }
           .short-row { color: #dc2626; font-weight: bold; }
           .over-row { color: #059669; font-weight: bold; }
           .meta-box { background-color: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; margin-bottom: 15px; }
@@ -531,10 +539,10 @@ export default function Reports() {
       <body>
         <table>
           <tr>
-            <th colSpan="4" class="main-header">${companyName.toUpperCase()} - ${branchName.toUpperCase()}</th>
+            <th colSpan="8" class="main-header">${companyName.toUpperCase()} - ${branchName.toUpperCase()}</th>
           </tr>
           <tr>
-            <th colSpan="4" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">
+            <th colSpan="8" style="background-color: #0284c7; color: white; font-size: 14px; text-align: center;">
               ${reportLabel.toUpperCase()}
             </th>
           </tr>
@@ -544,28 +552,29 @@ export default function Reports() {
           <b>Date Range / Period:</b> ${period} &nbsp;|&nbsp; 
           <b>Generated On:</b> ${nowStr} &nbsp;|&nbsp; 
           <b>User:</b> ${user.full_name || user.username || 'Staff'} &nbsp;|&nbsp;
-          <b>Z-Counter:</b> ${z_counter || 1}
+          <b>Z-Counter:</b> ${z_counter || 1} &nbsp;|&nbsp;
+          <b>Total Products Sold:</b> ${itemsSold.length} items (${totalUnitsSold} units)
         </div>
 
-        <h3>1. DAILY SALES BREAKDOWN (DAY-BY-DAY)</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">1. DAILY SALES BREAKDOWN (DAY-BY-DAY)</h3>
         <table>
           <thead>
             <tr class="section-header">
               <th style="width: 150px;">DATE</th>
               <th style="width: 120px; text-align: center;">TRANSACTIONS</th>
-              <th style="width: 160px; text-align: right;">COFFEE SALES (₱)</th>
-              <th style="width: 160px; text-align: right;">LAUNDRY SALES (₱)</th>
-              <th style="width: 160px; text-align: right;">TOTAL SALES (₱)</th>
+              <th style="width: 160px; text-align: right;">COFFEE SALES (PHP)</th>
+              <th style="width: 160px; text-align: right;">LAUNDRY SALES (PHP)</th>
+              <th style="width: 160px; text-align: right;">TOTAL SALES (PHP)</th>
             </tr>
           </thead>
           <tbody>
-            ${data?.dailySales && data.dailySales.length > 0 ? data.dailySales.map((d: any) => `
-              <tr>
+            ${data?.dailySales && data.dailySales.length > 0 ? data.dailySales.map((d: any, idx: number) => `
+              <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                 <td style="font-weight: 600; font-family: monospace;">${d.date}</td>
                 <td style="text-align: center;">${d.count || 1}</td>
-                <td class="num">₱${(d.coffee || 0).toFixed(2)}</td>
-                <td class="num">₱${(d.laundry || 0).toFixed(2)}</td>
-                <td class="num" style="color: #047857; font-weight: bold;">₱${(d.net || d.total || 0).toFixed(2)}</td>
+                <td class="num">PHP ${(d.coffee || 0).toFixed(2)}</td>
+                <td class="num">PHP ${(d.laundry || 0).toFixed(2)}</td>
+                <td class="num" style="color: #047857; font-weight: bold;">PHP ${(d.net || d.total || 0).toFixed(2)}</td>
               </tr>
             `).join('') : '<tr><td colSpan="5" style="text-align: center; color: #94a3b8;">No daily sales recorded</td></tr>'}
           </tbody>
@@ -573,97 +582,178 @@ export default function Reports() {
             <tr class="total-row">
               <td>TOTALS</td>
               <td style="text-align: center;">${summary?.total_transactions || 0}</td>
-              <td class="num">₱${totalDailyCoffee.toFixed(2)}</td>
-              <td class="num">₱${totalDailyLaundry.toFixed(2)}</td>
-              <td class="num"><b>₱${netSales.toFixed(2)}</b></td>
+              <td class="num">PHP ${totalDailyCoffee.toFixed(2)}</td>
+              <td class="num">PHP ${totalDailyLaundry.toFixed(2)}</td>
+              <td class="num"><b>PHP ${netSales.toFixed(2)}</b></td>
             </tr>
           </tfoot>
         </table>
 
-        <h3>2. SALES SUMMARY</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">2. FINANCIAL REVENUE SUMMARY</h3>
         <table>
           <thead>
             <tr class="section-header">
               <th style="width: 300px;">DESCRIPTION</th>
-              <th style="width: 200px; text-align: right;">AMOUNT (₱)</th>
+              <th style="width: 200px; text-align: right;">AMOUNT (PHP)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="label">Gross Sales</td>
-              <td class="num">₱${grossSales.toFixed(2)}</td>
+              <td class="num">PHP ${grossSales.toFixed(2)}</td>
             </tr>
             ${isLaundryBranch ? `
             <tr>
-              <td style="padding-left: 25px; color: #64748b;">☕ Coffee Shop Sales Gross</td>
-              <td class="num">₱${(summary?.coffee_sales_total || 0).toFixed(2)}</td>
+              <td style="padding-left: 25px; color: #64748b;">Coffee Shop Sales Gross</td>
+              <td class="num">PHP ${(summary?.coffee_sales_total || 0).toFixed(2)}</td>
             </tr>
             <tr>
-              <td style="padding-left: 25px; color: #64748b;">🧺 Laundry Services Gross</td>
-              <td class="num">₱${(summary?.laundry_sales_total || 0).toFixed(2)}</td>
+              <td style="padding-left: 25px; color: #64748b;">Laundry Services Gross</td>
+              <td class="num">PHP ${(summary?.laundry_sales_total || 0).toFixed(2)}</td>
             </tr>
             ` : ''}
             <tr>
               <td class="label" style="color: #dc2626;">- Total Discounts Applied</td>
-              <td class="num" style="color: #dc2626;">-(₱${totalDiscounts.toFixed(2)})</td>
+              <td class="num" style="color: #dc2626;">-(PHP ${totalDiscounts.toFixed(2)})</td>
             </tr>
             <tr class="total-row">
-              <td>NET SALES</td>
-              <td class="num"><b>₱${netSales.toFixed(2)}</b></td>
+              <td>NET SALES REVENUE</td>
+              <td class="num"><b>PHP ${netSales.toFixed(2)}</b></td>
             </tr>
           </tbody>
         </table>
 
-        <h3>2. PAYMENT METHOD BREAKDOWN</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">3. PAYMENT METHOD BREAKDOWN</h3>
         <table>
           <thead>
             <tr class="section-header">
               <th style="width: 250px;">PAYMENT METHOD</th>
               <th style="width: 150px; text-align: center;">TRANSACTION COUNT</th>
-              <th style="width: 200px; text-align: right;">TOTAL AMOUNT (₱)</th>
+              <th style="width: 200px; text-align: right;">TOTAL AMOUNT (PHP)</th>
             </tr>
           </thead>
           <tbody>
-            ${payments && payments.length > 0 ? payments.map((p: any) => `
-              <tr>
+            ${payments && payments.length > 0 ? payments.map((p: any, idx: number) => `
+              <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                 <td style="font-weight: 600;">${p.method === 'credit_card' ? 'CARD' : p.method.toUpperCase()}</td>
                 <td style="text-align: center;">${p.count}</td>
-                <td class="num">₱${(p.amount || 0).toFixed(2)}</td>
+                <td class="num">PHP ${(p.amount || 0).toFixed(2)}</td>
               </tr>
             `).join('') : '<tr><td colSpan="3" style="text-align: center; color: #94a3b8;">No payment transactions recorded</td></tr>'}
           </tbody>
         </table>
 
-        <h3>3. VAT BREAKDOWN</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">4. VAT BREAKDOWN</h3>
         <table>
           <thead>
             <tr class="section-header">
               <th style="width: 300px;">VAT CATEGORY</th>
-              <th style="width: 200px; text-align: right;">AMOUNT (₱)</th>
+              <th style="width: 200px; text-align: right;">AMOUNT (PHP)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="label">VATable Sales</td>
-              <td class="num">₱${(summary?.vatable_sales || 0).toFixed(2)}</td>
+              <td class="num">PHP ${(summary?.vatable_sales || 0).toFixed(2)}</td>
             </tr>
             <tr>
               <td class="label">VAT Exempt Sales</td>
-              <td class="num">₱${(summary?.vat_exempt_sales || 0).toFixed(2)}</td>
+              <td class="num">PHP ${(summary?.vat_exempt_sales || 0).toFixed(2)}</td>
             </tr>
             <tr>
               <td class="label">Zero Rated Sales</td>
-              <td class="num">₱0.00</td>
+              <td class="num">PHP 0.00</td>
             </tr>
             <tr class="total-row">
               <td>TOTAL VAT AMOUNT (12%)</td>
-              <td class="num"><b>₱${(summary?.total_vat || 0).toFixed(2)}</b></td>
+              <td class="num"><b>PHP ${(summary?.total_vat || 0).toFixed(2)}</b></td>
             </tr>
           </tbody>
         </table>
 
+        <h3 style="color: #0f172a; margin-bottom: 6px;">5. ITEMS & PRODUCTS SOLD BREAKDOWN (PRODUCT SALES)</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 40px; text-align: center;">#</th>
+              <th style="width: 260px;">ITEM / PRODUCT NAME</th>
+              <th style="width: 140px;">CATEGORY</th>
+              <th style="width: 110px; text-align: center;">DIVISION</th>
+              <th style="width: 120px; text-align: right;">UNIT PRICE (PHP)</th>
+              <th style="width: 100px; text-align: center;">QTY SOLD</th>
+              <th style="width: 140px; text-align: right;">TOTAL SALES (PHP)</th>
+              <th style="width: 100px; text-align: right;">% OF VOLUME</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsSold && itemsSold.length > 0 ? itemsSold.map((it: any, idx: number) => {
+              const isCoffee = it.division !== 'laundry';
+              const divBadge = isCoffee
+                ? '<span style="background-color: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Coffee</span>'
+                : '<span style="background-color: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Laundry</span>';
+              const pct = totalUnitsSold > 0 ? ((it.quantity || 0) / totalUnitsSold * 100).toFixed(1) : '0.0';
+              const compText = it.comp_count > 0 ? ` <span style="color: #dc2626; font-size: 10px;">(${it.comp_count} Free/Comp)</span>` : '';
+              return `
+                <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
+                  <td style="text-align: center; color: #64748b; font-family: monospace;">${idx + 1}</td>
+                  <td style="font-weight: bold; color: #0f172a;">${it.name || 'Item'}${compText}</td>
+                  <td style="color: #475569;">${it.category || 'General'}</td>
+                  <td style="text-align: center;">${divBadge}</td>
+                  <td class="num">PHP ${(it.unit_price || 0).toFixed(2)}</td>
+                  <td style="text-align: center; font-weight: bold; font-family: monospace; font-size: 13px;">${it.quantity || 0}</td>
+                  <td class="num" style="color: #047857; font-weight: bold;">PHP ${(it.total_amount || 0).toFixed(2)}</td>
+                  <td class="num" style="color: #64748b;">${pct}%</td>
+                </tr>
+              `;
+            }).join('') : '<tr><td colSpan="8" style="text-align: center; color: #94a3b8;">No items sold recorded</td></tr>'}
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colSpan="4">TOTALS (${itemsSold.length} PRODUCTS)</td>
+              <td style="text-align: center;">-</td>
+              <td style="text-align: center; font-weight: bold;">${totalUnitsSold} Units</td>
+              <td class="num"><b>PHP ${totalItemsAmount.toFixed(2)}</b></td>
+              <td class="num">100%</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        ${dailyList && dailyList.some((d: any) => d.items && d.items.length > 0) ? `
+        <h3 style="color: #0f172a; margin-bottom: 6px;">6. DAY-BY-DAY ITEMS SOLD BREAKDOWN</h3>
+        <table>
+          <thead>
+            <tr class="section-header">
+              <th style="width: 110px;">DATE</th>
+              <th style="width: 240px;">ITEM / PRODUCT NAME</th>
+              <th style="width: 130px;">CATEGORY</th>
+              <th style="width: 100px; text-align: center;">DIVISION</th>
+              <th style="width: 110px; text-align: right;">UNIT PRICE (PHP)</th>
+              <th style="width: 90px; text-align: center;">QTY SOLD</th>
+              <th style="width: 130px; text-align: right;">TOTAL AMOUNT (PHP)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dailyList.map((d: any) => {
+              const dItems = d.items || [];
+              if (dItems.length === 0) return '';
+              return dItems.map((it: any, iIdx: number) => `
+                <tr style="${iIdx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
+                  <td style="font-family: monospace; font-weight: bold; color: #1e293b;">${d.date}</td>
+                  <td style="font-weight: bold; color: #0f172a;">${it.name}</td>
+                  <td style="color: #475569;">${it.category || 'General'}</td>
+                  <td style="text-align: center; font-size: 11px; font-weight: 600;">${it.division === 'laundry' ? 'Laundry' : 'Coffee'}</td>
+                  <td class="num">PHP ${(it.unit_price || 0).toFixed(2)}</td>
+                  <td style="text-align: center; font-weight: bold; font-family: monospace;">${it.quantity}</td>
+                  <td class="num" style="color: #047857; font-weight: bold;">PHP ${(it.total_amount || 0).toFixed(2)}</td>
+                </tr>
+              `).join('');
+            }).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+
         ${shiftData && shiftData.length > 0 ? `
-        <h3>4. CASHIER SHIFT SUMMARY</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">7. CASHIER SHIFT SUMMARY</h3>
         <table>
           <thead>
             <tr class="section-header">
@@ -678,7 +768,7 @@ export default function Reports() {
             </tr>
           </thead>
           <tbody>
-            ${shiftData.map((s: any) => {
+            ${shiftData.map((s: any, idx: number) => {
               const cashierName = s.users?.full_name || s.users?.username || 'Cashier';
               let shiftCash = 0;
               if (s.orders) {
@@ -688,10 +778,10 @@ export default function Reports() {
               }
               const expectedCash = (s.cash_in || 0) + shiftCash;
               const diff = s.cash_out !== null && s.cash_out !== undefined ? s.cash_out - expectedCash : null;
-              const diffText = diff !== null ? (diff >= 0 ? `+₱${diff.toFixed(2)} (Over)` : `-₱${Math.abs(diff).toFixed(2)} (Short)`) : 'Active Shift';
+              const diffText = diff !== null ? (diff >= 0 ? `+PHP ${diff.toFixed(2)} (Over)` : `-PHP ${Math.abs(diff).toFixed(2)} (Short)`) : 'Active Shift';
               const diffClass = diff !== null ? (diff >= 0 ? 'over-row' : 'short-row') : '';
               return `
-                <tr>
+                <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                   <td style="font-weight: bold;">${cashierName} (Shift #${s.id})</td>
                   <td>${s.time_in ? format(new Date(s.time_in), 'MM/dd/yyyy hh:mm a') : ''}</td>
                   <td>${s.time_out ? format(new Date(s.time_out), 'MM/dd/yyyy hh:mm a') : 'Active'}</td>
@@ -708,7 +798,7 @@ export default function Reports() {
         ` : ''}
 
         ${voidedTransactions && voidedTransactions.length > 0 ? `
-        <h3>5. VOIDED TRANSACTIONS</h3>
+        <h3 style="color: #0f172a; margin-bottom: 6px;">8. VOIDED TRANSACTIONS</h3>
         <table>
           <thead>
             <tr class="section-header">
@@ -720,8 +810,8 @@ export default function Reports() {
             </tr>
           </thead>
           <tbody>
-            ${voidedTransactions.map((v: any) => `
-              <tr>
+            ${voidedTransactions.map((v: any, idx: number) => `
+              <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                 <td>#${v.id ? v.id.toString().padStart(6, '0') : ''}</td>
                 <td>${v.receipt_number !== undefined && v.receipt_number !== null ? '#' + v.receipt_number.toString().padStart(6, '0') : 'N/A'}</td>
                 <td>${v.users?.full_name || v.users?.username || 'Staff'}</td>
@@ -821,6 +911,28 @@ export default function Reports() {
     const totalDailyTxns = dailyList.reduce((s: number, d: any) => s + (d.count || 0), 0);
     const totalDailyCoffee = dailyList.reduce((s: number, d: any) => s + (d.coffee || 0), 0);
     const totalDailyLaundry = dailyList.reduce((s: number, d: any) => s + (d.laundry || 0), 0);
+
+    const itemsSold = data?.items_sold || [];
+    const totalUnitsSold = itemsSold.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
+    const totalItemsAmount = itemsSold.reduce((s: number, it: any) => s + (it.total_amount || 0), 0);
+
+    const filteredItemsSold = itemsSold.filter((it: any) => {
+      if (itemDivisionFilter !== 'all') {
+        const isCoffee = it.division !== 'laundry';
+        if (itemDivisionFilter === 'coffee' && !isCoffee) return false;
+        if (itemDivisionFilter === 'laundry' && isCoffee) return false;
+      }
+      if (itemSearch.trim()) {
+        const q = itemSearch.toLowerCase();
+        const matchesName = (it.name || '').toLowerCase().includes(q);
+        const matchesCat = (it.category || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesCat) return false;
+      }
+      return true;
+    });
+
+    const totalFilteredUnits = filteredItemsSold.reduce((s: number, it: any) => s + (it.quantity || 0), 0);
+    const totalFilteredAmount = filteredItemsSold.reduce((s: number, it: any) => s + (it.total_amount || 0), 0);
 
     return (
       <div className="w-full bg-white p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-xs font-sans text-slate-800">
@@ -1041,6 +1153,134 @@ export default function Reports() {
                     <td className="py-2.5 px-4 text-right font-mono font-black text-slate-900 text-sm">₱{(accumulated_grand_total || 0).toFixed(2)}</td>
                   </tr>
                 </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* TABLE 6: ITEMS & PRODUCTS SOLD BREAKDOWN */}
+          <div className="bg-white rounded-xl border border-slate-300 overflow-hidden shadow-xs">
+            <div className="bg-slate-800 text-white px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 font-black text-xs uppercase tracking-wider">
+              <span className="flex items-center gap-2">
+                <ShoppingBag size={15} className="text-amber-400" />
+                6. Items & Products Sold Breakdown
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] bg-slate-700 px-2.5 py-0.5 rounded-full text-slate-200 font-bold">
+                  {filteredItemsSold.length} Products ({totalFilteredUnits} Units Sold)
+                </span>
+              </div>
+            </div>
+
+            {/* Controls: Search and Filter */}
+            <div className="p-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-300 flex-1 max-w-xs shadow-2xs">
+                <Search size={14} className="text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search item or category..."
+                  value={itemSearch}
+                  onChange={e => setItemSearch(e.target.value)}
+                  className="bg-transparent border-none outline-none text-xs text-slate-700 w-full"
+                />
+                {itemSearch && (
+                  <button onClick={() => setItemSearch('')} className="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+                )}
+              </div>
+
+              {isLaundryBranch && (
+                <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-300 text-xs font-semibold shadow-2xs">
+                  <button
+                    onClick={() => setItemDivisionFilter('all')}
+                    className={clsx("px-2.5 py-1 rounded-md transition-colors cursor-pointer", itemDivisionFilter === 'all' ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100")}
+                  >
+                    All Items
+                  </button>
+                  <button
+                    onClick={() => setItemDivisionFilter('coffee')}
+                    className={clsx("px-2.5 py-1 rounded-md transition-colors cursor-pointer", itemDivisionFilter === 'coffee' ? "bg-amber-600 text-white" : "text-slate-600 hover:bg-slate-100")}
+                  >
+                    ☕ Coffee & Food
+                  </button>
+                  <button
+                    onClick={() => setItemDivisionFilter('laundry')}
+                    className={clsx("px-2.5 py-1 rounded-md transition-colors cursor-pointer", itemDivisionFilter === 'laundry' ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100")}
+                  >
+                    🧺 Laundry
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-left text-xs font-medium border-collapse">
+                <thead className="sticky top-0 bg-slate-100 border-b border-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-wider shadow-xs z-10">
+                  <tr>
+                    <th className="py-2.5 px-3 border-r border-slate-300 text-center w-12">#</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300">Product / Item Name</th>
+                    <th className="py-2.5 px-3 border-r border-slate-300">Category</th>
+                    <th className="py-2.5 px-3 border-r border-slate-300 text-center">Division</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Unit Price (₱)</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-center">Qty Sold</th>
+                    <th className="py-2.5 px-4 border-r border-slate-300 text-right">Total Sales (₱)</th>
+                    <th className="py-2.5 px-3 text-right">% of Volume</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredItemsSold.length > 0 ? (
+                    filteredItemsSold.map((it: any, idx: number) => {
+                      const isCoffee = it.division !== 'laundry';
+                      const pctOfUnits = totalUnitsSold > 0 ? ((it.quantity || 0) / totalUnitsSold) * 100 : 0;
+
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors odd:bg-white even:bg-slate-50/40">
+                          <td className="py-2 px-3 border-r border-slate-200 text-center text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                          <td className="py-2 px-4 border-r border-slate-200 font-bold text-slate-900">
+                            {it.name}
+                            {it.comp_count > 0 && (
+                              <span className="ml-2 text-[10px] bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded-full font-semibold">
+                                {it.comp_count} Free/Comp
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 border-r border-slate-200 text-slate-600 text-[11px]">{it.category || 'General'}</td>
+                          <td className="py-2 px-3 border-r border-slate-200 text-center">
+                            <span className={clsx(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider inline-block",
+                              isCoffee ? "bg-amber-100 text-amber-800 border border-amber-200" : "bg-blue-100 text-blue-800 border border-blue-200"
+                            )}>
+                              {isCoffee ? '☕ Coffee' : '🧺 Laundry'}
+                            </span>
+                          </td>
+                          <td className="py-2 px-4 border-r border-slate-200 text-right font-mono text-slate-700">₱{(it.unit_price || 0).toFixed(2)}</td>
+                          <td className="py-2 px-4 border-r border-slate-200 text-center font-mono font-bold text-slate-900 bg-slate-50/50">{it.quantity || 0}</td>
+                          <td className="py-2 px-4 border-r border-slate-200 text-right font-mono font-bold text-emerald-700">₱{(it.total_amount || 0).toFixed(2)}</td>
+                          <td className="py-2 px-3 text-right font-mono text-slate-500 text-[11px]">
+                            {pctOfUnits.toFixed(1)}%
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-slate-400 italic">
+                        {itemSearch ? 'No items matched your search query.' : 'No itemized product sales recorded for this period.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                {filteredItemsSold.length > 0 && (
+                  <tfoot className="sticky bottom-0 bg-emerald-50 text-emerald-950 border-t-2 border-slate-400 font-black text-xs shadow-xs">
+                    <tr>
+                      <td colSpan={4} className="py-3 px-4 border-r border-emerald-200 uppercase tracking-wider">
+                        TOTAL ITEMS SOLD ({filteredItemsSold.length} PRODUCTS)
+                      </td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right text-slate-500 font-normal text-[10px]">-</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-center font-mono text-sm">{totalFilteredUnits} Units</td>
+                      <td className="py-3 px-4 border-r border-emerald-200 text-right font-mono text-emerald-700 text-sm">₱{totalFilteredAmount.toFixed(2)}</td>
+                      <td className="py-3 px-3 text-right font-mono text-[11px]">100%</td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>

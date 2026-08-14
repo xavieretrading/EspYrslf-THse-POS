@@ -1,5 +1,19 @@
 [
   {
+    "id": "1786607116626x8yp4",
+    "timestamp": "2026-08-13T07:45:16.626Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Export Sales Report Excel",
+    "details": "Exported Y-Reading (Period) to Excel for 2026-07-31 to 2026-08-13"
+  },
+  {
+    "id": "1786606982217ehez8",
+    "timestamp": "2026-08-13T07:43:02.217Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Login",
+    "details": "User logged in successfully (Local Auth)"
+  },
+  {
     "id": "17865348329757egwh",
     "timestamp": "2026-08-12T11:40:32.975Z",
     "user": "Cashier 1",

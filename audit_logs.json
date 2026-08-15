@@ -1,5 +1,33 @@
 [
   {
+    "id": "17867796908410q1qp",
+    "timestamp": "2026-08-15T07:41:30.842Z",
+    "user": "Philip Macairan",
+    "activity": "Edit Product",
+    "details": "Updated product: Cinamon Rolls"
+  },
+  {
+    "id": "1786779642261s1e45",
+    "timestamp": "2026-08-15T07:40:42.261Z",
+    "user": "Philip Macairan",
+    "activity": "Delete Product",
+    "details": "Deleted product: Cinamon Rolls"
+  },
+  {
+    "id": "1786779634183vrd61",
+    "timestamp": "2026-08-15T07:40:34.183Z",
+    "user": "Philip Macairan",
+    "activity": "Delete Product",
+    "details": "Deleted product: Cinnamon Roll"
+  },
+  {
+    "id": "1786779537395mr8cf",
+    "timestamp": "2026-08-15T07:38:57.395Z",
+    "user": "Philip Macairan",
+    "activity": "Add Product",
+    "details": "Created product: Cinnamon Roll"
+  },
+  {
     "id": "1786779264765z8i13",
     "timestamp": "2026-08-15T07:34:24.765Z",
     "user": "Philip Macairan",

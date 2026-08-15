@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Download, Calendar, Activity, ChevronRight, ChevronDown, Tag, Users, User, Medal, Ticket, Gift, Clock, Printer, Trash2, TableIcon, ShoppingBag, Search } from 'lucide-react';
+import { FileText, Download, Calendar, Activity, ChevronRight, ChevronDown, Tag, Users, User, Medal, Ticket, Gift, Clock, Printer, Trash2, TableIcon, ShoppingBag, Search, Package } from 'lucide-react';
 import { format, subDays, startOfMonth, startOfDay, startOfWeek } from 'date-fns';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
@@ -9,12 +9,13 @@ import * as XLSX from 'xlsx';
 import { logActivity } from '../lib/audit';
 import { swalAlert } from '../lib/swal';
 
-type ReportType = 'Z' | 'Y' | 'X' | 'BIR_SALES_SUMMARY' | 'SENIOR_CITIZEN' | 'PWD' | 'NATIONAL_ATHLETES' | 'SOLO_PARENT' | 'MEDAL_OF_VALOR' | 'REGULAR_DISCOUNT' | 'EJOURNAL' | 'VOUCHER_PAYMENTS' | 'VOUCHER_REDEMPTIONS' | 'COMPLIMENTARY' | 'VOIDED';
+type ReportType = 'Z' | 'Y' | 'X' | 'BIR_SALES_SUMMARY' | 'SENIOR_CITIZEN' | 'PWD' | 'NATIONAL_ATHLETES' | 'SOLO_PARENT' | 'MEDAL_OF_VALOR' | 'REGULAR_DISCOUNT' | 'EJOURNAL' | 'VOUCHER_PAYMENTS' | 'VOUCHER_REDEMPTIONS' | 'COMPLIMENTARY' | 'VOIDED' | 'INVENTORY_STOCKS';
 
 const REPORT_CATEGORIES: { id: ReportType; label: string; icon: any }[] = [
   { id: 'X', label: 'X-Reading (Interim Snapshot)', icon: FileText },
   { id: 'Z', label: 'Z-Reading (Daily)', icon: Activity },
   { id: 'Y', label: 'Y-Reading (Period)', icon: Calendar },
+  { id: 'INVENTORY_STOCKS', label: 'Inventory Stocks Report', icon: Package },
   { id: 'VOIDED', label: 'Voided Transactions Report', icon: Trash2 },
   { id: 'BIR_SALES_SUMMARY', label: 'BIR Sales Summary Report', icon: FileText },
   { id: 'COMPLIMENTARY', label: 'Complimentary Report', icon: Gift },
@@ -62,6 +63,7 @@ export default function Reports() {
   });
 
   const [voucherRedemptions, setVoucherRedemptions] = useState<any[]>([]);
+  const [inventoryStocks, setInventoryStocks] = useState<any[]>([]);
   const [complimentaryData, setComplimentaryData] = useState<any[]>([]);
   const [eJournalData, setEJournalData] = useState<any[]>([]);
   const [shiftData, setShiftData] = useState<any[]>([]);
@@ -152,6 +154,86 @@ export default function Reports() {
         .catch(() => setDiscountOrders([]));
     } else {
       setDiscountOrders([]);
+    }
+
+    if (reportType === 'INVENTORY_STOCKS') {
+      Promise.all([
+        fetch(`/api/inventory?branch_id=${activeBranch.id}`).then(r => r.json()),
+        fetch(`/api/inventory/transactions?branch_id=${activeBranch.id}`).then(r => r.json())
+      ]).then(([products, txs]) => {
+        const computed = (products || []).map((p: any) => {
+          const pTxs = (txs || []).filter((t: any) => t.product_id === p.id);
+          const rangeStart = new Date(`${dateRange.start}T00:00:00+08:00`);
+          const rangeEnd = new Date(`${dateRange.end}T23:59:59+08:00`);
+          
+          let endingStock = p.stock || 0;
+          let stockIn = 0;
+          let stockOut = 0;
+          
+          pTxs.forEach((t: any) => {
+            const txDate = new Date(t.created_at);
+            const isInitial = t.remarks && (
+              t.remarks.toLowerCase().includes('initial') || 
+              t.remarks.toLowerCase().includes('setup') || 
+              t.remarks.toLowerCase().includes('creation')
+            );
+            
+            if (txDate > rangeEnd) {
+              if (t.type === 'in') {
+                endingStock -= t.quantity;
+              } else {
+                endingStock += t.quantity;
+              }
+            } else if (txDate >= rangeStart && txDate <= rangeEnd) {
+              if (t.type === 'in') {
+                if (isInitial) {
+                  // Initial setups do not count as Stock In (+), they represent the starting balance
+                } else {
+                  stockIn += t.quantity;
+                }
+              } else {
+                stockOut += t.quantity;
+              }
+            }
+          });
+          
+          const beginningStock = endingStock - stockIn + stockOut;
+          
+          const restockTxs = pTxs.filter((t: any) => {
+            const txDate = new Date(t.created_at);
+            const isInitial = t.remarks && (
+              t.remarks.toLowerCase().includes('initial') || 
+              t.remarks.toLowerCase().includes('setup') || 
+              t.remarks.toLowerCase().includes('creation')
+            );
+            return t.type === 'in' && !isInitial && txDate >= rangeStart && txDate <= rangeEnd;
+          });
+
+          const restockLogs = restockTxs.map((t: any) => {
+            const txDate = new Date(new Date(t.created_at).getTime() + 8 * 60 * 60 * 1000);
+            const dateStr = txDate.toISOString().split('T')[0];
+            return {
+              date: dateStr,
+              quantity: t.quantity,
+              remarks: t.remarks || 'Restock'
+            };
+          });
+          
+          return {
+            ...p,
+            beginningStock: p.stock >= 9997 ? 'Unlimited' : beginningStock,
+            endingStock: p.stock >= 9997 ? 'Unlimited' : endingStock,
+            stockIn: p.stock >= 9997 ? 0 : stockIn,
+            stockOut: p.stock >= 9997 ? 0 : stockOut,
+            salesValue: p.stock >= 9997 ? 0 : stockOut * (p.price || 0),
+            restockLogs
+          };
+        });
+        setInventoryStocks(computed);
+      }).catch(err => {
+        console.error(err);
+        setInventoryStocks([]);
+      });
     }
   };
 
@@ -483,15 +565,80 @@ export default function Reports() {
       });
     }
   };
-
   const handleExportSalesReportExcel = () => {
     if (!activeBranch) return;
     const user = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
     const period = `${dateRange.start} to ${dateRange.end}`;
     const companyName = settings?.company_name || activeBranch?.name || 'AllSet POS';
+    const nowStr = format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss');
+
+    if (reportType === 'INVENTORY_STOCKS') {
+      const htmlContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="utf-8" />
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; }
+            table { border-collapse: collapse; width: 100%; }
+            th { background-color: #1e3a8a; color: white; font-weight: bold; border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+            td { border: 1px solid #cbd5e1; padding: 6px; }
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+          </style>
+        </head>
+        <body>
+          <h2>${companyName} — INVENTORY STOCKS REPORT</h2>
+          <p>Period Coverage: ${period} | Generated On: ${nowStr}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Item Type</th>
+                <th>Beginning Stock</th>
+                <th>Stock In (+)</th>
+                <th>Restock Logs</th>
+                <th>Stock Out (-)</th>
+                <th>Ending Stock</th>
+                <th>Price</th>
+                <th>Total Sales Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredStocks.map((item: any) => `
+                <tr>
+                  <td class="text-center">${item.id}</td>
+                  <td>${item.name}</td>
+                  <td>${item.category_name || 'General'}</td>
+                  <td>${item.stock >= 9997 ? 'Service/Non-Inventory' : 'Tracked Inventory'}</td>
+                  <td class="text-center">${item.beginningStock}</td>
+                  <td class="text-center">${item.stockIn}</td>
+                  <td class="text-center">${item.restockLogs && item.restockLogs.length > 0 ? item.restockLogs.map((log: any) => `${log.date} (+${log.quantity})`).join(', ') : '—'}</td>
+                  <td class="text-center">${item.stockOut}</td>
+                  <td class="text-center">${item.endingStock}</td>
+                  <td class="text-right">₱${(item.price || 0).toFixed(2)}</td>
+                  <td class="text-right">₱${(Number(item.stockOut || 0) * (item.price || 0)).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+      const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Inventory_Stocks_Report_${dateRange.start}_to_${dateRange.end}.xls`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      logActivity(user.full_name || user.username || 'Staff', 'Export Inventory Stocks Excel', `Exported Inventory Stocks Report to Excel for ${period}`);
+      return;
+    }
+
     const branchName = activeBranch?.name || '';
     const reportLabel = REPORT_CATEGORIES.find(c => c.id === reportType)?.label || 'Sales Report';
-    const nowStr = format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss');
     const grossSales = summary?.gross_sales || 0;
     const totalDiscounts = summary?.total_discounts || 0;
     const netSales = grossSales - totalDiscounts;
@@ -2545,6 +2692,186 @@ export default function Reports() {
     );
   };
 
+  const filteredStocks = inventoryStocks.filter((s: any) => {
+    const catName = s.category_name?.toLowerCase() || '';
+    const nameLower = s.name.toLowerCase();
+
+    // 1. Exclude Hot Coffee, Iced & Blended, Non-Coffee, and Tea categories
+    if (
+      catName.includes('hot coffee') || 
+      catName.includes('iced & blended') || 
+      catName.includes('non-coffee') || 
+      catName.includes('tea & alternatives')
+    ) {
+      return false;
+    }
+
+    // 2. Exclude Laundry service items (washing, ironing, dry cleaning, delivery, comforters, shoes, toys, curtains)
+    const isLaundryService = 
+      nameLower.includes('clothes:') || 
+      nameLower.includes('bedsheet') || 
+      nameLower.includes('comforter') || 
+      nameLower.includes('wash only') || 
+      nameLower.includes('dry clean') || 
+      nameLower.includes('ironing') || 
+      nameLower.includes('suits') || 
+      nameLower.includes('gown') || 
+      nameLower.includes('shoes') || 
+      nameLower.includes('dress') || 
+      nameLower.includes('formal shirt') || 
+      nameLower.includes('barong') ||
+      nameLower.includes('trousers') ||
+      nameLower.includes('button-up') ||
+      nameLower.includes('toys') ||
+      nameLower.includes('curtains') ||
+      nameLower.includes('delivery');
+
+    if (isLaundryService && catName.includes('laundry')) {
+      return false;
+    }
+    if (
+      catName.includes('wear') || 
+      catName.includes('ironing') || 
+      catName.includes('clean') || 
+      catName.includes('pressing')
+    ) {
+      return false;
+    }
+
+    // 3. Search query filter
+    const matchesSearch = s.name.toLowerCase().includes(itemSearch.toLowerCase()) || 
+                          (s.category_name && s.category_name.toLowerCase().includes(itemSearch.toLowerCase()));
+    if (!matchesSearch) return false;
+
+    // 4. Division filter
+    if (itemDivisionFilter === 'coffee' && s.division !== 'coffee') return false;
+    if (itemDivisionFilter === 'laundry' && s.division !== 'laundry') return false;
+    
+    return true;
+  });
+
+  const renderInventoryStocksReport = () => {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-100 pb-5 print:pb-2 print:mb-2">
+          <div>
+            <h3 className="text-base font-extrabold text-slate-800 uppercase tracking-wide print:text-xs">Inventory Stocks Summary</h3>
+            <p className="text-xs text-slate-500 font-semibold mt-0.5 print:text-[8px]">Showing Beginning Stock, Total Stock In, Total Stock Out, and Ending Stock levels</p>
+          </div>
+          
+          <div className="flex items-center gap-2 print:hidden">
+            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setItemDivisionFilter('all')}
+                className={clsx(
+                  "px-3 py-1 rounded-md text-xs font-bold transition-all",
+                  itemDivisionFilter === 'all' ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                )}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemDivisionFilter('coffee')}
+                className={clsx(
+                  "px-3 py-1 rounded-md text-xs font-bold transition-all",
+                  itemDivisionFilter === 'coffee' ? "bg-white text-amber-700 shadow-xs" : "text-slate-500 hover:text-amber-700"
+                )}
+              >
+                Cafe
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemDivisionFilter('laundry')}
+                className={clsx(
+                  "px-3 py-1 rounded-md text-xs font-bold transition-all",
+                  itemDivisionFilter === 'laundry' ? "bg-white text-blue-700 shadow-xs" : "text-slate-500 hover:text-blue-700"
+                )}
+              >
+                Laundry
+              </button>
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={itemSearch}
+                onChange={e => setItemSearch(e.target.value)}
+                className="pl-8 pr-3 py-1 bg-slate-50 border border-slate-200 rounded-lg focus:border-slate-400 focus:ring-1 focus:ring-slate-200 outline-none text-xs font-bold"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-medium border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-y border-slate-100 text-slate-500 uppercase tracking-wider print:border-black">
+                <th className="py-2.5 px-3 font-bold text-center">ID</th>
+                <th className="py-2.5 px-4 font-bold">Product Name</th>
+                <th className="py-2.5 px-3 font-bold">Category</th>
+                <th className="py-2.5 px-3 font-bold text-center">Beginning Stock</th>
+                <th className="py-2.5 px-3 font-bold text-center">Stock In (+)</th>
+                <th className="py-2.5 px-3 font-bold text-center">Restock Logs</th>
+                <th className="py-2.5 px-3 font-bold text-center">Stock Out (-)</th>
+                <th className="py-2.5 px-3 font-bold text-center">Ending Stock</th>
+                <th className="py-2.5 px-3 font-bold text-right">Price</th>
+                <th className="py-2.5 px-4 font-bold text-right">Sales Value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-700 print:divide-black">
+              {filteredStocks.map((item: any) => {
+                const salesVal = (item.stockOut || 0) * (item.price || 0);
+                const isOutOfStock = item.endingStock !== 'Unlimited' && Number(item.endingStock) <= 0;
+                
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50/20 transition-all">
+                    <td className="py-2 px-3 text-slate-400 text-center font-mono">{item.id}</td>
+                    <td className="py-2 px-4 font-bold text-slate-900">{item.name}</td>
+                    <td className="py-2 px-3 text-slate-500 font-semibold">{item.category_name || 'General'}</td>
+                    <td className="py-2 px-3 text-center font-bold">{item.beginningStock}</td>
+                    <td className="py-2 px-3 text-center text-emerald-600 font-bold">+{item.stockIn}</td>
+                    <td className="py-2 px-3 text-center">
+                      {item.restockLogs && item.restockLogs.length > 0 ? (
+                        <div className="flex flex-col gap-1 items-center">
+                          {item.restockLogs.map((log: any, logIdx: number) => {
+                            const dateObj = new Date(log.date);
+                            const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            return (
+                              <span key={logIdx} className="inline-block bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-100 text-[10px] w-max" title={log.remarks}>
+                                {displayDate}: +{log.quantity}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 font-normal">—</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center text-rose-600 font-bold">-{item.stockOut}</td>
+                    <td className={clsx(
+                      "py-2 px-3 text-center font-black",
+                      isOutOfStock ? "text-rose-700 bg-rose-50/50" : "text-slate-800"
+                    )}>
+                      {item.endingStock}
+                    </td>
+                    <td className="py-2 px-3 text-right font-mono">₱{(item.price || 0).toFixed(2)}</td>
+                    <td className="py-2 px-4 text-right font-mono font-bold">
+                      ₱{salesVal.toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   const currentReportTitle = REPORT_CATEGORIES.find(r => r.id === reportType)?.label || '';
 
   return (
@@ -2770,15 +3097,15 @@ export default function Reports() {
           <style type="text/css" media="print">
             {`
               @page { 
-                size: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR'].includes(reportType)
-                ? 'A4 landscape'
+                size: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
+                ? (printSize === 'legal' ? '356mm 216mm landscape' : 'A4 landscape')
                 : printSize === 'A4'
                   ? 'A4 portrait'
                   : printSize === 'legal'
                     ? '216mm 356mm portrait'
                     : '80mm auto'
               }; 
-                margin: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR'].includes(reportType)
+                margin: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
                 ? '10mm'
                 : printSize === 'A4' || printSize === 'legal'
                   ? '12mm 15mm'
@@ -2800,8 +3127,8 @@ export default function Reports() {
                 display: none !important;
               }
               
-              /* Reset specific parent layout containers so they seamlessly host the printable area without page offset */
-              html, body, #root, #root > div, main, main > div, .flex-1.flex.flex-col, .bg-white.rounded-3xl {
+               /* Reset specific parent layout containers so they seamlessly host the printable area without page offset */
+              html, body, #root, #root div, main, main div, .printable-area {
                 height: auto !important;
                 min-height: 0 !important;
                 max-height: none !important;
@@ -2821,6 +3148,15 @@ export default function Reports() {
                 background: transparent !important;
               }
               
+              .printable-area table thead {
+                display: table-header-group !important;
+              }
+              
+              .printable-area tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              
               /* Force the main white background context for printed page */
               html, body {
                 display: block !important;
@@ -2834,8 +3170,14 @@ export default function Reports() {
               
               /* Layout and color styling for .printable-area container */
               .printable-area { 
-                width: ${printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm'} !important; 
-                max-width: ${printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm'} !important; 
+                width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
+                  ? (printSize === 'legal' ? '336mm' : '277mm')
+                  : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+                } !important; 
+                max-width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
+                  ? (printSize === 'legal' ? '336mm' : '277mm')
+                  : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+                } !important; 
                 margin: 0 !important; 
                 padding: ${printSize === '80mm' ? '4mm' : '6mm'} !important; 
                 border: none !important;
@@ -2866,7 +3208,7 @@ export default function Reports() {
               /* For A4/legal: allow tables to use full width */
               ${printSize !== '80mm' ? `
               .printable-area table { width: 100% !important; }
-              .printable-area td, .printable-area th { font-size: 10px !important; }
+              .printable-area td, .printable-area th { font-size: ${reportType === 'INVENTORY_STOCKS' ? '7.5px' : '10px'} !important; padding: ${reportType === 'INVENTORY_STOCKS' ? '4px 6px' : '8px 12px'} !important; }
               ` : ''}
               
               /* Hide elements explicitly marked to be hidden during print within the printable area */
@@ -2876,7 +3218,7 @@ export default function Reports() {
               }
             `}
           </style>
-          <div className={`mx-auto border sm:border-2 border-slate-300 p-8 print:border-none print:p-0 bg-white printable-area print:max-w-none ${reportType === 'BIR_SALES_SUMMARY' || reportType === 'SENIOR_CITIZEN' || reportType === 'PWD' || reportType === 'NATIONAL_ATHLETES' || reportType === 'SOLO_PARENT' || reportType === 'MEDAL_OF_VALOR'
+          <div className={`mx-auto border sm:border-2 border-slate-300 p-8 print:border-none print:p-0 bg-white printable-area print:max-w-none ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
             ? 'max-w-none'
             : printSize === 'A4'
               ? 'max-w-3xl'
@@ -2951,6 +3293,8 @@ export default function Reports() {
               renderShiftSalesReport()
             ) : reportType === 'VOUCHER_PAYMENTS' ? (
               renderVoucherReport()
+            ) : reportType === 'INVENTORY_STOCKS' ? (
+              renderInventoryStocksReport()
             ) : (
               renderDiscountReport('discount', 'REGULAR DISCOUNT SALES REPORT')
             )}

@@ -1,5 +1,96 @@
 [
   {
+    "id": "1786779264765z8i13",
+    "timestamp": "2026-08-15T07:34:24.765Z",
+    "user": "Philip Macairan",
+    "activity": "Login",
+    "details": "User logged in successfully (Auto-migrate)"
+  },
+  {
+    "id": "1786776867791zjql9",
+    "timestamp": "2026-08-15T06:54:27.791Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786776829207ufpij",
+    "timestamp": "2026-08-15T06:53:49.207Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "17867767886550n153",
+    "timestamp": "2026-08-15T06:53:08.655Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786776758822b20yf",
+    "timestamp": "2026-08-15T06:52:38.822Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786776724566bvr20",
+    "timestamp": "2026-08-15T06:52:04.566Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "17867761098517kyiz",
+    "timestamp": "2026-08-15T06:41:49.851Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786776097708o64i5",
+    "timestamp": "2026-08-15T06:41:37.708Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786776029552lnrx8",
+    "timestamp": "2026-08-15T06:40:29.552Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786775253888e1925",
+    "timestamp": "2026-08-15T06:27:33.888Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-07-31 to 2026-08-15"
+  },
+  {
+    "id": "1786775099801up1ax",
+    "timestamp": "2026-08-15T06:24:59.801Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Print Report",
+    "details": "Printed Inventory Stocks Report for 2026-08-01 to 2026-08-15"
+  },
+  {
+    "id": "1786773330832mzx35",
+    "timestamp": "2026-08-15T05:55:30.832Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
+    "id": "17867733302414efii",
+    "timestamp": "2026-08-15T05:55:30.241Z",
+    "user": "JUNREL EJURANGO",
+    "activity": "Toggle Stock Strict Lock",
+    "details": "Turned strict out-of-stock item lock ON"
+  },
+  {
     "id": "1786607116626x8yp4",
     "timestamp": "2026-08-13T07:45:16.626Z",
     "user": "JUNREL EJURANGO",

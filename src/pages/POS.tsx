@@ -209,6 +209,7 @@ export default function POS() {
   const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>(null);
   const [paxCount, setPaxCount] = useState<number>(1);
   const [discountPaxCount, setDiscountPaxCount] = useState<number>(1);
+  const [manualCafeDiscountPercent, setManualCafeDiscountPercent] = useState<number>(0);
   const [amountTendered, setAmountTendered] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'gcash' | 'rcbc' | 'voucher' | 'store_credit'>('cash');
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -456,9 +457,21 @@ export default function POS() {
                 const discName = match[1];
                 itemDiscount = d.find((disc: any) => disc.name === discName);
               }
+            } else if (item.discount_id === -99 || (item.discount_amount > 0 && item.discount_id === null)) {
+              const discountPercent = item.price > 0 ? Math.round((item.discount_amount / (item.price * item.quantity)) * 10000) / 100 : 0;
+              itemDiscount = {
+                id: -99,
+                name: `Manual Cafe Discount (${discountPercent}%)`,
+                type: 'percentage',
+                value: discountPercent
+              };
+            } else if (item.discount_id) {
+              itemDiscount = d.find((disc: any) => disc.id === item.discount_id);
             }
             return {
               ...item,
+              id: item.product_id, // Map product_id to id for POS cart consistency
+              name: item.product_name,
               _isSaved: true,
               itemDiscount,
               isComplimentary: item.is_complimentary,
@@ -639,7 +652,23 @@ export default function POS() {
     setComplimentaryItemIdx(null);
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.isComplimentary ? 0 : (item.price * item.quantity)), 0);
+  const processedCart = cart.map(item => {
+    const isCafe = item.division?.toLowerCase() === 'coffee' || !item.division || item.division?.toLowerCase() === 'cafe';
+    if (isCafe && manualCafeDiscountPercent > 0 && !item.isComplimentary) {
+      return {
+        ...item,
+        itemDiscount: {
+          id: -99,
+          name: `Manual Cafe Discount (${manualCafeDiscountPercent}%)`,
+          type: 'percentage',
+          value: manualCafeDiscountPercent
+        }
+      };
+    }
+    return item;
+  });
+
+  const subtotal = processedCart.reduce((sum, item) => sum + (item.isComplimentary ? 0 : (item.price * item.quantity)), 0);
 
   const serviceChargePercentage = settings?.service_charge_percentage || 0;
   const serviceChargeBasis = settings?.service_charge_basis || 'vat_exclusive';
@@ -648,13 +677,13 @@ export default function POS() {
     subtotal,
     paxCount,
     discountPaxCount,
-    discountName: selectedDiscount?.name || null,
-    discountType: selectedDiscount?.type || null,
-    discountValue: selectedDiscount ? parseFloat(selectedDiscount.value as any) : 0,
+    discountName: selectedDiscount?.name || (manualCafeDiscountPercent > 0 ? 'Manual Cafe Discount' : null),
+    discountType: selectedDiscount?.type || (manualCafeDiscountPercent > 0 ? 'percentage' : null),
+    discountValue: selectedDiscount ? parseFloat(selectedDiscount.value as any) : (manualCafeDiscountPercent > 0 ? manualCafeDiscountPercent : 0),
     serviceChargePercentage,
     serviceChargeBasis,
-    items: cart,
-    isBirCompliant: activeBranch?.is_bir_compliant,
+    items: processedCart,
+    isBirCompliant: activeBranch?.is_bir_compliant || manualCafeDiscountPercent > 0 || cart.some(item => item.itemDiscount),
   });
 
   const vatableSales = cartCalculations.vatableSales;
@@ -1683,6 +1712,16 @@ export default function POS() {
               const discName = match[1];
               itemDiscount = discounts.find(d => d.name === discName);
             }
+          } else if (item.discount_id === -99 || (item.discount_amount > 0 && item.discount_id === null)) {
+            const discountPercent = item.price > 0 ? Math.round((item.discount_amount / (item.price * item.quantity)) * 10000) / 100 : 0;
+            itemDiscount = {
+              id: -99,
+              name: `Manual Cafe Discount (${discountPercent}%)`,
+              type: 'percentage',
+              value: discountPercent
+            };
+          } else if (item.discount_id) {
+            itemDiscount = discounts.find(d => d.id === item.discount_id);
           }
           return {
             ...item,
@@ -3172,6 +3211,60 @@ export default function POS() {
 
               {/* Totals & Payment */}
               <div className="p-3 bg-slate-50 border-t border-slate-200 space-y-2.5 flex-shrink-0">
+                {activeBranch && (activeBranch.name.toLowerCase().includes('s1p') || activeBranch.name.toLowerCase().includes('spin')) && (currentUser?.role === 'admin' || currentUser?.role === 'manager') && (
+                  <div className="bg-amber-50/50 border border-amber-100 p-2.5 rounded-xl space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-amber-800 uppercase tracking-wider">Manual Cafe Discount</span>
+                      {manualCafeDiscountPercent > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => setManualCafeDiscountPercent(0)}
+                          className="text-[9px] font-black text-rose-600 hover:text-rose-800 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-100 uppercase transition-all"
+                        >
+                          Remove
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const { value } = await Swal.fire({
+                              title: 'Apply Cafe Discount',
+                              input: 'number',
+                              inputLabel: 'Enter discount percentage (0 to 100)',
+                              inputPlaceholder: 'e.g. 15.5',
+                              inputAttributes: {
+                                min: '0',
+                                max: '100',
+                                step: 'any'
+                              },
+                              showCancelButton: true,
+                              confirmButtonText: 'Apply',
+                              confirmButtonColor: '#3b82f6',
+                              inputValidator: (val) => {
+                                if (!val || isNaN(Number(val)) || Number(val) < 0 || Number(val) > 100) {
+                                  return 'Please enter a valid percentage';
+                                }
+                                return null;
+                              }
+                            });
+                            if (value) {
+                              setManualCafeDiscountPercent(parseFloat(value));
+                            }
+                          }}
+                          className="text-[9px] font-black text-blue-600 hover:text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase transition-all"
+                        >
+                          Apply
+                        </button>
+                      )}
+                    </div>
+                    {manualCafeDiscountPercent > 0 && (
+                      <div className="text-[10px] text-amber-850 font-bold flex justify-between items-center bg-amber-50/60 p-1.5 rounded">
+                        <span>Rate: {manualCafeDiscountPercent}%</span>
+                        <span>Cafe Items Discounted</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {/* Discount Selection */}
                 <div className="hidden">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Discount</label>

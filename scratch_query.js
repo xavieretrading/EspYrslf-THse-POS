@@ -1,16 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 
-const file = path.join('c:', 'Users', 'Philippines Freight', 'MainSystems', 'POS', 'src', 'pages', 'POS.tsx');
+const file = path.join('c:', 'Users', 'Philippines Freight', 'MainSystems', 'POS', 'server.ts');
 
 function main() {
   const content = fs.readFileSync(file, 'utf8');
   const lines = content.split('\n');
 
-  console.log('Searching in POS.tsx for stock locks, addons, or detergents...');
+  console.log('Searching for static or Vite in server.ts...');
   lines.forEach((line, i) => {
-    const lineLower = line.toLowerCase();
-    if (lineLower.includes('add-on') || lineLower.includes('addon') || lineLower.includes('detergent') || lineLower.includes('strict_item_locked') || lineLower.includes('strict_item') || lineLower.includes('stock')) {
+    if (line.includes('express.static') || line.includes('createServer') || line.includes('vite')) {
       console.log(`Line ${i + 1}: ${line.trim()}`);
     }
   });

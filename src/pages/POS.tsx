@@ -2455,29 +2455,47 @@ export default function POS() {
                         })
                         .map(addon => {
                           const qty = laundrySelectedAddons[addon.id] || 0;
-                          const isChecked = qty > 0;
+                          const isOutOfStock = addon.stock !== 9999 && addon.stock <= 0;
                           return (
                             <div
                               key={addon.id}
                               className={cn(
-                                "flex items-center justify-between p-1 border rounded-xl select-none text-[10px] font-bold text-slate-700 transition-all",
-                                isChecked ? "bg-blue-50/50 border-blue-500" : "bg-slate-50 border-slate-200"
+                                "flex items-center justify-between p-1.5 border rounded-xl select-none text-[10px] font-bold",
+                                isOutOfStock
+                                  ? "bg-slate-100 border-slate-200 opacity-60 text-slate-400"
+                                  : (qty > 0 ? "bg-blue-50/30 border-blue-500 text-slate-700" : "bg-slate-50 border-slate-200 text-slate-700")
                               )}
                             >
-                              <span className="truncate max-w-[90px] pl-1 font-bold" title={addon.name}>{addon.name}</span>
+                              <span className="truncate max-w-[90px] pl-1 font-bold" title={addon.name}>
+                                {addon.name} {isOutOfStock && <span className="text-[8px] text-red-500 font-bold">(OUT)</span>}
+                              </span>
                               <div className="flex items-center gap-1">
-                                <span className="text-blue-600 text-[9px] font-black mr-1">+₱{(addon.price * (qty || 1)).toFixed(0)}</span>
+                                <span className={cn("text-[9px] font-black mr-1", isOutOfStock ? "text-slate-400" : "text-blue-600")}>
+                                  +₱{(addon.price * (qty || 1)).toFixed(0)}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: Math.max(0, (prev[addon.id] || 0) - 1) }))}
                                   className="w-5 h-5 rounded-md bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-650 hover:bg-slate-50 transition-all text-xs"
+                                  disabled={isOutOfStock}
                                 >
                                   -
                                 </button>
                                 <span className="w-4 text-center font-mono font-bold text-[10px]">{qty}</span>
                                 <button
                                   type="button"
-                                  onClick={() => setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: (prev[addon.id] || 0) + 1 }))}
+                                  onClick={() => {
+                                    if (isOutOfStock) {
+                                      swalAlert('Out of Stock', `${addon.name} is currently out of stock.`, 'error');
+                                      return;
+                                    }
+                                    const currentQty = laundrySelectedAddons[addon.id] || 0;
+                                    if (addon.stock !== 9999 && currentQty + 1 > addon.stock) {
+                                      swalAlert('Insufficient Stock', `Cannot add more than the available stock (${addon.stock} units left)`, 'error');
+                                      return;
+                                    }
+                                    setLaundrySelectedAddons(prev => ({ ...prev, [addon.id]: currentQty + 1 }));
+                                  }}
                                   className="w-5 h-5 rounded-md bg-white border border-slate-300 flex items-center justify-center font-bold text-slate-650 hover:bg-slate-50 transition-all text-xs"
                                 >
                                   +

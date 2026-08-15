@@ -1,0 +1,1769 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+ <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="ProgId" content="Excel.Sheet">
+  <meta name="Generator" content="WPS Office ET">
+  <!--[if gte mso 9]>
+   <xml>
+    <o:DocumentProperties>
+     <o:Created>2026-08-15T11:38:32</o:Created>
+     <o:LastAuthor>xavieretrading</o:LastAuthor>
+     <o:LastSaved>2026-08-15T11:49:05</o:LastSaved>
+    </o:DocumentProperties>
+    <o:CustomDocumentProperties>
+     <o:KSOProductBuildVer dt:dt="string">1033-12.1.0.28032</o:KSOProductBuildVer>
+     <o:CalculationRule dt:dt="float">0.0</o:CalculationRule>
+     <o:ICV dt:dt="string">3301521C134F4C4DB23F5756B23B858F_12</o:ICV>
+    </o:CustomDocumentProperties>
+   </xml>
+  <![endif]-->
+  <style>
+<!-- @page
+	{margin:0.50in 0.50in 0.50in 0.50in;
+	mso-header-margin:0.50in;
+	mso-footer-margin:0.50in;}
+tr
+	{mso-height-source:auto;
+	mso-ruby-visibility:none;}
+col
+	{mso-width-source:auto;
+	mso-ruby-visibility:none;}
+br
+	{mso-data-placement:same-cell;}
+.font0
+	{color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font1
+	{color:#334155;
+	font-size:8.3pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font2
+	{color:#1E3A8A;
+	font-size:13.5pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font3
+	{color:#64748B;
+	font-size:9.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font4
+	{color:#334155;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font5
+	{color:#334155;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font6
+	{color:#334155;
+	font-size:7.5pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Segoe UI";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font7
+	{color:#0000FF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:underline;
+	text-underline-style:single;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font8
+	{color:#800080;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:underline;
+	text-underline-style:single;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font9
+	{color:#FF0000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font10
+	{color:#44546A;
+	font-size:18.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font11
+	{color:#7F7F7F;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:italic;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font12
+	{color:#44546A;
+	font-size:15.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font13
+	{color:#44546A;
+	font-size:13.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font14
+	{color:#44546A;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:134;}
+.font15
+	{color:#3F3F76;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font16
+	{color:#3F3F3F;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font17
+	{color:#FA7D00;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font18
+	{color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font19
+	{color:#FA7D00;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font20
+	{color:#000000;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font21
+	{color:#006100;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font22
+	{color:#9C0006;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font23
+	{color:#9C6500;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font24
+	{color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.font25
+	{color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:"Calibri";
+	mso-generic-font-family:auto;
+	mso-font-charset:0;}
+.style0
+	{mso-number-format:"General";
+	text-align:general;
+	vertical-align:middle;
+	white-space:nowrap;
+	mso-rotate:0;
+	mso-pattern:auto;
+	mso-background-source:auto;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	border:none;
+	mso-protection:locked visible;
+	mso-style-name:"Normal";
+	mso-style-id:0;}
+.style16
+	{mso-number-format:"_-* \#\,\#\#0\.00_-\;\\-* \#\,\#\#0\.00_-\;_-* \0022-\0022??_-\;_-\@_-";
+	mso-style-name:"Comma";
+	mso-style-id:3;}
+.style17
+	{mso-number-format:"_-\0022₱\0022* \#\,\#\#0\.00_-\;\\-\0022₱\0022* \#\,\#\#0\.00_-\;_-\0022₱\0022* \0022-\0022??_-\;_-\@_-";
+	mso-style-name:"Currency";
+	mso-style-id:4;}
+.style18
+	{mso-number-format:"0%";
+	mso-style-name:"Percent";
+	mso-style-id:5;}
+.style19
+	{mso-number-format:"_-* \#\,\#\#0_-\;\\-* \#\,\#\#0_-\;_-* \0022-\0022_-\;_-\@_-";
+	mso-style-name:"Comma [0]";
+	mso-style-id:6;}
+.style20
+	{mso-number-format:"_-\0022₱\0022* \#\,\#\#0_-\;\\-\0022₱\0022* \#\,\#\#0_-\;_-\0022₱\0022* \0022-\0022_-\;_-\@_-";
+	mso-style-name:"Currency [0]";
+	mso-style-id:7;}
+.style21
+	{color:#0000FF;
+	font-size:11.0pt;
+	text-decoration:underline;
+	text-underline-style:single;
+	font-family:Calibri;
+	mso-style-name:"Link";
+	mso-style-id:8;}
+.style22
+	{color:#800080;
+	font-size:11.0pt;
+	text-decoration:underline;
+	text-underline-style:single;
+	font-family:Calibri;
+	mso-style-name:"Followed Hyperlink";
+	mso-style-id:9;}
+.style23
+	{mso-pattern:auto none;
+	background:#FFFFCC;
+	border:.5pt solid #B2B2B2;
+	mso-style-name:"Note";}
+.style24
+	{color:#FF0000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Warning Text";}
+.style25
+	{color:#44546A;
+	font-size:18.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	mso-style-name:"Title";}
+.style26
+	{color:#7F7F7F;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:italic;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Explanatory Text";}
+.style27
+	{color:#44546A;
+	font-size:15.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	border-bottom:1.0pt solid #5B9BD5;
+	mso-style-name:"Heading 1";}
+.style28
+	{color:#44546A;
+	font-size:13.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	border-bottom:1.0pt solid #5B9BD5;
+	mso-style-name:"Heading 2";}
+.style29
+	{color:#44546A;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	border-bottom:1.0pt solid #ACCCEA;
+	mso-style-name:"Heading 3";}
+.style30
+	{color:#44546A;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	mso-style-name:"Heading 4";}
+.style31
+	{mso-pattern:auto none;
+	background:#FFCC99;
+	color:#3F3F76;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border:.5pt solid #7F7F7F;
+	mso-style-name:"Input";}
+.style32
+	{mso-pattern:auto none;
+	background:#F2F2F2;
+	color:#3F3F3F;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border:.5pt solid #3F3F3F;
+	mso-style-name:"Output";}
+.style33
+	{mso-pattern:auto none;
+	background:#F2F2F2;
+	color:#FA7D00;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border:.5pt solid #7F7F7F;
+	mso-style-name:"Calculation";}
+.style34
+	{mso-pattern:auto none;
+	background:#A5A5A5;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border:2.0pt double #3F3F3F;
+	mso-style-name:"Check Cell";}
+.style35
+	{color:#FA7D00;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border-bottom:2.0pt double #FF8001;
+	mso-style-name:"Linked Cell";}
+.style36
+	{color:#000000;
+	font-size:11.0pt;
+	font-weight:700;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	border-top:.5pt solid #5B9BD5;
+	border-bottom:2.0pt double #5B9BD5;
+	mso-style-name:"Total";}
+.style37
+	{mso-pattern:auto none;
+	background:#C6EFCE;
+	color:#006100;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Good";}
+.style38
+	{mso-pattern:auto none;
+	background:#FFC7CE;
+	color:#9C0006;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Bad";}
+.style39
+	{mso-pattern:auto none;
+	background:#FFEB9C;
+	color:#9C6500;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Neutral";}
+.style40
+	{mso-pattern:auto none;
+	background:#5B9BD5;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent1";}
+.style41
+	{mso-pattern:auto none;
+	background:#DDEBF7;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent1";}
+.style42
+	{mso-pattern:auto none;
+	background:#BDD7EE;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent1";}
+.style43
+	{mso-pattern:auto none;
+	background:#9BC2E6;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent1";}
+.style44
+	{mso-pattern:auto none;
+	background:#ED7D31;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent2";}
+.style45
+	{mso-pattern:auto none;
+	background:#FCE4D6;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent2";}
+.style46
+	{mso-pattern:auto none;
+	background:#F8CBAD;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent2";}
+.style47
+	{mso-pattern:auto none;
+	background:#F4B084;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent2";}
+.style48
+	{mso-pattern:auto none;
+	background:#A5A5A5;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent3";}
+.style49
+	{mso-pattern:auto none;
+	background:#EDEDED;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent3";}
+.style50
+	{mso-pattern:auto none;
+	background:#DBDBDB;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent3";}
+.style51
+	{mso-pattern:auto none;
+	background:#C9C9C9;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent3";}
+.style52
+	{mso-pattern:auto none;
+	background:#FFC000;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent4";}
+.style53
+	{mso-pattern:auto none;
+	background:#FFF2CC;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent4";}
+.style54
+	{mso-pattern:auto none;
+	background:#FFE699;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent4";}
+.style55
+	{mso-pattern:auto none;
+	background:#FFD966;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent4";}
+.style56
+	{mso-pattern:auto none;
+	background:#4472C4;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent5";}
+.style57
+	{mso-pattern:auto none;
+	background:#D9E1F2;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent5";}
+.style58
+	{mso-pattern:auto none;
+	background:#B4C6E7;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent5";}
+.style59
+	{mso-pattern:auto none;
+	background:#8EA9DB;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent5";}
+.style60
+	{mso-pattern:auto none;
+	background:#70AD47;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"Accent6";}
+.style61
+	{mso-pattern:auto none;
+	background:#E2EFDA;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"20% - Accent6";}
+.style62
+	{mso-pattern:auto none;
+	background:#C6E0B4;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"40% - Accent6";}
+.style63
+	{mso-pattern:auto none;
+	background:#A9D08E;
+	color:#FFFFFF;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:0;
+	mso-style-name:"60% - Accent6";}
+td
+	{mso-style-parent:style0;
+	padding-top:1px;
+	padding-right:1px;
+	padding-left:1px;
+	mso-ignore:padding;
+	mso-number-format:"General";
+	text-align:general;
+	vertical-align:middle;
+	white-space:nowrap;
+	mso-rotate:0;
+	mso-pattern:auto;
+	mso-background-source:auto;
+	color:#000000;
+	font-size:11.0pt;
+	font-weight:400;
+	font-style:normal;
+	text-decoration:none;
+	font-family:Calibri;
+	mso-generic-font-family:auto;
+	mso-font-charset:134;
+	border:none;
+	mso-protection:locked visible;}
+.xl65
+	{mso-style-parent:style0;
+	color:#334155;
+	font-size:8.3pt;
+	font-family:Segoe UI;
+	mso-font-charset:134;}
+.xl66
+	{mso-style-parent:style0;
+	text-align:center;
+	color:#334155;
+	font-size:8.3pt;
+	font-family:Segoe UI;
+	mso-font-charset:134;}
+.xl67
+	{mso-style-parent:style0;
+	color:#334155;
+	font-size:8.3pt;
+	font-family:Segoe UI;
+	mso-font-charset:134;}
+.xl68
+	{mso-style-parent:style0;
+	color:#1E3A8A;
+	font-size:13.5pt;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;}
+.xl69
+	{mso-style-parent:style0;
+	color:#64748B;
+	font-size:9.0pt;
+	font-family:Segoe UI;
+	mso-font-charset:134;}
+.xl70
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	color:#334155;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl71
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	color:#334155;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl72
+	{mso-style-parent:style0;
+	white-space:normal;
+	color:#334155;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl73
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl74
+	{mso-style-parent:style0;
+	text-align:left;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl75
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-size:7.5pt;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl76
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl77
+	{mso-style-parent:style0;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl78
+	{mso-style-parent:style0;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl79
+	{mso-style-parent:style0;
+	mso-number-format:"dd/mm/yyyy";
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#F8FAFC;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl80
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl81
+	{mso-style-parent:style0;
+	text-align:left;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl82
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-size:7.5pt;
+	font-weight:700;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl83
+	{mso-style-parent:style0;
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl84
+	{mso-style-parent:style0;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl85
+	{mso-style-parent:style0;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+.xl86
+	{mso-style-parent:style0;
+	mso-number-format:"dd/mm/yyyy";
+	text-align:center;
+	white-space:normal;
+	mso-pattern:auto none;
+	background:#FFFFFF;
+	color:#334155;
+	font-family:Segoe UI;
+	mso-font-charset:134;
+	border:1.0pt solid #E2E8F0;}
+ -->  </style>
+  <!--[if gte mso 9]>
+   <xml>
+    <x:ExcelWorkbook>
+     <x:ExcelWorksheets>
+      <x:ExcelWorksheet>
+       <x:Name>Stocks Report</x:Name>
+       <x:WorksheetOptions>
+        <x:DefaultRowHeight>250</x:DefaultRowHeight>
+        <x:StandardWidth>2234</x:StandardWidth>
+        <x:Selected/>
+        <x:Panes>
+         <x:Pane>
+          <x:Number>3</x:Number>
+          <x:ActiveCol>10</x:ActiveCol>
+          <x:ActiveRow>37</x:ActiveRow>
+          <x:RangeSelection>K38</x:RangeSelection>
+         </x:Pane>
+        </x:Panes>
+        <x:ProtectContents>False</x:ProtectContents>
+        <x:ProtectObjects>True</x:ProtectObjects>
+        <x:ProtectScenarios>True</x:ProtectScenarios>
+        <x:PageBreakZoom>100</x:PageBreakZoom>
+        <x:Zoom>42</x:Zoom>
+        <x:Print>
+         <x:ValidPrinterInfo/>
+         <x:HorizontalResolution>600</x:HorizontalResolution>
+        </x:Print>
+       </x:WorksheetOptions>
+      </x:ExcelWorksheet>
+     </x:ExcelWorksheets>
+     <x:ProtectStructure>False</x:ProtectStructure>
+     <x:ProtectWindows>False</x:ProtectWindows>
+     <x:WindowHeight>6800</x:WindowHeight>
+     <x:WindowWidth>19200</x:WindowWidth>
+    </x:ExcelWorkbook>
+   </xml>
+  <![endif]-->
+ </head>
+ <body link="blue" vlink="purple" class="xl65">
+  <table width="1928.40" border="0" cellpadding="0" cellspacing="0" style='width:964.20pt;border-collapse:collapse;table-layout:fixed;'>
+   <col width="128" class="xl65" style='mso-width-source:userset;mso-width-alt:3120;'/>
+   <col width="339" class="xl65" style='mso-width-source:userset;mso-width-alt:8264;'/>
+   <col width="183.20" class="xl65" style='mso-width-source:userset;mso-width-alt:4466;'/>
+   <col width="104.50" class="xl65" style='mso-width-source:userset;mso-width-alt:2547;'/>
+   <col width="172.20" class="xl66" style='mso-width-source:userset;mso-width-alt:4198;'/>
+   <col width="212.50" class="xl65" style='mso-width-source:userset;mso-width-alt:5180;'/>
+   <col width="158.30" class="xl65" style='mso-width-source:userset;mso-width-alt:3859;'/>
+   <col width="128" class="xl67" style='mso-width-source:userset;mso-width-alt:3120;'/>
+   <col width="225" class="xl66" style='mso-width-source:userset;mso-width-alt:5485;'/>
+   <col width="277.70" class="xl65" style='mso-width-source:userset;mso-width-alt:6770;'/>
+   <col width="96" span="246" class="xl65" style='mso-width-source:userset;mso-width-alt:2340;'/>
+   <tr height="41" style='height:20.50pt;'>
+    <td class="xl68" height="41" width="926.90" colspan="5" style='height:20.50pt;width:463.45pt;mso-ignore:colspan;' x:str>SIP AND SPIN LAUNDRY SHOP — INVENTORY STOCKS REPORT</td>
+    <td class="xl65" width="212.50" style='width:106.25pt;'></td>
+    <td class="xl65" width="158.30" style='width:79.15pt;'></td>
+    <td class="xl67" width="128" style='width:64.00pt;'></td>
+    <td class="xl66" width="225" style='width:112.50pt;'></td>
+    <td class="xl65" width="277.70" style='width:138.85pt;'></td>
+   </tr>
+   <tr height="29.50" style='height:14.75pt;'>
+    <td class="xl69" height="29.50" colspan="6" style='height:14.75pt;mso-ignore:colspan;' x:str>Period Coverage: July 31, 2026 to August 14, 2026 | Categories: Pastries, Snacks, Hard Drinks, Non-Coffee, Beverages, Laundry Add-Ons</td>
+    <td class="xl65"></td>
+    <td class="xl67"></td>
+    <td class="xl66"></td>
+    <td class="xl65"></td>
+   </tr>
+   <tr height="67.50" style='height:33.75pt;'>
+    <td class="xl70" height="67.50" style='height:33.75pt;' x:str>Product ID</td>
+    <td class="xl70" x:str>Product Name</td>
+    <td class="xl70" x:str>Category</td>
+    <td class="xl70" x:str>Division</td>
+    <td class="xl71" x:str>Initial Stock (July 31)</td>
+    <td class="xl70" x:str>Current Stock Now</td>
+    <td class="xl70" x:str>Total Units Sold</td>
+    <td class="xl72" x:str>Unit Price</td>
+    <td class="xl71" x:str>Total Retail Value</td>
+    <td class="xl70" x:str>Date Added</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>327</td>
+    <td class="xl74" x:str>Ariel/Power Liquid w/Downy</td>
+    <td class="xl74" x:str>Add On</td>
+    <td class="xl75" x:str>LAUNDRY</td>
+    <td class="xl76" x:num>51</td>
+    <td class="xl77" align="right" x:num>18</td>
+    <td class="xl73" x:num>33</td>
+    <td class="xl78" x:str>₱9.00</td>
+    <td class="xl76" x:str>₱162.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>329</td>
+    <td class="xl81" x:str>Breeze / Rush Clean</td>
+    <td class="xl81" x:str>Add On</td>
+    <td class="xl82" x:str>LAUNDRY</td>
+    <td class="xl83" x:num>36</td>
+    <td class="xl84" align="right" x:num>12</td>
+    <td class="xl80" x:num>24</td>
+    <td class="xl85" x:str>₱8.00</td>
+    <td class="xl83" x:str>₱96.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>334</td>
+    <td class="xl74" x:str>Del/ Fragrance Pearls</td>
+    <td class="xl74" x:str>Add On</td>
+    <td class="xl75" x:str>LAUNDRY</td>
+    <td class="xl76" x:num>12</td>
+    <td class="xl77" align="right" x:num>4</td>
+    <td class="xl73" x:num>8</td>
+    <td class="xl78" x:str>₱8.00</td>
+    <td class="xl76" x:str>₱32.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>333</td>
+    <td class="xl81" x:str>Del/ Gentle Protect</td>
+    <td class="xl81" x:str>Add On</td>
+    <td class="xl82" x:str>LAUNDRY</td>
+    <td class="xl83" x:num>12</td>
+    <td class="xl84" align="right" x:num>6</td>
+    <td class="xl80" x:num>6</td>
+    <td class="xl85" x:str>₱8.00</td>
+    <td class="xl83" x:str>₱48.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>330</td>
+    <td class="xl74" x:str>Downy / Sunrise Fresh</td>
+    <td class="xl74" x:str>Add On</td>
+    <td class="xl75" x:str>LAUNDRY</td>
+    <td class="xl76" x:num>17</td>
+    <td class="xl77" align="right" x:num>9</td>
+    <td class="xl73" x:num>8</td>
+    <td class="xl78" x:str>₱10.00</td>
+    <td class="xl76" x:str>₱90.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>328</td>
+    <td class="xl81" x:str>Downy/ Kontra Kulob</td>
+    <td class="xl81" x:str>Add On</td>
+    <td class="xl82" x:str>LAUNDRY</td>
+    <td class="xl83" x:num>19</td>
+    <td class="xl84" align="right" x:num>11</td>
+    <td class="xl80" x:num>8</td>
+    <td class="xl85" x:str>₱7.00</td>
+    <td class="xl83" x:str>₱77.00</td>
+    <td class="xl86" x:num="46236.">02/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>331</td>
+    <td class="xl74" x:str>Downy/ Passion</td>
+    <td class="xl74" x:str>Add On</td>
+    <td class="xl75" x:str>LAUNDRY</td>
+    <td class="xl76" x:num>18</td>
+    <td class="xl77" align="right" x:num>-2</td>
+    <td class="xl73" x:num>20</td>
+    <td class="xl78" x:str>₱10.00</td>
+    <td class="xl76" x:str>₱-20.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>326</td>
+    <td class="xl81" x:str>Downy/Perfume / CottonFresh</td>
+    <td class="xl81" x:str>Add On</td>
+    <td class="xl82" x:str>LAUNDRY</td>
+    <td class="xl83" x:num>31</td>
+    <td class="xl84" align="right" x:num>22</td>
+    <td class="xl80" x:num>9</td>
+    <td class="xl85" x:str>₱7.00</td>
+    <td class="xl83" x:str>₱154.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>332</td>
+    <td class="xl74" x:str>Tide/ Garden Bloom</td>
+    <td class="xl74" x:str>Add On</td>
+    <td class="xl75" x:str>LAUNDRY</td>
+    <td class="xl76" x:num>35</td>
+    <td class="xl77" align="right" x:num>28</td>
+    <td class="xl73" x:num>7</td>
+    <td class="xl78" x:str>₱10.00</td>
+    <td class="xl76" x:str>₱280.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>335</td>
+    <td class="xl81" x:str>Zonrox/ ColorSafe</td>
+    <td class="xl81" x:str>Add On</td>
+    <td class="xl82" x:str>LAUNDRY</td>
+    <td class="xl83" x:num>12</td>
+    <td class="xl84" align="right" x:num>12</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱8.00</td>
+    <td class="xl83" x:str>₱96.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>366</td>
+    <td class="xl74" x:str>Canada Dry</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>12</td>
+    <td class="xl77" align="right" x:num>11</td>
+    <td class="xl73" x:num>1</td>
+    <td class="xl78" x:str>₱149.00</td>
+    <td class="xl76" x:str>₱1639.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>313</td>
+    <td class="xl81" x:str>Coca Cola/Jackdaniel</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>10</td>
+    <td class="xl84" align="right" x:num>10</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱990.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>305</td>
+    <td class="xl74" x:str>Coke Regular</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>27</td>
+    <td class="xl77" align="right" x:num>22</td>
+    <td class="xl73" x:num>5</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱2178.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>304</td>
+    <td class="xl81" x:str>Coke Zero</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>24</td>
+    <td class="xl84" align="right" x:num>21</td>
+    <td class="xl80" x:num>3</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱2079.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>302</td>
+    <td class="xl74" x:str>Evian 330ml</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>8</td>
+    <td class="xl77" align="right" x:num>2</td>
+    <td class="xl73" x:num>6</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱198.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>303</td>
+    <td class="xl81" x:str>Evian 550ml</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>11</td>
+    <td class="xl84" align="right" x:num>7</td>
+    <td class="xl80" x:num>4</td>
+    <td class="xl85" x:str>₱149.00</td>
+    <td class="xl83" x:str>₱1043.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>367</td>
+    <td class="xl74" x:str>Heineken - Silver</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>6</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱594.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>308</td>
+    <td class="xl81" x:str>Lemon Pou</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>6</td>
+    <td class="xl84" align="right" x:num>4</td>
+    <td class="xl80" x:num>2</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱396.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>311</td>
+    <td class="xl74" x:str>Pale Pilsen</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>24</td>
+    <td class="xl77" align="right" x:num>23</td>
+    <td class="xl73" x:num>1</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱2277.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>314</td>
+    <td class="xl81" x:str>Perrier</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>12</td>
+    <td class="xl84" align="right" x:num>11</td>
+    <td class="xl80" x:num>1</td>
+    <td class="xl85" x:str>₱199.00</td>
+    <td class="xl83" x:str>₱2189.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>301</td>
+    <td class="xl74" x:str>Pocari Sweet - 500ml</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>37</td>
+    <td class="xl77" align="right" x:num>29</td>
+    <td class="xl73" x:num>8</td>
+    <td class="xl78" x:str>₱50.00</td>
+    <td class="xl76" x:str>₱1450.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>312</td>
+    <td class="xl81" x:str>Red Horse Can</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>14</td>
+    <td class="xl84" align="right" x:num>12</td>
+    <td class="xl80" x:num>2</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱1188.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>310</td>
+    <td class="xl74" x:str>Redbull</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>4</td>
+    <td class="xl73" x:num>2</td>
+    <td class="xl78" x:str>₱130.00</td>
+    <td class="xl76" x:str>₱520.00</td>
+    <td class="xl79" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>307</td>
+    <td class="xl81" x:str>Royal Orange</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>28</td>
+    <td class="xl84" align="right" x:num>18</td>
+    <td class="xl80" x:num>10</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱1782.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>309</td>
+    <td class="xl74" x:str>San Miglight</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>24</td>
+    <td class="xl77" align="right" x:num>24</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱89.00</td>
+    <td class="xl76" x:str>₱2136.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>306</td>
+    <td class="xl81" x:str>Sprite</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>21</td>
+    <td class="xl84" align="right" x:num>19</td>
+    <td class="xl80" x:num>2</td>
+    <td class="xl85" x:str>₱99.00</td>
+    <td class="xl83" x:str>₱1881.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>439</td>
+    <td class="xl74" x:str>Sprite 1.5L</td>
+    <td class="xl74" x:str>Beverages</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>4</td>
+    <td class="xl77" align="right" x:num>4</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱69.50</td>
+    <td class="xl76" x:str>₱278.00</td>
+    <td class="xl73" x:str>July 31, 2026 (Initial Setup)</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>300</td>
+    <td class="xl81" x:str>Summit Water</td>
+    <td class="xl81" x:str>Beverages</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>51</td>
+    <td class="xl84" align="right" x:num>41</td>
+    <td class="xl80" x:num>10</td>
+    <td class="xl85" x:str>₱20.00</td>
+    <td class="xl83" x:str>₱820.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>371</td>
+    <td class="xl74" x:str>Glenfiddich - 15</td>
+    <td class="xl74" x:str>Hard Drinks</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>1</td>
+    <td class="xl77" align="right" x:num>1</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱8000.00</td>
+    <td class="xl76" x:str>₱8000.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>373</td>
+    <td class="xl81" x:str>Glenfiddich- 18</td>
+    <td class="xl81" x:str>Hard Drinks</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>1</td>
+    <td class="xl84" align="right" x:num>1</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱1100.00</td>
+    <td class="xl83" x:str>₱1100.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>372</td>
+    <td class="xl74" x:str>The Macallan</td>
+    <td class="xl74" x:str>Hard Drinks</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>1</td>
+    <td class="xl77" align="right" x:num>1</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱9000.00</td>
+    <td class="xl76" x:str>₱9000.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>370</td>
+    <td class="xl81" x:str>The Singleton</td>
+    <td class="xl81" x:str>Hard Drinks</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>1</td>
+    <td class="xl84" align="right" x:num>1</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱8000.00</td>
+    <td class="xl83" x:str>₱8000.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>339</td>
+    <td class="xl74" x:str>Bagel</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>-1</td>
+    <td class="xl73" x:num>7</td>
+    <td class="xl78" x:str>₱60.00</td>
+    <td class="xl76" x:str>₱-60.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>341</td>
+    <td class="xl81" x:str>Berry Loaf</td>
+    <td class="xl81" x:str>Pastries</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>8</td>
+    <td class="xl84" align="right" x:num>0</td>
+    <td class="xl80" x:num>9</td>
+    <td class="xl85" x:str>₱49.00</td>
+    <td class="xl83" x:str>₱0.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>377</td>
+    <td class="xl74" x:str>Blue Berry Cake</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>12</td>
+    <td class="xl77" align="right" x:num>4</td>
+    <td class="xl73" x:num>8</td>
+    <td class="xl78" x:str>₱149.00</td>
+    <td class="xl76" x:str>₱596.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>415</td>
+    <td class="xl81" x:str>Blue Berry Cheesecake</td>
+    <td class="xl81" x:str>Pastries</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>8</td>
+    <td class="xl84" align="right" x:num>8</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱149.00</td>
+    <td class="xl83" x:str>₱1192.00</td>
+    <td class="xl86" x:num="46242.">08/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>340</td>
+    <td class="xl74" x:str>Cheese Muff</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>0</td>
+    <td class="xl73" x:num>6</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱0.00</td>
+    <td class="xl79" x:num="46236.">02/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>369</td>
+    <td class="xl81" x:str>Chico Walnuts Cookies</td>
+    <td class="xl81" x:str>Pastries</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>6</td>
+    <td class="xl84" align="right" x:num>6</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱129.00</td>
+    <td class="xl83" x:str>₱774.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>336</td>
+    <td class="xl74" x:str>Choco Bomb</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>4</td>
+    <td class="xl77" align="right" x:num>0</td>
+    <td class="xl73" x:num>4</td>
+    <td class="xl78" x:str>₱139.00</td>
+    <td class="xl76" x:str>₱0.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>376</td>
+    <td class="xl81" x:str>Choco Walcut Cookies</td>
+    <td class="xl81" x:str>Pastries</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>6</td>
+    <td class="xl84" align="right" x:num>0</td>
+    <td class="xl80" x:num>6</td>
+    <td class="xl85" x:str>₱39.00</td>
+    <td class="xl83" x:str>₱0.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>411</td>
+    <td class="xl74" x:str>Crema de Fruta</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>8</td>
+    <td class="xl77" align="right" x:num>8</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱40.00</td>
+    <td class="xl76" x:str>₱320.00</td>
+    <td class="xl79" x:num="46242.">08/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>338</td>
+    <td class="xl81" x:str>Ensaymada</td>
+    <td class="xl81" x:str>Pastries</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>5</td>
+    <td class="xl84" align="right" x:num>0</td>
+    <td class="xl80" x:num>5</td>
+    <td class="xl85" x:str>₱59.00</td>
+    <td class="xl83" x:str>₱0.00</td>
+    <td class="xl86" x:num="46234.">31/07/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>350</td>
+    <td class="xl74" x:str>Lemon Lava</td>
+    <td class="xl74" x:str>Pastries</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:str>Unlimited</td>
+    <td class="xl77" x:str>Unlimited</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱95.00</td>
+    <td class="xl76" x:str>N/A</td>
+    <td class="xl73" x:str>July 31, 2026 (Initial Setup)</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>337</td>
+    <td class="xl81" x:str>Lemon Lava</td>
+    <td class="xl81" x:str>Pastries &amp; Desserts</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>4</td>
+    <td class="xl84" align="right" x:num>0</td>
+    <td class="xl80" x:num>4</td>
+    <td class="xl85" x:str>₱95.00</td>
+    <td class="xl83" x:str>₱0.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>375</td>
+    <td class="xl74" x:str>Oat Meal Cookies</td>
+    <td class="xl74" x:str>Pastries &amp; Desserts</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>0</td>
+    <td class="xl73" x:num>6</td>
+    <td class="xl78" x:str>₱129.00</td>
+    <td class="xl76" x:str>₱0.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>368</td>
+    <td class="xl81" x:str>Otmeak Cookies</td>
+    <td class="xl81" x:str>Pastries &amp; Desserts</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>6</td>
+    <td class="xl84" align="right" x:num>6</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱129.00</td>
+    <td class="xl83" x:str>₱774.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>412</td>
+    <td class="xl74" x:str>Red Velvet Muffin</td>
+    <td class="xl74" x:str>Pastries &amp; Desserts</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>6</td>
+    <td class="xl77" align="right" x:num>6</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱75.00</td>
+    <td class="xl76" x:str>₱450.00</td>
+    <td class="xl79" x:num="46242.">08/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>413</td>
+    <td class="xl81" x:str>Strawberry New York Cheesecake</td>
+    <td class="xl81" x:str>Pastries &amp; Desserts</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>8</td>
+    <td class="xl84" align="right" x:num>8</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱149.00</td>
+    <td class="xl83" x:str>₱1192.00</td>
+    <td class="xl86" x:num="46242.">08/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>414</td>
+    <td class="xl74" x:str>Tiramisu Cake</td>
+    <td class="xl74" x:str>Pastries &amp; Desserts</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>4</td>
+    <td class="xl77" align="right" x:num>4</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱175.00</td>
+    <td class="xl76" x:str>₱700.00</td>
+    <td class="xl79" x:num="46242.">08/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>378</td>
+    <td class="xl81" x:str>Velvet Cake</td>
+    <td class="xl81" x:str>Pastries &amp; Desserts</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>8</td>
+    <td class="xl84" align="right" x:num>0</td>
+    <td class="xl80" x:num>8</td>
+    <td class="xl85" x:str>₱49.00</td>
+    <td class="xl83" x:str>₱0.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>389</td>
+    <td class="xl74" x:str>ACT II - Butter Lovers Flavour</td>
+    <td class="xl74" x:str>Snacks</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>9</td>
+    <td class="xl77" align="right" x:num>9</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱149.00</td>
+    <td class="xl76" x:str>₱1341.00</td>
+    <td class="xl79" x:num="46240.">06/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>390</td>
+    <td class="xl81" x:str>Butter Licious</td>
+    <td class="xl81" x:str>Snacks</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>9</td>
+    <td class="xl84" align="right" x:num>9</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱149.00</td>
+    <td class="xl83" x:str>₱1341.00</td>
+    <td class="xl86" x:num="46240.">06/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl73" height="34.50" style='height:17.25pt;' x:num>383</td>
+    <td class="xl74" x:str>Mango &amp; Lychee</td>
+    <td class="xl74" x:str>Snacks</td>
+    <td class="xl75" x:str>COFFEE</td>
+    <td class="xl76" x:num>100</td>
+    <td class="xl77" align="right" x:num>100</td>
+    <td class="xl73" x:num>0</td>
+    <td class="xl78" x:str>₱99.00</td>
+    <td class="xl76" x:str>₱9900.00</td>
+    <td class="xl79" x:num="46239.">05/08/2026</td>
+   </tr>
+   <tr height="34.50" style='height:17.25pt;'>
+    <td class="xl80" height="34.50" style='height:17.25pt;' x:num>365</td>
+    <td class="xl81" x:str>Party Snacks - 100grams</td>
+    <td class="xl81" x:str>Snacks</td>
+    <td class="xl82" x:str>COFFEE</td>
+    <td class="xl83" x:num>2000</td>
+    <td class="xl84" align="right" x:num>2000</td>
+    <td class="xl80" x:num>0</td>
+    <td class="xl85" x:str>₱69.00</td>
+    <td class="xl83" x:str>₱138000.00</td>
+    <td class="xl86" x:num="46239.">05/08/2026</td>
+   </tr>
+   <![if supportMisalignedColumns]>
+    <tr width="0" style='display:none;'>
+     <td width="128" style='width:64;'></td>
+     <td width="339" style='width:170;'></td>
+     <td width="183" style='width:92;'></td>
+     <td width="105" style='width:52;'></td>
+     <td width="172" style='width:86;'></td>
+     <td width="213" style='width:106;'></td>
+     <td width="158" style='width:79;'></td>
+     <td width="128" style='width:64;'></td>
+     <td width="225" style='width:113;'></td>
+     <td width="278" style='width:139;'></td>
+     <td width="96" style='width:48;'></td>
+    </tr>
+   <![endif]>
+  </table>
+ </body>
+</html>

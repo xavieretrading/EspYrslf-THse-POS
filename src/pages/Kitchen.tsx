@@ -171,7 +171,7 @@ export default function Kitchen() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[13px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                  ORD #{item.order_id}
+                  ORD #{item.order_number || item.order_id}
                 </span>
                 <span className={cn(
                   "text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-md", 
@@ -386,7 +386,7 @@ export default function Kitchen() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[13px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                        ORD #{item.order_id}
+                        ORD #{item.order_number || item.order_id}
                       </span>
                       <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 uppercase inline-block">
                         {item.table_name ? `TABLE ${item.table_name}` : (item.notes?.includes('[DINE-IN]') || item.notes?.includes('(Voucher)') ? 'WALK-IN' : 'TAKEAWAY')}

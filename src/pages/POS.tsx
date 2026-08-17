@@ -4976,7 +4976,7 @@ export default function POS() {
                       )}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-black text-slate-900">#{order.id}</span>
+                        <span className="font-black text-slate-900">#{order.order_number || order.id}</span>
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[10px] font-black uppercase",
                           order.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
@@ -5014,7 +5014,7 @@ export default function POS() {
                     <div className="p-6 border-b border-slate-100">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-lg font-black text-slate-900">ORDER #{selectedModalOrder.id}</h3>
+                          <h3 className="text-lg font-black text-slate-900">ORDER #{selectedModalOrder.order_number || selectedModalOrder.id}</h3>
                           <p className="text-slate-500 text-sm font-bold uppercase">{selectedModalOrder.table_name || selectedModalOrder.order_type}</p>
                         </div>
                         <div className="flex gap-2 items-center flex-wrap">

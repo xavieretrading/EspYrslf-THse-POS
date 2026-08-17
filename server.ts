@@ -61,29 +61,63 @@ async function generateNextReceiptNumber(orderId: string | number, branchId: str
       .select('current_value')
       .eq('branch_id', bId);
 
-    if (!error && data && data.length > 0) {
-      const nextVal = Number(data[0].current_value) + 1;
-      
-      const { error: updateErr } = await supabase
-        .from('receipt_counter_espresso')
-        .update({ current_value: nextVal })
-        .eq('branch_id', bId);
-
-      if (!updateErr) {
-        // Also try to persist to orders.receipt_number if column exists
-        await supabase
-          .from('orders_espresso')
-          .update({ receipt_number: nextVal })
-          .eq('id', oId);
+    if (!error) {
+      if (data && data.length > 0) {
+        const nextVal = Number(data[0].current_value) + 1;
         
-        return nextVal;
+        const { error: updateErr } = await supabase
+          .from('receipt_counter_espresso')
+          .update({ current_value: nextVal })
+          .eq('branch_id', bId);
+
+        if (!updateErr) {
+          // Also try to persist to orders.receipt_number if column exists
+          await supabase
+            .from('orders_espresso')
+            .update({ receipt_number: nextVal })
+            .eq('id', oId);
+          
+          return nextVal;
+        }
+      } else {
+        // Row is missing for this branch. Let's initialize/seed it!
+        let startVal = 1000;
+        try {
+          const { data: maxPaid } = await supabase
+            .from('orders_espresso')
+            .select('receipt_number')
+            .eq('branch_id', bId)
+            .eq('status', 'paid')
+            .order('receipt_number', { ascending: false })
+            .limit(1);
+          if (maxPaid && maxPaid.length > 0 && maxPaid[0].receipt_number) {
+            startVal = Math.max(1000, Number(maxPaid[0].receipt_number));
+          }
+        } catch (e) {
+          console.error('Failed to query max paid receipt number:', e);
+        }
+
+        const nextVal = startVal + 1;
+
+        const { error: insertErr } = await supabase
+          .from('receipt_counter_espresso')
+          .insert([{ branch_id: bId, current_value: nextVal }]);
+
+        if (!insertErr) {
+          await supabase
+            .from('orders_espresso')
+            .update({ receipt_number: nextVal })
+            .eq('id', oId);
+          
+          return nextVal;
+        }
       }
     }
   } catch (err) {
     console.error('Error with receipt_counter database sequence:', err);
   }
 
-  // 2. Gracious Fallback: Sync with persistent Branches CONFIG JSON (no DB migrations required, fully sharing-safe!)
+  // 2. Gracious Fallback: Sync with persistent Branches CONFIG JSON (fully branch-separated!)
   try {
     let settings: any = {};
     if (fs.existsSync(SETTINGS_FILE)) {
@@ -94,20 +128,25 @@ async function generateNextReceiptNumber(orderId: string | number, branchId: str
       }
     }
 
-    if (!settings.last_receipt_number) {
-      let startSeq = 795;
+    if (!settings.last_receipt_number_by_branch) {
+      settings.last_receipt_number_by_branch = {};
+    }
+
+    if (!settings.last_receipt_number_by_branch[bId]) {
+      let startSeq = 1000;
       try {
         const { data: maxOrderData } = await supabase
           .from('orders_espresso')
-          .select('id')
+          .select('receipt_number')
+          .eq('branch_id', bId)
           .eq('status', 'paid')
-          .order('id', { ascending: false })
+          .order('receipt_number', { ascending: false })
           .limit(1);
-        if (maxOrderData && maxOrderData.length > 0) {
-          startSeq = Math.max(795, Number(maxOrderData[0].id));
+        if (maxOrderData && maxOrderData.length > 0 && maxOrderData[0].receipt_number) {
+          startSeq = Math.max(1000, Number(maxOrderData[0].receipt_number));
         }
       } catch (e) {}
-      settings.last_receipt_number = startSeq;
+      settings.last_receipt_number_by_branch[bId] = startSeq;
     }
 
     if (!settings.receipt_mappings) {
@@ -119,8 +158,8 @@ async function generateNextReceiptNumber(orderId: string | number, branchId: str
       return Number(settings.receipt_mappings[oId]);
     }
 
-    const nextVal = Number(settings.last_receipt_number) + 1;
-    settings.last_receipt_number = nextVal;
+    const nextVal = Number(settings.last_receipt_number_by_branch[bId]) + 1;
+    settings.last_receipt_number_by_branch[bId] = nextVal;
     settings.receipt_mappings[oId] = nextVal;
 
     // Save to server local cache
@@ -2069,7 +2108,7 @@ app.get('/api/kds', async (req, res) => {
   // Workaround: We query order_items and join orders & products
   let query = supabase
     .from('order_items_espresso')
-    .select('*, products:products_espresso(name, category_id, categories:categories_espresso(name)), orders:orders_espresso!inner(id, table_id, created_at, status, branch_id, tables:tables_espresso(name))')
+    .select('*, products:products_espresso(name, category_id, categories:categories_espresso(name)), orders:orders_espresso!inner(id, order_number, table_id, created_at, status, branch_id, tables:tables_espresso(name))')
     .in('status', ['ordered', 'cooking', 'served'])
     .in('orders.status', ['open', 'paid'])
     .order('id', { ascending: false })
@@ -2105,6 +2144,7 @@ app.get('/api/kds', async (req, res) => {
       return {
         ...item,
         order_id: item.order_id,
+        order_number: order?.order_number || null,
         product_name: product?.name,
         category_name: category?.name,
         table_id: order?.table_id,
@@ -2125,7 +2165,7 @@ app.get('/api/kds/archived', async (req, res) => {
   const { branch_id } = req.query;
   let query = supabase
     .from('order_items_espresso')
-    .select('*, products:products_espresso(name), orders:orders_espresso!inner(id, table_id, created_at, status, branch_id, tables:tables_espresso(name))')
+    .select('*, products:products_espresso(name), orders:orders_espresso!inner(id, order_number, table_id, created_at, status, branch_id, tables:tables_espresso(name))')
     .eq('status', 'archived');
 
   if (branch_id) {
@@ -2156,6 +2196,7 @@ app.get('/api/kds/archived', async (req, res) => {
     return {
       ...item,
       order_id: item.order_id,
+      order_number: order?.order_number || null,
       product_name: product?.name,
       table_name: table?.name,
       order_time: order?.created_at,

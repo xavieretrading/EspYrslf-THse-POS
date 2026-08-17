@@ -1,0 +1,932 @@
+﻿
+  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+  <head>
+    <!--[if gte mso 9]>
+    <xml>
+      <x:ExcelWorkbook>
+        <x:ExcelWorksheets>
+          <x:ExcelWorksheet>
+            <x:Name>Profitability Analysis</x:Name>
+            <x:WorksheetOptions>
+              <x:DisplayGridlines/>
+            </x:WorksheetOptions>
+          </x:ExcelWorksheet>
+        </x:ExcelWorksheets>
+      </x:ExcelWorkbook>
+    </xml>
+    <![endif]-->
+    <style>
+      body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 11px; }
+      table { border-collapse: collapse; }
+      th { background-color: #4a3728; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #d2c4b7; padding: 8px; font-size: 12px; }
+      td { border: 1px solid #e2d7cd; padding: 6px 8px; vertical-align: middle; }
+      .num { text-align: right; mso-number-format: "\#\,\#\#0\.00"; }
+      .pct { text-align: right; mso-number-format: "0\.0%"; }
+      .category-header { background-color: #8b7355; color: #ffffff; font-weight: bold; font-size: 12px; }
+      .row-even { background-color: #faf8f6; }
+      .row-odd { background-color: #ffffff; }
+      .margin-high { background-color: #e6f4ea; color: #137333; font-weight: bold; text-align: center; }
+      .margin-med { background-color: #fef7e0; color: #b06000; font-weight: bold; text-align: center; }
+      .margin-low { background-color: #fce8e6; color: #c5221f; font-weight: bold; text-align: center; }
+      .title-cell { font-size: 16px; font-weight: bold; color: #4a3728; padding: 12px 0; }
+      .desc-cell { font-size: 11px; color: #6e5c4f; padding-bottom: 12px; font-style: italic; }
+    </style>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <td colspan="10" class="title-cell">ESPRESSO YOURSELF & TEA HOUSE — MENU PROFITABILITY ANALYSIS</td>
+      </tr>
+      <tr>
+        <td colspan="10" class="desc-cell">Calculated using ingredient weights from the recipe template and unit costs from delivery invoices. Cup and disposable packaging included.</td>
+      </tr>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Product Name</th>
+          <th>Temp</th>
+          <th>Size</th>
+          <th>Sale Price (PHP)</th>
+          <th>Ingredient Cost (PHP)</th>
+          <th>Packaging Cost (PHP)</th>
+          <th>Total Cost (PHP)</th>
+          <th>Net Profit (PHP)</th>
+          <th>Profit Margin (%)</th>
+          <th>Recipe Ingredients Breakdown</th>
+        </tr>
+      </thead>
+      <tbody>
+  
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Americano</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">20.04</td>
+        <td class="num">3.50</td>
+        <td class="num">23.54</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">125.46</td>
+        <td class="margin-high">84.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">esspresso(double shot) (72ml), sugar (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Americano</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">20.04</td>
+        <td class="num">5.00</td>
+        <td class="num">25.04</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">123.96</td>
+        <td class="margin-high">83.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso(double shot) (72ml), sugar (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>MATCHA SERIES</td>
+        <td><b>Matcha Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">20.87</td>
+        <td class="num">5.00</td>
+        <td class="num">25.87</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">123.13</td>
+        <td class="margin-high">82.6%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (4g), sugar (40g), milk (130g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>MATCHA SERIES</td>
+        <td><b>Matcha Seasalt</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">23.57</td>
+        <td class="num">5.00</td>
+        <td class="num">28.57</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">120.43</td>
+        <td class="margin-high">80.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sugar (40g), milk (130g), seasalt cream (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>FRUIT TEAS</td>
+        <td><b>Lychee Tea</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">5.60</td>
+        <td class="num">5.00</td>
+        <td class="num">10.60</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">118.40</td>
+        <td class="margin-high">91.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>FRUIT TEAS</td>
+        <td><b>Pomegranate Tea</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">5.60</td>
+        <td class="num">5.00</td>
+        <td class="num">10.60</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">118.40</td>
+        <td class="margin-high">91.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Spanish Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">35.42</td>
+        <td class="num">5.00</td>
+        <td class="num">40.42</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">108.58</td>
+        <td class="margin-med">72.9%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (5g), condense milk (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">35.69</td>
+        <td class="num">5.00</td>
+        <td class="num">40.69</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">108.31</td>
+        <td class="margin-med">72.7%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot (72ml), milk (150g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Spanish Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">37.40</td>
+        <td class="num">3.50</td>
+        <td class="num">40.90</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">108.10</td>
+        <td class="margin-med">72.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (5g), condense milk (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>MATCHA SERIES</td>
+        <td><b>White Chocolate Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">36.71</td>
+        <td class="num">5.00</td>
+        <td class="num">41.71</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">107.29</td>
+        <td class="margin-med">72.0%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (4g), sugar (40g), milk (130g), white chocolate syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>MATCHA SERIES</td>
+        <td><b>Dirty Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">38.51</td>
+        <td class="num">5.00</td>
+        <td class="num">43.51</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">105.49</td>
+        <td class="margin-med">70.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (4g), sugar (40g), milk (130g), espresso (double shot) (72ml)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>FRUIT TEAS</td>
+        <td><b>Pink Guava & Pomegranate Tea</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">20.20</td>
+        <td class="num">5.00</td>
+        <td class="num">25.20</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">103.80</td>
+        <td class="margin-high">80.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), Pink guava syrup (20g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Cappuccino</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">46.58</td>
+        <td class="num">5.00</td>
+        <td class="num">51.58</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">97.42</td>
+        <td class="margin-med">65.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (40g), milk foam (130g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>SODA BASED</td>
+        <td><b>Lychee</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">27.12</td>
+        <td class="num">5.00</td>
+        <td class="num">32.12</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">96.88</td>
+        <td class="margin-high">75.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sprite (130ml), sugar (5g), lychee syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>White Chocolate Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">49.55</td>
+        <td class="num">5.00</td>
+        <td class="num">54.55</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">94.45</td>
+        <td class="margin-med">63.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (40g), white chocolate syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Mocha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">49.55</td>
+        <td class="num">5.00</td>
+        <td class="num">54.55</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">94.45</td>
+        <td class="margin-med">63.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso(double shot) (70ml), milk (130g), chocolate (40g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Cappuccino</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">51.53</td>
+        <td class="num">3.50</td>
+        <td class="num">55.03</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">93.97</td>
+        <td class="margin-med">63.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (180g), sugar (40g), milk foam (130g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>White Chocolate Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">51.53</td>
+        <td class="num">3.50</td>
+        <td class="num">55.03</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">93.97</td>
+        <td class="margin-med">63.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (40g), white chocolate syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>FRUIT TEAS</td>
+        <td><b>Jasmine Tea</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">99.00</td>
+        <td class="num">3.20</td>
+        <td class="num">3.50</td>
+        <td class="num">6.70</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">92.30</td>
+        <td class="margin-high">93.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), sugar (10g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>FRUIT TEAS</td>
+        <td><b>Black Tea</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">99.00</td>
+        <td class="num">3.20</td>
+        <td class="num">3.50</td>
+        <td class="num">6.70</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">92.30</td>
+        <td class="margin-high">93.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Black Tea Leaves (6g), sugar (10g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>SODA BASED</td>
+        <td><b>Pink Guava</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">33.12</td>
+        <td class="num">5.00</td>
+        <td class="num">38.12</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">90.88</td>
+        <td class="margin-med">70.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sprite (130ml), sugar (5g), pink guava (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>SODA BASED</td>
+        <td><b>Mango</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">33.12</td>
+        <td class="num">5.00</td>
+        <td class="num">38.12</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">90.88</td>
+        <td class="margin-med">70.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sprite (130ml), sugar (5g), mango syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>SODA BASED</td>
+        <td><b>Pomegranate</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">33.12</td>
+        <td class="num">5.00</td>
+        <td class="num">38.12</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">90.88</td>
+        <td class="margin-med">70.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sprite (130ml), sugar (5g), pomegranate (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Mocha</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">54.90</td>
+        <td class="num">3.50</td>
+        <td class="num">58.40</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">90.60</td>
+        <td class="margin-med">60.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso(double shot (70ml), chocolate (40g), milk (184g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Americano</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">11.40</td>
+        <td class="num">3.50</td>
+        <td class="num">14.90</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">90.10</td>
+        <td class="margin-high">85.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">56.48</td>
+        <td class="num">3.50</td>
+        <td class="num">59.98</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">89.02</td>
+        <td class="margin-low">59.7%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot (72ml), milk (360g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Americano</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">11.40</td>
+        <td class="num">5.00</td>
+        <td class="num">16.40</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">88.60</td>
+        <td class="margin-high">84.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Butterscotch</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">58.51</td>
+        <td class="num">5.00</td>
+        <td class="num">63.51</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">85.49</td>
+        <td class="margin-low">57.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (5g), butterscotchsyrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>MATCHA SERIES</td>
+        <td><b>Matcha Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">14.61</td>
+        <td class="num">5.00</td>
+        <td class="num">19.61</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">85.39</td>
+        <td class="margin-high">81.3%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (scaled 70%), sugar (scaled 70%), milk (scaled 70%)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Butterscotch</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">60.49</td>
+        <td class="num">3.50</td>
+        <td class="num">63.99</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">85.01</td>
+        <td class="margin-low">57.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (5g), butterscotch syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Macadamia Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">59.31</td>
+        <td class="num">5.00</td>
+        <td class="num">64.31</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">84.69</td>
+        <td class="margin-low">56.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (70ml), milk (130g), sugar (15g), macadamia syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Macadamia Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">61.29</td>
+        <td class="num">3.50</td>
+        <td class="num">64.79</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">84.21</td>
+        <td class="margin-low">56.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (15g), macadamia syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>MATCHA SERIES</td>
+        <td><b>Matcha Seasalt</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">16.50</td>
+        <td class="num">5.00</td>
+        <td class="num">21.50</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">83.50</td>
+        <td class="margin-high">79.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sugar (scaled 70%), milk (scaled 70%), seasalt cream (scaled 70%)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>French Vanilla</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">60.51</td>
+        <td class="num">5.00</td>
+        <td class="num">65.51</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">83.49</td>
+        <td class="margin-low">56.0%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (30g), french vanilla syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>French Vanilla</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">62.49</td>
+        <td class="num">3.50</td>
+        <td class="num">65.99</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">83.01</td>
+        <td class="margin-low">55.7%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (30g), french vanilla syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>SODA BASED</td>
+        <td><b>Pink Guava & Pomegranate</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">41.16</td>
+        <td class="num">5.00</td>
+        <td class="num">46.16</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.84</td>
+        <td class="margin-med">64.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">sprite (120ml), Pink guava syrup (20g), pomegranate syrup (20g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>FRUIT TEAS</td>
+        <td><b>Pink Guava Tea</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">41.20</td>
+        <td class="num">5.00</td>
+        <td class="num">46.20</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.80</td>
+        <td class="margin-med">64.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), Pink guava syrup (40g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>FRUIT TEAS</td>
+        <td><b>Mango Tea</b></td>
+        <td align="center">Cold</td>
+        <td align="center">16 oz</td>
+        <td class="num">129.00</td>
+        <td class="num">41.20</td>
+        <td class="num">5.00</td>
+        <td class="num">46.20</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.80</td>
+        <td class="margin-med">64.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">Jasmine Tea Leaves (6g), Mango Syrup (40g), sugar (40g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Caramel Macchiato</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">61.31</td>
+        <td class="num">5.00</td>
+        <td class="num">66.31</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.69</td>
+        <td class="margin-low">55.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (130g), sugar (40g), caramel syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>MATCHA SERIES</td>
+        <td><b>Biscoff Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">61.42</td>
+        <td class="num">5.00</td>
+        <td class="num">66.42</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.58</td>
+        <td class="margin-low">55.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (4g), biscoff mix (50g), milk (130g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Caramel Macchiato</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Large</td>
+        <td class="num">149.00</td>
+        <td class="num">63.29</td>
+        <td class="num">3.50</td>
+        <td class="num">66.79</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">82.21</td>
+        <td class="margin-low">55.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (double shot) (72ml), milk (150g), sugar (40g), caramel syrup (40g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>MATCHA SERIES</td>
+        <td><b>Dirty Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">24.41</td>
+        <td class="num">5.00</td>
+        <td class="num">29.41</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">75.59</td>
+        <td class="margin-med">72.0%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (scaled 70%), sugar (scaled 70%), milk (scaled 70%), espresso (double shot) (scaled 70%)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>MATCHA SERIES</td>
+        <td><b>White Chocolate Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">25.70</td>
+        <td class="num">5.00</td>
+        <td class="num">30.70</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">74.30</td>
+        <td class="margin-med">70.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (scaled 70%), sugar (scaled 70%), milk (scaled 70%), white chocolate syrup (scaled 70%)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Mocha</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">28.43</td>
+        <td class="num">3.50</td>
+        <td class="num">31.93</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">73.07</td>
+        <td class="margin-med">69.6%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso(single shot (35ml), chocolate (20g), milk (92g), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">29.22</td>
+        <td class="num">3.50</td>
+        <td class="num">32.72</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">72.28</td>
+        <td class="margin-med">68.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot ) (36ml), milk (180g), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Mocha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">28.43</td>
+        <td class="num">5.00</td>
+        <td class="num">33.43</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">71.57</td>
+        <td class="margin-med">68.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso(single shot (35ml), chocolate (20g), milk (92g), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">29.22</td>
+        <td class="num">5.00</td>
+        <td class="num">34.22</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">70.78</td>
+        <td class="margin-med">67.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot ) (36ml), milk (180g), sugar (20g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Spanish Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">31.40</td>
+        <td class="num">3.50</td>
+        <td class="num">34.90</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">70.10</td>
+        <td class="margin-med">66.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (5g), condense milk (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Spanish Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">31.40</td>
+        <td class="num">5.00</td>
+        <td class="num">36.40</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">68.60</td>
+        <td class="margin-med">65.3%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (5g), condense milk (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Cappuccino</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">36.15</td>
+        <td class="num">3.50</td>
+        <td class="num">39.65</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">65.35</td>
+        <td class="margin-med">62.2%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (150g), sugar (20g), milk foam (100g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Cappuccino</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">36.15</td>
+        <td class="num">5.00</td>
+        <td class="num">41.15</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">63.85</td>
+        <td class="margin-med">60.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (150g), sugar (20g), milk foam (100g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>White Chocolate Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">41.10</td>
+        <td class="num">3.50</td>
+        <td class="num">44.60</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">60.40</td>
+        <td class="margin-low">57.5%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (20g), white chocolate syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>White Chocolate Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">41.10</td>
+        <td class="num">5.00</td>
+        <td class="num">46.10</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">58.90</td>
+        <td class="margin-low">56.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (20g), white chocolate syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>MATCHA SERIES</td>
+        <td><b>Biscoff Matcha</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">42.99</td>
+        <td class="num">5.00</td>
+        <td class="num">47.99</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">57.01</td>
+        <td class="margin-low">54.3%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">matcha powder (scaled 70%), biscoff mix (scaled 70%), milk (scaled 70%)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Butterscotch</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">48.72</td>
+        <td class="num">3.50</td>
+        <td class="num">52.22</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">52.78</td>
+        <td class="margin-low">50.3%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (5g), butterscotch syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Macadamia Latte</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">49.92</td>
+        <td class="num">3.50</td>
+        <td class="num">53.42</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">51.58</td>
+        <td class="margin-low">49.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso ( single shot (36ml), milk (180g), sugar (20g), macadamia syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>French Vanilla</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">49.92</td>
+        <td class="num">3.50</td>
+        <td class="num">53.42</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">51.58</td>
+        <td class="margin-low">49.1%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (20g), french vanilla syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Butterscotch</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">48.72</td>
+        <td class="num">5.00</td>
+        <td class="num">53.72</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">51.28</td>
+        <td class="margin-low">48.8%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (5g), butterscotch syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>Caramel Macchiato</b></td>
+        <td align="center">Hot</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">50.72</td>
+        <td class="num">3.50</td>
+        <td class="num">54.22</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">50.78</td>
+        <td class="margin-low">48.4%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (30g), caramel syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Macadamia Latte</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">49.92</td>
+        <td class="num">5.00</td>
+        <td class="num">54.92</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">50.08</td>
+        <td class="margin-low">47.7%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso ( single shot (36ml), milk (180g), sugar (20g), macadamia syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-even">
+        <td>COFFEE BASED</td>
+        <td><b>French Vanilla</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">49.92</td>
+        <td class="num">5.00</td>
+        <td class="num">54.92</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">50.08</td>
+        <td class="margin-low">47.7%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (20g), french vanilla syrup (30g)</td>
+      </tr>
+    
+      <tr class="row-odd">
+        <td>COFFEE BASED</td>
+        <td><b>Caramel Macchiato</b></td>
+        <td align="center">Cold</td>
+        <td align="center">Small</td>
+        <td class="num">105.00</td>
+        <td class="num">50.72</td>
+        <td class="num">5.00</td>
+        <td class="num">55.72</td>
+        <td class="num" style="font-weight: bold; color: #4a3728;">49.28</td>
+        <td class="margin-low">46.9%</td>
+        <td style="color: #6e5c4f; font-size: 10px;">espresso (single shot) (36ml), milk (180g), sugar (30g), caramel syrup (30g)</td>
+      </tr>
+    
+      </tbody>
+    </table>
+  </body>
+  </html>
+  

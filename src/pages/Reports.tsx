@@ -1016,7 +1016,7 @@ export default function Reports() {
     content += `====================================\n\n`;
 
     eJournalData.forEach((order: any) => {
-      content += `Order No  : ${order.id.toString().padStart(8, '0')}\n`;
+      content += `Order No  : ${(order.order_number || order.id).toString().padStart(8, '0')}\n`;
       content += `Invoice No: ${order.receipt_number !== undefined && order.receipt_number !== null ? order.receipt_number.toString().padStart(8, '0') : 'PENDING'}\n`;
       content += `Date/Time : ${format(new Date(new Date(order.updated_at || order.created_at).toLocaleString("en-US", { timeZone: "Asia/Manila" })), 'MM/dd/yyyy HH:mm:ss')}\n`;
       content += `Status    : ${order.status.toUpperCase()}\n`;
@@ -2249,7 +2249,7 @@ export default function Reports() {
                   </td>
                   <td className="p-1.5 sm:p-2 border border-slate-200 print:border-black font-mono">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-800">ORD #{t.id.toString().padStart(6, '0')}</span>
+                      <span className="font-bold text-slate-800">ORD #{(t.order_number || t.id).toString().padStart(6, '0')}</span>
                       {t.receipt_number !== undefined && t.receipt_number !== null ? (
                         <span className="text-[10px] text-emerald-600 font-bold">INV #{t.receipt_number.toString().padStart(6, '0')}</span>
                       ) : (
@@ -2433,7 +2433,7 @@ export default function Reports() {
             s.orders.map((o: any) => (
               <div key={o.id} className="flex justify-between items-center py-1 font-medium text-[11px] border-b border-slate-100 last:border-b-0">
                 <div className="flex flex-col">
-                  <span className="font-bold text-slate-800">ORD #{o.id.toString().padStart(6, '0')}</span>
+                  <span className="font-bold text-slate-800">ORD #{(o.order_number || o.id).toString().padStart(6, '0')}</span>
                   {o.receipt_number !== undefined && o.receipt_number !== null ? (
                     <span className="text-[10px] text-emerald-600 font-bold">INV #{o.receipt_number.toString().padStart(6, '0')}</span>
                   ) : (
@@ -2640,7 +2640,7 @@ export default function Reports() {
                                     s.orders.map((o: any) => (
                                       <div key={o.id} className="flex justify-between items-center text-[11px] font-medium text-slate-700 border-b border-slate-200 pb-1 last:border-b-0 py-1">
                                         <div className="flex flex-col truncate pr-1">
-                                          <span className="font-bold text-slate-800">ORD #{o.id.toString().padStart(6, '0')}</span>
+                                          <span className="font-bold text-slate-800">ORD #{(o.order_number || o.id).toString().padStart(6, '0')}</span>
                                           {o.receipt_number !== undefined && o.receipt_number !== null ? (
                                             <span className="text-[10px] text-emerald-600 font-bold">INV #{o.receipt_number.toString().padStart(6, '0')}</span>
                                           ) : (
@@ -3246,7 +3246,7 @@ export default function Reports() {
                 <div className="mb-4 text-center print:mb-2 text-slate-300 print:text-black">====================================</div>
                 {eJournalData.map((order: any, idx) => (
                   <div key={idx} className="mb-4 print:mb-3 border-b border-slate-50 pb-4 print:pb-2 print:border-black">
-                    <div>Order No : {order.id.toString().padStart(8, '0')}</div>
+                    <div>Order No : {(order.order_number || order.id).toString().padStart(8, '0')}</div>
                     <div>Invoice No: {order.receipt_number !== undefined && order.receipt_number !== null ? order.receipt_number.toString().padStart(8, '0') : 'PENDING'}</div>
                     <div>Date/Time : {format(new Date(new Date(order.updated_at || order.created_at).toLocaleString("en-US", { timeZone: "Asia/Manila" })), 'MM/dd/yyyy HH:mm:ss')}</div>
                     <div>Status    : {order.status.toUpperCase()}</div>

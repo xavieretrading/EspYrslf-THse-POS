@@ -498,11 +498,21 @@ export default function POS() {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return isSellable && matchesDivision && matchesCategory && matchesSearch;
   }).sort((a, b) => {
+    const aOutOfStock = a.stock <= 0;
+    const bOutOfStock = b.stock <= 0;
+
+    // 1. Put out-of-stock items at the end
+    if (aOutOfStock && !bOutOfStock) return 1;
+    if (!aOutOfStock && bOutOfStock) return -1;
+
+    // 2. Put promo/sale items first
     const aPromo = a.name.toLowerCase().includes('promo') || a.name.toLowerCase().includes('sale') || a.category_name?.toLowerCase().includes('promo');
     const bPromo = b.name.toLowerCase().includes('promo') || b.name.toLowerCase().includes('sale') || b.category_name?.toLowerCase().includes('promo');
     if (aPromo && !bPromo) return -1;
     if (!aPromo && bPromo) return 1;
-    return 0;
+
+    // 3. Alphabetical sort fallback for clean, consistent alignment
+    return (a.name || '').localeCompare(b.name || '');
   });
 
   const addToCart = async (product: Product) => {

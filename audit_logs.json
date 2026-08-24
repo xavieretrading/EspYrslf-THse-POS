@@ -2,35 +2,35 @@
   {
     "id": "17867796908410q1qp",
     "timestamp": "2026-08-15T07:41:30.842Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Cinamon Rolls"
   },
   {
     "id": "1786779642261s1e45",
     "timestamp": "2026-08-15T07:40:42.261Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Cinamon Rolls"
   },
   {
     "id": "1786779634183vrd61",
     "timestamp": "2026-08-15T07:40:34.183Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Cinnamon Roll"
   },
   {
     "id": "1786779537395mr8cf",
     "timestamp": "2026-08-15T07:38:57.395Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Cinnamon Roll"
   },
   {
     "id": "1786779264765z8i13",
     "timestamp": "2026-08-15T07:34:24.765Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Auto-migrate)"
   },
@@ -142,28 +142,28 @@
   {
     "id": "1786524758444k0ijb",
     "timestamp": "2026-08-12T08:52:38.444Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Export Sales Report Excel",
     "details": "Exported Y-Reading (Period) to Excel for 2026-08-01 to 2026-08-12"
   },
   {
     "id": "1786520176499bgzi8",
     "timestamp": "2026-08-12T07:36:16.499Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1786518121503b3d29",
     "timestamp": "2026-08-12T07:02:01.503Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Concept Blend"
   },
   {
     "id": "1786518112028mpqip",
     "timestamp": "2026-08-12T07:01:52.028Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Concept Blend"
   },
@@ -226,63 +226,63 @@
   {
     "id": "1785996088220tb01u",
     "timestamp": "2026-08-06T06:01:28.220Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Export Sales Report Excel",
     "details": "Exported Z-Reading (Daily) to Excel for 2026-08-06 to 2026-08-06"
   },
   {
     "id": "1785993210461tvo0c",
     "timestamp": "2026-08-06T05:13:30.461Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Macchiato"
   },
   {
     "id": "1785993176938jevz0",
     "timestamp": "2026-08-06T05:12:56.938Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Latte"
   },
   {
     "id": "1785993141992hkge6",
     "timestamp": "2026-08-06T05:12:21.992Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Hot Chocolate"
   },
   {
     "id": "1785993126687xh5n5",
     "timestamp": "2026-08-06T05:12:06.687Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Wild Rose Tea"
   },
   {
     "id": "178599310646343h2d",
     "timestamp": "2026-08-06T05:11:46.463Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Spanish Latte"
   },
   {
     "id": "178599279119379bgs",
     "timestamp": "2026-08-06T05:06:31.193Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Butter Licious"
   },
   {
     "id": "17859927589118z4yx",
     "timestamp": "2026-08-06T05:05:58.911Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: ACT II - Butter Lovers Flavour"
   },
   {
     "id": "17859898987761k56e",
     "timestamp": "2026-08-06T04:18:18.776Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Espresso"
   },
@@ -296,14 +296,14 @@
   {
     "id": "1785987940563dg91l",
     "timestamp": "2026-08-06T03:45:40.563Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete User",
     "details": "Deleted user earl@gmail.com1"
   },
   {
     "id": "17859879349650qlkj",
     "timestamp": "2026-08-06T03:45:34.965Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete User",
     "details": "Deleted user Jun-Waiter"
   },
@@ -331,7 +331,7 @@
   {
     "id": "1785978197352c5st7",
     "timestamp": "2026-08-06T01:03:17.352Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Print Single Shift Report",
     "details": "Printed Shift Report for cashier Cashier 1 on 08/01/2026"
   },
@@ -352,1491 +352,1491 @@
   {
     "id": "1785884626069ptilx",
     "timestamp": "2026-08-04T23:03:46.069Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Mango Coffee Frappe"
   },
   {
     "id": "1785815261880z4e87",
     "timestamp": "2026-08-04T03:47:41.880Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Glenfiddich "
   },
   {
     "id": "1785815236587cm0qu",
     "timestamp": "2026-08-04T03:47:16.587Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: The Macallan"
   },
   {
     "id": "1785815198776pvm5d",
     "timestamp": "2026-08-04T03:46:38.776Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Glenfiddich - 15"
   },
   {
     "id": "178581514897722ui5",
     "timestamp": "2026-08-04T03:45:48.977Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Glenfiddich"
   },
   {
     "id": "1785815071868p3ile",
     "timestamp": "2026-08-04T03:44:31.868Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: The Singleton"
   },
   {
     "id": "1785814954182hyt7y",
     "timestamp": "2026-08-04T03:42:34.182Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Chico Walnuts Cookies"
   },
   {
     "id": "1785814907779anh8c",
     "timestamp": "2026-08-04T03:41:47.779Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Otmeak Cookies"
   },
   {
     "id": "1785814577429avk51",
     "timestamp": "2026-08-04T03:36:17.429Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Heineken - Silver"
   },
   {
     "id": "17858144136832xw2f",
     "timestamp": "2026-08-04T03:33:33.683Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Canada Dry"
   },
   {
     "id": "17858143979145d8c3",
     "timestamp": "2026-08-04T03:33:17.914Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Canada Dry"
   },
   {
     "id": "178581437948140vxl",
     "timestamp": "2026-08-04T03:32:59.481Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Canada Dry"
   },
   {
     "id": "1785814341090hz0sf",
     "timestamp": "2026-08-04T03:32:21.090Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Party Snacks - 100grams"
   },
   {
     "id": "1785746336853xp3a8",
     "timestamp": "2026-08-03T08:38:56.853Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Mango Coconut"
   },
   {
     "id": "17857462916844wtlv",
     "timestamp": "2026-08-03T08:38:11.691Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Durian Frappe"
   },
   {
     "id": "1785746254833v2a2z",
     "timestamp": "2026-08-03T08:37:34.833Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Tropical Mango Brew "
   },
   {
     "id": "1785746200083ybvi3",
     "timestamp": "2026-08-03T08:36:40.084Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Iced Durian Latte"
   },
   {
     "id": "1785743197353vmsw7",
     "timestamp": "2026-08-03T07:46:37.353Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durian Latte"
   },
   {
     "id": "1785743192174ziz4t",
     "timestamp": "2026-08-03T07:46:32.174Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durian Latte"
   },
   {
     "id": "1785743155761zjyr5",
     "timestamp": "2026-08-03T07:45:55.761Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Durian Latte"
   },
   {
     "id": "1785743103574jsle6",
     "timestamp": "2026-08-03T07:45:03.574Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Durian Latte"
   },
   {
     "id": "1785743069601jsjr2",
     "timestamp": "2026-08-03T07:44:29.601Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Irish cream"
   },
   {
     "id": "1785743034989uyez0",
     "timestamp": "2026-08-03T07:43:54.989Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Macadamia"
   },
   {
     "id": "1785742999158saaxk",
     "timestamp": "2026-08-03T07:43:19.158Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Butterscotch "
   },
   {
     "id": "1785742964759bviyf",
     "timestamp": "2026-08-03T07:42:44.759Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Spanish Latte"
   },
   {
     "id": "1785742936786z30oa",
     "timestamp": "2026-08-03T07:42:16.786Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Iced French Vanilla"
   },
   {
     "id": "17857429021216o5ah",
     "timestamp": "2026-08-03T07:41:42.121Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Fresh Vanilla"
   },
   {
     "id": "1785742871599a0ndm",
     "timestamp": "2026-08-03T07:41:11.599Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Mocha"
   },
   {
     "id": "17857428466774lyva",
     "timestamp": "2026-08-03T07:40:46.677Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Latte"
   },
   {
     "id": "17857428189265fzsb",
     "timestamp": "2026-08-03T07:40:18.926Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Iced Americano"
   },
   {
     "id": "1785742779819h1mpq",
     "timestamp": "2026-08-03T07:39:39.819Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Wild Rose Tea"
   },
   {
     "id": "1785742645977h0jev",
     "timestamp": "2026-08-03T07:37:25.977Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Lemon Lava"
   },
   {
     "id": "1785742585664tmdrw",
     "timestamp": "2026-08-03T07:36:25.664Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Durian Latte"
   },
   {
     "id": "1785742565076tdbom",
     "timestamp": "2026-08-03T07:36:05.076Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Macchiato"
   },
   {
     "id": "1785742533244nt187",
     "timestamp": "2026-08-03T07:35:33.244Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Flat White"
   },
   {
     "id": "178574250939902mst",
     "timestamp": "2026-08-03T07:35:09.399Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Espresso with Milk"
   },
   {
     "id": "1785742484891l22bo",
     "timestamp": "2026-08-03T07:34:44.891Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Cafe Latter"
   },
   {
     "id": "17857424662449dzaz",
     "timestamp": "2026-08-03T07:34:26.244Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Cappuccino "
   },
   {
     "id": "17857424343755tjun",
     "timestamp": "2026-08-03T07:33:54.375Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Americano"
   },
   {
     "id": "1785742405298vaddr",
     "timestamp": "2026-08-03T07:33:25.298Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Latte"
   },
   {
     "id": "17857423361228jn38",
     "timestamp": "2026-08-03T07:32:16.122Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Ristretto "
   },
   {
     "id": "1785742307157hzzbj",
     "timestamp": "2026-08-03T07:31:47.157Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mocha"
   },
   {
     "id": "1785742289970iprtj",
     "timestamp": "2026-08-03T07:31:29.971Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coffee Creme"
   },
   {
     "id": "17857422458522sk8g",
     "timestamp": "2026-08-03T07:30:45.852Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Americano"
   },
   {
     "id": "1785742238633s2tne",
     "timestamp": "2026-08-03T07:30:38.633Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Espresso Coffee"
   },
   {
     "id": "1785742235454libpw",
     "timestamp": "2026-08-03T07:30:35.454Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Mango Coffee Frappe"
   },
   {
     "id": "17857422317982y2rk",
     "timestamp": "2026-08-03T07:30:31.798Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Durrian Coffee Frappe"
   },
   {
     "id": "1785742228201rdgf5",
     "timestamp": "2026-08-03T07:30:28.201Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Mango Coconut Coffee"
   },
   {
     "id": "1785742227074btdk1",
     "timestamp": "2026-08-03T07:30:27.074Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: Mango Coconut Coffee"
   },
   {
     "id": "1785741644354yzlje",
     "timestamp": "2026-08-03T07:20:44.354Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso Coffee"
   },
   {
     "id": "1785741625418wm84t",
     "timestamp": "2026-08-03T07:20:25.418Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: PISO PROMO - Espresso Coffee"
   },
   {
     "id": "1785574038800by44g",
     "timestamp": "2026-08-01T08:47:18.800Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Stuff Toys - Extra Large"
   },
   {
     "id": "1785574028380ffd2u",
     "timestamp": "2026-08-01T08:47:08.380Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Stuff Toys - Extra Large"
   },
   {
     "id": "1785568363939y4muu",
     "timestamp": "2026-08-01T07:12:43.939Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #33. Total: ₱1.00"
   },
   {
     "id": "1785568247635to2kd",
     "timestamp": "2026-08-01T07:10:47.636Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #33 on Walk-In"
   },
   {
     "id": "1785565926082qud65",
     "timestamp": "2026-08-01T06:32:06.082Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Royal Orange"
   },
   {
     "id": "1785565890064ugma6",
     "timestamp": "2026-08-01T06:31:30.064Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #32. Total: ₱594.00"
   },
   {
     "id": "1785565865361l0hho",
     "timestamp": "2026-08-01T06:31:05.361Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #32 on Walk-In"
   },
   {
     "id": "1785565827428c45g3",
     "timestamp": "2026-08-01T06:30:27.428Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Hot Durian Latte"
   },
   {
     "id": "1785565814842aiko7",
     "timestamp": "2026-08-01T06:30:14.842Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coffee Frappe"
   },
   {
     "id": "1785565809269svxj1",
     "timestamp": "2026-08-01T06:30:09.269Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Iced Durian Latte"
   },
   {
     "id": "1785565805392qraup",
     "timestamp": "2026-08-01T06:30:05.392Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durrian Coffee Frappe"
   },
   {
     "id": "1785565784107vabip",
     "timestamp": "2026-08-01T06:29:44.107Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785565736175tp7mh",
     "timestamp": "2026-08-01T06:28:56.175Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mocha"
   },
   {
     "id": "1785565730244qhjcg",
     "timestamp": "2026-08-01T06:28:50.244Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Cappuccino"
   },
   {
     "id": "1785565726464jzs8w",
     "timestamp": "2026-08-01T06:28:46.464Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Americano"
   },
   {
     "id": "17855657169933gw15",
     "timestamp": "2026-08-01T06:28:36.993Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "1785565712108b1tke",
     "timestamp": "2026-08-01T06:28:32.108Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "1785565708577nysr7",
     "timestamp": "2026-08-01T06:28:28.577Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "1785565702335eihli",
     "timestamp": "2026-08-01T06:28:22.335Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "1785565698531wju93",
     "timestamp": "2026-08-01T06:28:18.531Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "1785565656958e8ip9",
     "timestamp": "2026-08-01T06:27:36.958Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 330ml"
   },
   {
     "id": "1785565649997gp5hu",
     "timestamp": "2026-08-01T06:27:29.997Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 550ml"
   },
   {
     "id": "1785565615320f9512",
     "timestamp": "2026-08-01T06:26:55.320Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Downy / Sunrise Fresh"
   },
   {
     "id": "1785565574358p6xhu",
     "timestamp": "2026-08-01T06:26:14.358Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Ariel/Power Liquid w/Downy"
   },
   {
     "id": "178556553577773v6u",
     "timestamp": "2026-08-01T06:25:35.777Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Downy/Perfume / CottonFresh"
   },
   {
     "id": "1785565463179bzhvn",
     "timestamp": "2026-08-01T06:24:23.179Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Red Horse Can"
   },
   {
     "id": "1785565450017d6geo",
     "timestamp": "2026-08-01T06:24:10.017Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Pale Pilsen"
   },
   {
     "id": "1785565425718n5tde",
     "timestamp": "2026-08-01T06:23:45.718Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "178556541837294zji",
     "timestamp": "2026-08-01T06:23:38.372Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Redbull"
   },
   {
     "id": "17855653772174g1kp",
     "timestamp": "2026-08-01T06:22:57.217Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: PISO PROMO - Espresso Coffee"
   },
   {
     "id": "1785565286826a7oz2",
     "timestamp": "2026-08-01T06:21:26.826Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Royal Orange"
   },
   {
     "id": "1785565265865jqopn",
     "timestamp": "2026-08-01T06:21:05.865Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Sprite"
   },
   {
     "id": "1785565239970t0j3f",
     "timestamp": "2026-08-01T06:20:39.970Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mocha"
   },
   {
     "id": "1785565233869c1v3a",
     "timestamp": "2026-08-01T06:20:33.869Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Cappuccino"
   },
   {
     "id": "1785565225188ki8as",
     "timestamp": "2026-08-01T06:20:25.188Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Americano"
   },
   {
     "id": "1785565209987avcky",
     "timestamp": "2026-08-01T06:20:09.987Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Regular"
   },
   {
     "id": "1785565100199cg7jz",
     "timestamp": "2026-08-01T06:18:20.200Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Zero"
   },
   {
     "id": "1785565069830mf27r",
     "timestamp": "2026-08-01T06:17:49.830Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 550ml"
   },
   {
     "id": "1785565051176u8gno",
     "timestamp": "2026-08-01T06:17:31.176Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 330ml"
   },
   {
     "id": "1785564995358gcl2x",
     "timestamp": "2026-08-01T06:16:35.358Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #31. Total: ₱359.00"
   },
   {
     "id": "1785564987033l5dc4",
     "timestamp": "2026-08-01T06:16:27.033Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #31 on Walk-In"
   },
   {
     "id": "17855649769876uzxg",
     "timestamp": "2026-08-01T06:16:16.987Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱10"
   },
   {
     "id": "1785564922905cgjid",
     "timestamp": "2026-08-01T06:15:22.905Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "1785564554252gsl9x",
     "timestamp": "2026-08-01T06:09:14.252Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Ended",
     "details": "Shift ended with cash out amount: ₱2000. Total Sales: ₱7217"
   },
   {
     "id": "1785563336736pqs6q",
     "timestamp": "2026-08-01T05:48:56.736Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso with Milk"
   },
   {
     "id": "17855633141537qw5c",
     "timestamp": "2026-08-01T05:48:34.153Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Macchiato"
   },
   {
     "id": "1785563307672lyxpn",
     "timestamp": "2026-08-01T05:48:27.672Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Hot Chocolate"
   },
   {
     "id": "1785563303025yji2n",
     "timestamp": "2026-08-01T05:48:23.025Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Macchiato"
   },
   {
     "id": "1785563300505se1ut",
     "timestamp": "2026-08-01T05:48:20.505Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Spanish Latte"
   },
   {
     "id": "1785563289957szwpi",
     "timestamp": "2026-08-01T05:48:09.957Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Latte"
   },
   {
     "id": "1785563262492aa1dv",
     "timestamp": "2026-08-01T05:47:42.492Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Pale Pilsen"
   },
   {
     "id": "1785563243300iasfb",
     "timestamp": "2026-08-01T05:47:23.300Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 550ml"
   },
   {
     "id": "17855632162076gnmj",
     "timestamp": "2026-08-01T05:46:56.207Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Royal Orange"
   },
   {
     "id": "1785563184810e11kg",
     "timestamp": "2026-08-01T05:46:24.810Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "178556316230537tld",
     "timestamp": "2026-08-01T05:46:02.306Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Perrier"
   },
   {
     "id": "1785563114637ex6se",
     "timestamp": "2026-08-01T05:45:14.637Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Evian 330ml"
   },
   {
     "id": "17855630795014iyh6",
     "timestamp": "2026-08-01T05:44:39.501Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Red Horse Can"
   },
   {
     "id": "1785563056605ku8ls",
     "timestamp": "2026-08-01T05:44:16.605Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Lemon Pou"
   },
   {
     "id": "1785563026440f81mv",
     "timestamp": "2026-08-01T05:43:46.440Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coca Cola/Jackdaniel"
   },
   {
     "id": "17855629996399lrs4",
     "timestamp": "2026-08-01T05:43:19.639Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: San Miglight "
   },
   {
     "id": "1785562971795vdfhm",
     "timestamp": "2026-08-01T05:42:51.795Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Pocari Sweet - 500ml"
   },
   {
     "id": "17855629443303w3ko",
     "timestamp": "2026-08-01T05:42:24.331Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Sprite"
   },
   {
     "id": "1785562893025c0yd3",
     "timestamp": "2026-08-01T05:41:33.025Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Redbull"
   },
   {
     "id": "1785562227218rx2zr",
     "timestamp": "2026-08-01T05:30:27.218Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Zero"
   },
   {
     "id": "1785562169228p17g8",
     "timestamp": "2026-08-01T05:29:29.228Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Zero"
   },
   {
     "id": "1785560880034e6zrz",
     "timestamp": "2026-08-01T05:08:00.034Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "1785560497506a5119",
     "timestamp": "2026-08-01T05:01:37.506Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Items to Order",
     "details": "Added new items to Order #30: 1x Mango Coconut Coffee"
   },
   {
     "id": "1785560475753ex263",
     "timestamp": "2026-08-01T05:01:15.753Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #30 on Walk-In"
   },
   {
     "id": "1785559968442jsgy1",
     "timestamp": "2026-08-01T04:52:48.442Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #29 on Walk-In"
   },
   {
     "id": "17855598751401kxtr",
     "timestamp": "2026-08-01T04:51:15.140Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #28 on Walk-In"
   },
   {
     "id": "1785559504708gk8ix",
     "timestamp": "2026-08-01T04:45:04.708Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #27 on Walk-In"
   },
   {
     "id": "1785559413104tt7wa",
     "timestamp": "2026-08-01T04:43:33.104Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Items to Order",
     "details": "Added new items to Order #25: 1x Pers"
   },
   {
     "id": "1785559388537bqtcl",
     "timestamp": "2026-08-01T04:43:08.537Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Items to Order",
     "details": "Added new items to Order #25: 1x Cappuccino"
   },
   {
     "id": "178555932942074esu",
     "timestamp": "2026-08-01T04:42:09.420Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #25 on Walk-In"
   },
   {
     "id": "1785559288879ol1fp",
     "timestamp": "2026-08-01T04:41:28.879Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #24 on Walk-In"
   },
   {
     "id": "1785558227912npcyt",
     "timestamp": "2026-08-01T04:23:47.912Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #23. Total: ₱2115.00"
   },
   {
     "id": "17855581897946kpxt",
     "timestamp": "2026-08-01T04:23:09.795Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #23 on Walk-In"
   },
   {
     "id": "17855530716505lylv",
     "timestamp": "2026-08-01T02:57:51.650Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #17. Total: ₱99.00"
   },
   {
     "id": "1785553058064zi0n2",
     "timestamp": "2026-08-01T02:57:38.064Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #17 on Walk-In"
   },
   {
     "id": "1785552137081ok7tu",
     "timestamp": "2026-08-01T02:42:17.081Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #16. Total: ₱99.00"
   },
   {
     "id": "1785552111483mnw2t",
     "timestamp": "2026-08-01T02:41:51.483Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #16 on Walk-In"
   },
   {
     "id": "1785551703086rx0he",
     "timestamp": "2026-08-01T02:35:03.086Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #15. Total: ₱0.00"
   },
   {
     "id": "1785550395162dppnx",
     "timestamp": "2026-08-01T02:13:15.162Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #14. Total: ₱99.00"
   },
   {
     "id": "1785550382563h4mvs",
     "timestamp": "2026-08-01T02:13:02.563Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #14 on Walk-In"
   },
   {
     "id": "17855498478866o0mg",
     "timestamp": "2026-08-01T02:04:07.886Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Zonrox/ ColorSafe"
   },
   {
     "id": "17855497723223cf9n",
     "timestamp": "2026-08-01T02:02:52.322Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Del/ Fragrance Pearls"
   },
   {
     "id": "17855497378605wu65",
     "timestamp": "2026-08-01T02:02:17.860Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Del/ Gentle Protect"
   },
   {
     "id": "17855496637973ishp",
     "timestamp": "2026-08-01T02:01:03.797Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Tide/ Garden Bloom"
   },
   {
     "id": "178554962679338stz",
     "timestamp": "2026-08-01T02:00:26.793Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Downy/ Passion "
   },
   {
     "id": "1785549597666upv31",
     "timestamp": "2026-08-01T01:59:57.666Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Downy / Sunrise Fresh"
   },
   {
     "id": "1785549562195xz7ia",
     "timestamp": "2026-08-01T01:59:22.195Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Breeze / Rush Clean"
   },
   {
     "id": "1785549456817zz7vy",
     "timestamp": "2026-08-01T01:57:36.817Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Downy/ Kontra Kulob"
   },
   {
     "id": "1785549391306dqpie",
     "timestamp": "2026-08-01T01:56:31.306Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Ariel/Power Liquid w/"
   },
   {
     "id": "1785549331387325fd",
     "timestamp": "2026-08-01T01:55:31.387Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Downy/Perfume / CottonFresh"
   },
   {
     "id": "17855490091373ctwe",
     "timestamp": "2026-08-01T01:50:09.137Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Barong / Formal Shirt"
   },
   {
     "id": "17855464692790sylv",
     "timestamp": "2026-08-01T01:07:49.279Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #13. Total: ₱330.00"
   },
   {
     "id": "1785546430527bl5k2",
     "timestamp": "2026-08-01T01:07:10.527Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #13 on Walk-In"
   },
   {
     "id": "178551635827369mdr",
     "timestamp": "2026-07-31T16:45:58.273Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Towels & Bedsheets:"
   },
   {
     "id": "17855163302959fmfm",
     "timestamp": "2026-07-31T16:45:30.295Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Towels & Bedsheets:"
   },
   {
     "id": "1785512233753qg98m",
     "timestamp": "2026-07-31T15:37:13.753Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "178551042626837088",
     "timestamp": "2026-07-31T15:07:06.268Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coca Cola/Jackdaniel"
   },
   {
     "id": "1785510348412urtgk",
     "timestamp": "2026-07-31T15:05:48.412Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: San Miglight "
   },
   {
     "id": "1785510293028bxf2e",
     "timestamp": "2026-07-31T15:04:53.028Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Regular"
   },
   {
     "id": "1785510109472o2gzp",
     "timestamp": "2026-07-31T15:01:49.472Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mocha"
   },
   {
     "id": "1785510050116epc38",
     "timestamp": "2026-07-31T15:00:50.116Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Cappuccino"
   },
   {
     "id": "17855099876764hfwi",
     "timestamp": "2026-07-31T14:59:47.676Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Espresso"
   },
   {
     "id": "17855098999150urba",
     "timestamp": "2026-07-31T14:58:19.915Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Hot Chocolate"
   },
   {
     "id": "1785509793799puypq",
     "timestamp": "2026-07-31T14:56:33.799Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Red Horse Can"
   },
   {
     "id": "178550972143852tnw",
     "timestamp": "2026-07-31T14:55:21.438Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Pocari Sweet - 500ml"
   },
   {
     "id": "17855097121221qdjs",
     "timestamp": "2026-07-31T14:55:12.122Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Pocari Sweet - 500ml"
   },
   {
     "id": "1785509693610h1i39",
     "timestamp": "2026-07-31T14:54:53.610Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Americano"
   },
   {
     "id": "1785509601583es89m",
     "timestamp": "2026-07-31T14:53:21.583Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Redbull"
   },
   {
     "id": "1785509516109g0acn",
     "timestamp": "2026-07-31T14:51:56.109Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Sprite"
   },
   {
     "id": "17855095159405sb3e",
     "timestamp": "2026-07-31T14:51:55.940Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Sprite"
   },
   {
     "id": "178550951502171fw7",
     "timestamp": "2026-07-31T14:51:55.021Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Sprite"
   },
   {
     "id": "1785509497371ly0pn",
     "timestamp": "2026-07-31T14:51:37.371Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Coke Zero"
   },
   {
     "id": "1785509479106fd720",
     "timestamp": "2026-07-31T14:51:19.106Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "1785509367908o1ly7",
     "timestamp": "2026-07-31T14:49:27.908Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Espresso with Milk"
   },
   {
     "id": "17855093497888jivx",
     "timestamp": "2026-07-31T14:49:09.789Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Hot Chocolate"
   },
   {
     "id": "17855093316420rp0s",
     "timestamp": "2026-07-31T14:48:51.642Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Mocha"
   },
   {
     "id": "17855093158054zjck",
     "timestamp": "2026-07-31T14:48:35.805Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Macchiato"
   },
   {
     "id": "1785509279665d1nzs",
     "timestamp": "2026-07-31T14:47:59.665Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Latte"
   },
   {
     "id": "1785509268194vtsn8",
     "timestamp": "2026-07-31T14:47:48.194Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Spanish Latte"
   },
   {
     "id": "1785509255292usf7g",
     "timestamp": "2026-07-31T14:47:35.296Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Cappuccino"
   },
   {
     "id": "1785509239699vhvpi",
     "timestamp": "2026-07-31T14:47:19.699Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Spanish Latte"
   },
   {
     "id": "1785509213715b18xn",
     "timestamp": "2026-07-31T14:46:53.715Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Americano"
   },
   {
     "id": "1785509196664xoyb3",
     "timestamp": "2026-07-31T14:46:36.667Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Latte"
   },
   {
     "id": "1785509167956brfkx",
     "timestamp": "2026-07-31T14:46:07.956Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Espresso"
   },
   {
     "id": "1785508496876ro3zq",
     "timestamp": "2026-07-31T14:34:56.876Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #11 on Walk-In"
   },
   {
     "id": "1785507684902ahjeq",
     "timestamp": "2026-07-31T14:21:24.902Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: PISO PROMO - Espresso Coffee"
   },
   {
     "id": "1785507684582z4b9x",
     "timestamp": "2026-07-31T14:21:24.582Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: PISO PROMO - Espresso Coffee"
   },
   {
     "id": "1785507086519w1jnn",
     "timestamp": "2026-07-31T14:11:26.519Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Piso Sale - Coffee"
   },
   {
     "id": "1785506944698daoo6",
     "timestamp": "2026-07-31T14:09:04.698Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #10 on Walk-In"
   },
   {
     "id": "1785506407419tu2r9",
     "timestamp": "2026-07-31T14:00:07.419Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Pers"
   },
   {
     "id": "1785506353678s3mel",
     "timestamp": "2026-07-31T13:59:13.678Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Coca Cola/Jackdaniel"
   },
   {
     "id": "1785506291857cvdq8",
     "timestamp": "2026-07-31T13:58:11.857Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Red Horse Can"
   },
   {
     "id": "1785506255998sbyf2",
     "timestamp": "2026-07-31T13:57:35.998Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Pale Pilsen"
   },
   {
     "id": "1785506166565ztxss",
     "timestamp": "2026-07-31T13:56:06.565Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Redbull"
   },
   {
     "id": "1785506121427x20vu",
     "timestamp": "2026-07-31T13:55:21.427Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: San Miglight "
   },
   {
     "id": "1785506026515bh588",
     "timestamp": "2026-07-31T13:53:46.515Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Lemon Pou (Signature)"
   },
   {
     "id": "1785505989963gzwlg",
     "timestamp": "2026-07-31T13:53:09.963Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Orange"
   },
   {
     "id": "1785505947366ijkp5",
     "timestamp": "2026-07-31T13:52:27.366Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Sprite"
   },
   {
     "id": "1785505911909uv976",
     "timestamp": "2026-07-31T13:51:51.909Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Coke Regular"
   },
   {
     "id": "1785505862248w8p9j",
     "timestamp": "2026-07-31T13:51:02.248Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Coke Zero"
   },
   {
     "id": "178550582838051bmv",
     "timestamp": "2026-07-31T13:50:28.380Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Evian 550ml"
   },
   {
     "id": "1785505788620981j8",
     "timestamp": "2026-07-31T13:49:48.620Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Evian 330ml"
   },
   {
     "id": "17855056867569jo48",
     "timestamp": "2026-07-31T13:48:06.756Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Pocari Sweet - 500ml"
   },
   {
     "id": "1785505624200cz0zz",
     "timestamp": "2026-07-31T13:47:04.200Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Iced Durian Latte"
   },
   {
     "id": "1785505618776h1oph",
     "timestamp": "2026-07-31T13:46:58.776Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durrian Coffee Frappe"
   },
   {
     "id": "1785505612598pzpuf",
     "timestamp": "2026-07-31T13:46:52.598Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Hot Durian Latte"
   },
   {
     "id": "1785505602387x6h1z",
     "timestamp": "2026-07-31T13:46:42.387Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coffee Frappe"
   },
   {
     "id": "17855055951901plrk",
     "timestamp": "2026-07-31T13:46:35.190Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "17855055813301t6pg",
     "timestamp": "2026-07-31T13:46:21.330Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "1785505571631kuxcx",
     "timestamp": "2026-07-31T13:46:11.631Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "1785505527492z24nk",
     "timestamp": "2026-07-31T13:45:27.492Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785505513638l0wg3",
     "timestamp": "2026-07-31T13:45:13.638Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Summit Water"
   },
   {
     "id": "17855053504697e0x7",
     "timestamp": "2026-07-31T13:42:30.469Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "17855053323190hpnq",
     "timestamp": "2026-07-31T13:42:12.319Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785505322072youur",
     "timestamp": "2026-07-31T13:42:02.072Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785505310631vcr42",
     "timestamp": "2026-07-31T13:41:50.631Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785504917519g845w",
     "timestamp": "2026-07-31T13:35:17.519Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Summit Water"
   },
   {
     "id": "17855035835554fyqt",
     "timestamp": "2026-07-31T13:13:03.555Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -1864,112 +1864,112 @@
   {
     "id": "1785492364712tl26d",
     "timestamp": "2026-07-31T10:06:04.712Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #9. Total: ₱200.00"
   },
   {
     "id": "1785492353584nned4",
     "timestamp": "2026-07-31T10:05:53.584Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #9 on Walk-In"
   },
   {
     "id": "1785492087364shxwa",
     "timestamp": "2026-07-31T10:01:27.364Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #7. Total: ₱200.00"
   },
   {
     "id": "1785492075721h96fa",
     "timestamp": "2026-07-31T10:01:15.721Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #7 on Walk-In"
   },
   {
     "id": "1785491379715mfezu",
     "timestamp": "2026-07-31T09:49:39.715Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #6. Total: ₱400.00"
   },
   {
     "id": "1785491364866dzn0y",
     "timestamp": "2026-07-31T09:49:24.866Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #6 on Walk-In"
   },
   {
     "id": "1785491008628xgmc8",
     "timestamp": "2026-07-31T09:43:28.628Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #5 on Walk-In"
   },
   {
     "id": "17854894714139kh8r",
     "timestamp": "2026-07-31T09:17:51.413Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Iced Durian Latte"
   },
   {
     "id": "1785489446252lg9oo",
     "timestamp": "2026-07-31T09:17:26.252Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Hot Durian Latte"
   },
   {
     "id": "1785489417634zrlsh",
     "timestamp": "2026-07-31T09:16:57.634Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durrian Coffee Frappe"
   },
   {
     "id": "1785489399929b37k4",
     "timestamp": "2026-07-31T09:16:39.929Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coffee Frappe"
   },
   {
     "id": "178548913909026mq8",
     "timestamp": "2026-07-31T09:12:19.090Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785489117166myd0j",
     "timestamp": "2026-07-31T09:11:57.166Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785489020292oznns",
     "timestamp": "2026-07-31T09:10:20.292Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "178548893912075mq5",
     "timestamp": "2026-07-31T09:08:59.120Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coconut Coffee"
   },
   {
     "id": "1785488543483avfl7",
     "timestamp": "2026-07-31T09:02:23.483Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -1990,287 +1990,287 @@
   {
     "id": "1785485806642bxrn4",
     "timestamp": "2026-07-31T08:16:46.642Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Mango Coconut Coffee"
   },
   {
     "id": "178548578008182gfv",
     "timestamp": "2026-07-31T08:16:20.081Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Iced Durian Latte"
   },
   {
     "id": "1785485749645z0owb",
     "timestamp": "2026-07-31T08:15:49.645Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Hot Durian Latte"
   },
   {
     "id": "1785485728881cam5x",
     "timestamp": "2026-07-31T08:15:28.881Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Mango Coffee Frappe"
   },
   {
     "id": "178548570192603vwg",
     "timestamp": "2026-07-31T08:15:01.926Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Durrian Coffee Frappe"
   },
   {
     "id": "1785485568414vrwnv",
     "timestamp": "2026-07-31T08:12:48.414Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Stuff Toys - Extra Large"
   },
   {
     "id": "17854855384310fv37",
     "timestamp": "2026-07-31T08:12:18.431Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Stuff Toys - Large"
   },
   {
     "id": "1785485514382w6blo",
     "timestamp": "2026-07-31T08:11:54.382Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Stuff Toys - Medium"
   },
   {
     "id": "1785485505729z0hx0",
     "timestamp": "2026-07-31T08:11:45.729Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Stuff Toys - Medium"
   },
   {
     "id": "1785485481314jhnjb",
     "timestamp": "2026-07-31T08:11:21.314Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Stuff Toys - Small"
   },
   {
     "id": "17854854500421ki3w",
     "timestamp": "2026-07-31T08:10:50.042Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Shoes"
   },
   {
     "id": "1785485356709y5k72",
     "timestamp": "2026-07-31T08:09:16.709Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Suits"
   },
   {
     "id": "1785485326907f84k9",
     "timestamp": "2026-07-31T08:08:46.907Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Gown"
   },
   {
     "id": "1785485267049ed5q8",
     "timestamp": "2026-07-31T08:07:47.049Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Wash only"
   },
   {
     "id": "17854852313347r8jn",
     "timestamp": "2026-07-31T08:07:11.334Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Dress:"
   },
   {
     "id": "1785485213418tltwb",
     "timestamp": "2026-07-31T08:06:53.418Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Barong / Formal Shirt:"
   },
   {
     "id": "1785485155810icizw",
     "timestamp": "2026-07-31T08:05:55.810Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Polo / Button-Up Shirt:"
   },
   {
     "id": "1785485136216jf6ns",
     "timestamp": "2026-07-31T08:05:36.216Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Pants / Trousers:"
   },
   {
     "id": "1785485113948zg5sl",
     "timestamp": "2026-07-31T08:05:13.948Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Comforter:"
   },
   {
     "id": "1785485093582q9khw",
     "timestamp": "2026-07-31T08:04:53.582Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Curtains:"
   },
   {
     "id": "1785485081020pz49n",
     "timestamp": "2026-07-31T08:04:41.020Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Undergarments / Delicate Load:"
   },
   {
     "id": "1785485047063phke6",
     "timestamp": "2026-07-31T08:04:07.063Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: Towels &amp; Bedsheets:"
   },
   {
     "id": "1785485036531v62yi",
     "timestamp": "2026-07-31T08:03:56.531Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Towels &amp; Bedsheets:"
   },
   {
     "id": "1785485023056nzzbt",
     "timestamp": "2026-07-31T08:03:43.056Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Regular Clothes:"
   },
   {
     "id": "1785484946685ub12z",
     "timestamp": "2026-07-31T08:02:26.685Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Delete Product",
     "details": "Deleted product: 2"
   },
   {
     "id": "1785484300280yeoef",
     "timestamp": "2026-07-31T07:51:40.280Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #4 on Walk-In"
   },
   {
     "id": "1785484069291urrj2",
     "timestamp": "2026-07-31T07:47:49.291Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #3. Total: ₱200.00"
   },
   {
     "id": "17854840561385au91",
     "timestamp": "2026-07-31T07:47:36.138Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #3 on Walk-In"
   },
   {
     "id": "1785484050201ur6qz",
     "timestamp": "2026-07-31T07:47:30.201Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785481342618n5vm9",
     "timestamp": "2026-07-31T07:02:22.618Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #2 on Walk-In"
   },
   {
     "id": "1785479383661ndctm",
     "timestamp": "2026-07-31T06:29:43.661Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785475860182qai2m",
     "timestamp": "2026-07-31T05:31:00.182Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #26. Total: ₱202.00"
   },
   {
     "id": "1785475844248vhrtl",
     "timestamp": "2026-07-31T05:30:44.248Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #26 on Walk-In"
   },
   {
     "id": "178547569981020bhc",
     "timestamp": "2026-07-31T05:28:19.810Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: test 1"
   },
   {
     "id": "1785475631598gzsxu",
     "timestamp": "2026-07-31T05:27:11.598Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: mango"
   },
   {
     "id": "17854752046660ac70",
     "timestamp": "2026-07-31T05:20:04.666Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #25. Total: ₱200.00"
   },
   {
     "id": "1785475028463hickn",
     "timestamp": "2026-07-31T05:17:08.463Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #25 on Walk-In"
   },
   {
     "id": "1785474878029xa245",
     "timestamp": "2026-07-31T05:14:38.029Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Items to Order",
     "details": "Added new items to Order #23: 1x Amerikano"
   },
   {
     "id": "1785474706247ufhh0",
     "timestamp": "2026-07-31T05:11:46.247Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #24 on Takeaway"
   },
   {
     "id": "1785474667000nyit3",
     "timestamp": "2026-07-31T05:11:07.000Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #23 on Walk-In"
   },
   {
     "id": "1785474377084wymim",
     "timestamp": "2026-07-31T05:06:17.084Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -2284,70 +2284,70 @@
   {
     "id": "1785473992080iiuzi",
     "timestamp": "2026-07-31T04:59:52.080Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "17854707807291g7ea",
     "timestamp": "2026-07-31T04:06:20.729Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785430781889j3ohf",
     "timestamp": "2026-07-30T16:59:41.889Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: 2"
   },
   {
     "id": "1785430750738bs99t",
     "timestamp": "2026-07-30T16:59:10.738Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Toggle Stock Strict Lock",
     "details": "Turned strict out-of-stock item lock ON"
   },
   {
     "id": "17854301000623exeg",
     "timestamp": "2026-07-30T16:48:20.062Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Cycle Count Submitted",
     "details": "Submitted \"Cycle Count Audit - Jul 31, 2026\". Status: Stocks Adjusted to Hand Count"
   },
   {
     "id": "1785429991253djaxr",
     "timestamp": "2026-07-30T16:46:31.253Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Amerikano"
   },
   {
     "id": "17854291785412m82f",
     "timestamp": "2026-07-30T16:32:58.541Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Toggle Stock Strict Lock",
     "details": "Turned strict out-of-stock item lock ON"
   },
   {
     "id": "17854291780091dosn",
     "timestamp": "2026-07-30T16:32:58.009Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Toggle Stock Strict Lock",
     "details": "Turned strict out-of-stock item lock ON"
   },
   {
     "id": "1785428898863lfrsq",
     "timestamp": "2026-07-30T16:28:18.863Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱200"
   },
   {
     "id": "1785425833200ik837",
     "timestamp": "2026-07-30T15:37:13.200Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -2356,7 +2356,7 @@
     "timestamp": "2026-07-30T14:57:32.885Z",
     "user": "Sir Earl ",
     "activity": "Print Single Shift Report",
-    "details": "Printed Shift Report for cashier System Administrator on 07/30/2026"
+    "details": "Printed Shift Report for cashier Junrel Ejurango on 07/30/2026"
   },
   {
     "id": "1785423406432n147l",
@@ -2368,21 +2368,21 @@
   {
     "id": "1785423385537u13rr",
     "timestamp": "2026-07-30T14:56:25.537Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Create User",
     "details": "Created user earl@gmail.com1 (cashier)"
   },
   {
     "id": "17854226580466uacr",
     "timestamp": "2026-07-30T14:44:18.046Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #22. Total: ₱200.00"
   },
   {
     "id": "1785422592528qv72j",
     "timestamp": "2026-07-30T14:43:12.528Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #22 on Walk-In"
   },
@@ -2396,119 +2396,119 @@
   {
     "id": "1785403683703uwdpp",
     "timestamp": "2026-07-30T09:28:03.703Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785403436694wqegx",
     "timestamp": "2026-07-30T09:23:56.694Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Ended",
     "details": "Shift ended with cash out amount: ₱2000. Total Sales: ₱1934"
   },
   {
     "id": "1785402329764pthhc",
     "timestamp": "2026-07-30T09:05:29.764Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #21. Total: ₱122.00"
   },
   {
     "id": "17854023206639gnh6",
     "timestamp": "2026-07-30T09:05:20.665Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #21 on Walk-In"
   },
   {
     "id": "1785399157071m92i7",
     "timestamp": "2026-07-30T08:12:37.071Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #13. Total: ₱122.00"
   },
   {
     "id": "1785399122091ly29t",
     "timestamp": "2026-07-30T08:12:02.091Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #13 on Walk-In"
   },
   {
     "id": "1785397979881qzbjx",
     "timestamp": "2026-07-30T07:52:59.881Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #11. Total: ₱220.00"
   },
   {
     "id": "1785397971194vqwef",
     "timestamp": "2026-07-30T07:52:51.197Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #11 on Walk-In"
   },
   {
     "id": "1785390299994rx9qa",
     "timestamp": "2026-07-30T05:44:59.994Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785386933338t41x6",
     "timestamp": "2026-07-30T04:48:53.338Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: 2"
   },
   {
     "id": "17853861178917fh2p",
     "timestamp": "2026-07-30T04:35:17.891Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785311564646xv33t",
     "timestamp": "2026-07-29T07:52:44.646Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #7. Total: ₱430.00"
   },
   {
     "id": "1785311533626jdymy",
     "timestamp": "2026-07-29T07:52:13.626Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #7 on Walk-In"
   },
   {
     "id": "178531151796697ndq",
     "timestamp": "2026-07-29T07:51:57.966Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Americano"
   },
   {
     "id": "1785311454050cmfhh",
     "timestamp": "2026-07-29T07:50:54.050Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: Espresso"
   },
   {
     "id": "1785310816872mvz55",
     "timestamp": "2026-07-29T07:40:16.872Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785310688746u993i",
     "timestamp": "2026-07-29T07:38:08.746Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -2599,7 +2599,7 @@
   {
     "id": "1785297303101s0qv2",
     "timestamp": "2026-07-29T03:55:03.101Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
@@ -2634,581 +2634,581 @@
   {
     "id": "1785290788394grasi",
     "timestamp": "2026-07-29T02:06:28.394Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Create User",
     "details": "Created user Jun-Waiter (cashier)"
   },
   {
     "id": "1785290728691vitko",
     "timestamp": "2026-07-29T02:05:28.691Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785290468104o6w8o",
     "timestamp": "2026-07-29T02:01:08.104Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Create User",
     "details": "Created user Earl Tan (cashier)"
   },
   {
     "id": "178529026332257a8k",
     "timestamp": "2026-07-29T01:57:43.322Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Cycle Count Submitted",
     "details": "Submitted \"Cycle Count Audit - Jul 29, 2026\". Status: Stocks Adjusted to Hand Count"
   },
   {
     "id": "1785290224282xmbfy",
     "timestamp": "2026-07-29T01:57:04.282Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Edit Product",
     "details": "Updated product: CHOCO COFFEE"
   },
   {
     "id": "17852902153967gngm",
     "timestamp": "2026-07-29T01:56:55.397Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: mocha"
   },
   {
     "id": "1785289113363s7vya",
     "timestamp": "2026-07-29T01:38:33.363Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: CHOCO COFFEE"
   },
   {
     "id": "1785289053385boeua",
     "timestamp": "2026-07-29T01:37:33.385Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "17852880753127jpsj",
     "timestamp": "2026-07-29T01:21:15.312Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785075209118jpjki",
     "timestamp": "2026-07-26T14:13:29.118Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #2 on Walk-In"
   },
   {
     "id": "17850747771530vr33",
     "timestamp": "2026-07-26T14:06:17.153Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1. Total: ₱180.00"
   },
   {
     "id": "17850747354838duwh",
     "timestamp": "2026-07-26T14:05:35.483Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1 on Walk-In"
   },
   {
     "id": "1785074621691ch9th",
     "timestamp": "2026-07-26T14:03:41.691Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Toggle Stock Strict Lock",
     "details": "Turned strict out-of-stock item lock OFF"
   },
   {
     "id": "1785074619726bu7u6",
     "timestamp": "2026-07-26T14:03:39.726Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Toggle Stock Strict Lock",
     "details": "Turned strict out-of-stock item lock ON"
   },
   {
     "id": "1785074614299txujq",
     "timestamp": "2026-07-26T14:03:34.299Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: 3"
   },
   {
     "id": "1785074601003c2jxx",
     "timestamp": "2026-07-26T14:03:21.003Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Add Product",
     "details": "Created product: 222"
   },
   {
     "id": "1785074547976jo9yb",
     "timestamp": "2026-07-26T14:02:27.976Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1785074534110hay4w",
     "timestamp": "2026-07-26T14:02:14.110Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785073952199ifq4b",
     "timestamp": "2026-07-26T13:52:32.199Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Auto-migrate)"
   },
   {
     "id": "1785073015858ddcm7",
     "timestamp": "2026-07-26T13:36:55.858Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Auto-migrate)"
   },
   {
     "id": "1785071309496iev27",
     "timestamp": "2026-07-26T13:08:29.496Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Auto-migrate)"
   },
   {
     "id": "1785070444999mm72q",
     "timestamp": "2026-07-26T12:54:04.999Z",
-    "user": "Philip Admin",
+    "user": "Junrel Admin",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1785070073353uxi53",
     "timestamp": "2026-07-26T12:47:53.353Z",
-    "user": "Philip Admin",
+    "user": "Junrel Admin",
     "activity": "Login",
     "details": "User logged in successfully (Local Auth)"
   },
   {
     "id": "1781944664993ng2lf",
     "timestamp": "2026-06-20T08:37:44.993Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
   },
   {
     "id": "1781944652167gsbsi",
     "timestamp": "2026-06-20T08:37:32.167Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
   },
   {
     "id": "1781944631077spzai",
     "timestamp": "2026-06-20T08:37:11.077Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Voucher Redemptions Report for 2026-06-01 to 2026-06-20"
   },
   {
     "id": "1781863957979numme",
     "timestamp": "2026-06-19T10:12:37.979Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed X-Reading (Interim Snapshot) for 2026-06-19 to 2026-06-19"
   },
   {
     "id": "1781863164881coeuc",
     "timestamp": "2026-06-19T09:59:24.881Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1384. Total: ₱228.75"
   },
   {
     "id": "1781860116230vnphp",
     "timestamp": "2026-06-19T09:08:36.230Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1385. Total: ₱163.39"
   },
   {
     "id": "1781860060730qe7wu",
     "timestamp": "2026-06-19T09:07:40.731Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1385 on Walk-In"
   },
   {
     "id": "1781858687576io3r6",
     "timestamp": "2026-06-19T08:44:47.576Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1382. Total: ₱54.46"
   },
   {
     "id": "17818586738859l2u8",
     "timestamp": "2026-06-19T08:44:33.885Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1384 on Walk-In"
   },
   {
     "id": "17818569323940tbqh",
     "timestamp": "2026-06-19T08:15:32.394Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1382 on Walk-In"
   },
   {
     "id": "1781856752104d24bp",
     "timestamp": "2026-06-19T08:12:32.104Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1381. Total: ₱163.39"
   },
   {
     "id": "1781856734737h3max",
     "timestamp": "2026-06-19T08:12:14.737Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1381 on Walk-In"
   },
   {
     "id": "1781855777254nrxzr",
     "timestamp": "2026-06-19T07:56:17.254Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1378. Total: ₱163.39"
   },
   {
     "id": "17818541245120cqsl",
     "timestamp": "2026-06-19T07:28:44.512Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1378 on Walk-In"
   },
   {
     "id": "1781854068527oqo0h",
     "timestamp": "2026-06-19T07:27:48.527Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1377. Total: ₱217.86"
   },
   {
     "id": "1781854032722drcvi",
     "timestamp": "2026-06-19T07:27:12.722Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1377 on Walk-In"
   },
   {
     "id": "178185162415737bpu",
     "timestamp": "2026-06-19T06:47:04.157Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1375. Total: ₱283.21"
   },
   {
     "id": "1781851515522bq06j",
     "timestamp": "2026-06-19T06:45:15.522Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1375 on Walk-In"
   },
   {
     "id": "178185145799147g58",
     "timestamp": "2026-06-19T06:44:17.991Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1374. Total: ₱54.46"
   },
   {
     "id": "17818514364008uihn",
     "timestamp": "2026-06-19T06:43:56.400Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1374 on Walk-In"
   },
   {
     "id": "1781851389102dq1kz",
     "timestamp": "2026-06-19T06:43:09.102Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Complimentary Claim",
     "details": "Processed 2 complimentary items. Recipient: 22, Auth: 22, Slip #: 2"
   },
   {
     "id": "17818491498928ok1a",
     "timestamp": "2026-06-19T06:05:49.892Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Y-Reading (Period) for 2026-06-01 to 2026-06-19"
   },
   {
     "id": "17818491142069uorq",
     "timestamp": "2026-06-19T06:05:14.206Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Y-Reading (Period) for 2026-06-01 to 2026-06-19"
   },
   {
     "id": "1781847010697ep3vp",
     "timestamp": "2026-06-19T05:30:10.697Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Z-Reading (Daily) for 2026-06-10 to 2026-06-10"
   },
   {
     "id": "1781680488643se9f0",
     "timestamp": "2026-06-17T07:14:48.643Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱43"
   },
   {
     "id": "178168003824008tfn",
     "timestamp": "2026-06-17T07:07:18.241Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Void Order",
     "details": "Voided Order #1287"
   },
   {
     "id": "1781679675273hhlwo",
     "timestamp": "2026-06-17T07:01:15.273Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Single Shift Report",
-    "details": "Printed Shift Report for cashier System Administrator on 06/16/2026"
+    "details": "Printed Shift Report for cashier Junrel Ejurango on 06/16/2026"
   },
   {
     "id": "1781679582912nk9wq",
     "timestamp": "2026-06-17T06:59:42.912Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Export BIR Annexes",
     "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
   },
   {
     "id": "17816789612843bv0h",
     "timestamp": "2026-06-17T06:49:21.284Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Export BIR Annexes",
     "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
   },
   {
     "id": "17816788963529f58e",
     "timestamp": "2026-06-17T06:48:16.352Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Create User",
     "details": "Created user auditor (cashier)"
   },
   {
     "id": "17816784669810dlsk",
     "timestamp": "2026-06-17T06:41:06.981Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Shift Ended",
     "details": "Shift ended with cash out amount: ₱6. Total Sales: ₱0"
   },
   {
     "id": "17816784230790n2ks",
     "timestamp": "2026-06-17T06:40:23.079Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱2000"
   },
   {
     "id": "1781678243967ds191",
     "timestamp": "2026-06-17T06:37:23.967Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Shift Ended",
     "details": "Shift ended with cash out amount: ₱600. Total Sales: ₱1068.75"
   },
   {
     "id": "17816780012834xrym",
     "timestamp": "2026-06-17T06:33:21.283Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1292. Total: ₱217.86"
   },
   {
     "id": "1781677682357n803t",
     "timestamp": "2026-06-17T06:28:02.357Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1293. Total: ₱435.71"
   },
   {
     "id": "1781677625161e62zf",
     "timestamp": "2026-06-17T06:27:05.161Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1295 on Table 3"
   },
   {
     "id": "1781677594029urbsc",
     "timestamp": "2026-06-17T06:26:34.029Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1294 on Table 4"
   },
   {
     "id": "1781677580207m4wbj",
     "timestamp": "2026-06-17T06:26:20.207Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1293 on Table 1"
   },
   {
     "id": "1781677518921yjgcs",
     "timestamp": "2026-06-17T06:25:18.921Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1292 on Table 2"
   },
   {
     "id": "178167749996631gku",
     "timestamp": "2026-06-17T06:24:59.966Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1291 on 5"
   },
   {
     "id": "1781677477062w3rde",
     "timestamp": "2026-06-17T06:24:37.062Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1290 on Table 2"
   },
   {
     "id": "1781677455687v2r5w",
     "timestamp": "2026-06-17T06:24:15.687Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1289 on Walk-In"
   },
   {
     "id": "17816750110998y0w1",
     "timestamp": "2026-06-17T05:43:31.099Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1288 on Walk-In"
   },
   {
     "id": "17816749561310tbdu",
     "timestamp": "2026-06-17T05:42:36.131Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1287. Total: ₱88.39"
   },
   {
     "id": "1781674847086nj8j4",
     "timestamp": "2026-06-17T05:40:47.086Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1287 on Walk-In"
   },
   {
     "id": "1781672294649d67nf",
     "timestamp": "2026-06-17T04:58:14.649Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Checkout",
     "details": "Completed Payment for Order #1286. Total: ₱326.79"
   },
   {
     "id": "1781672267976kdtcj",
     "timestamp": "2026-06-17T04:57:47.976Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Place Order",
     "details": "Created new order #1286 on Walk-In"
   },
   {
     "id": "1781672074869k66f5",
     "timestamp": "2026-06-17T04:54:34.869Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Export BIR Annexes",
     "details": "Exported BIR Annexes E-1 to E-5 as Excel for 2026-06-01 to 2026-06-17"
   },
   {
     "id": "1781671250077idbic",
     "timestamp": "2026-06-17T04:40:50.077Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed BIR Sales Summary Report for 2026-06-01 to 2026-06-17"
   },
   {
     "id": "1781671232878i5cnk",
     "timestamp": "2026-06-17T04:40:32.878Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed BIR Sales Summary Report for 2026-06-01 to 2026-06-17"
   },
   {
     "id": "1781671198384btmz9",
     "timestamp": "2026-06-17T04:39:58.384Z",
-    "user": "Philip Macairan",
+    "user": "Junrel Ejurango",
     "activity": "Login",
     "details": "User logged in successfully (Auto-migrate)"
   },
   {
     "id": "1781611039242wir3q",
     "timestamp": "2026-06-16T11:57:19.242Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Complimentary Claim",
     "details": "Processed 2 complimentary items. Recipient: eqweqw, Auth: 23, Slip #: 12312312"
   },
   {
     "id": "1781608862880zoxq2",
     "timestamp": "2026-06-16T11:21:02.880Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Complimentary Claim",
     "details": "Processed 2 complimentary items. Recipient: qwe, Auth: 132, Slip #: 2"
   },
   {
     "id": "17816088416395o9q6",
     "timestamp": "2026-06-16T11:20:41.639Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Shift Started",
     "details": "Shift started with cash amount: ₱3"
   },
   {
     "id": "1781533003497ud2j5",
     "timestamp": "2026-06-15T14:16:43.497Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Complimentary Claim",
     "details": "Processed 2 complimentary items. Recipient: das, Auth: dd, Slip #: 12312"
   },
   {
     "id": "1781532956201qvr4h",
     "timestamp": "2026-06-15T14:15:56.201Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Print Report",
     "details": "Printed Complimentary Report for 2026-06-01 to 2026-06-15"
   },
   {
     "id": "1781531886204iexye",
     "timestamp": "2026-06-15T13:58:06.204Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Void Order",
     "details": "Voided Order #1173"
   },
   {
     "id": "17815317645939nu7o",
     "timestamp": "2026-06-15T13:56:04.593Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Print Single Shift Report",
     "details": "Printed Shift Report for cashier Anna on 06/14/2026"
   },
   {
     "id": "1781531218563hjcq3",
     "timestamp": "2026-06-15T13:46:58.563Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Print Single Shift Report",
     "details": "Printed Shift Report for cashier Anna on 06/14/2026"
   },
   {
     "id": "1781526343418gt0nn",
     "timestamp": "2026-06-15T12:25:43.418Z",
-    "user": "System Administrator",
+    "user": "Junrel Ejurango",
     "activity": "Complimentary Claim",
     "details": "Processed 1 complimentary items. Recipient: junre, Auth: mane, Slip #: 32312"
   }

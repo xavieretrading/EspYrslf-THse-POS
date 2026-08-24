@@ -1,17 +1,17 @@
-<html xmlns:v="urn:schemas-microsoft-com:vml"
+﻿<html xmlns:v="urn:schemas-microsoft-com:vml"
 xmlns:o="urn:schemas-microsoft-com:office:office"
 xmlns:x="urn:schemas-microsoft-com:office:excel"
 xmlns="http://www.w3.org/TR/REC-html40">
 
 <head>
 <meta name="Excel Workbook Frameset">
-<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta http-equiv=Content-Type content="text/html; charset=utf-8">
 <meta name=ProgId content=Excel.Sheet>
 <meta name=Generator content="Microsoft Excel 15">
 <link rel=File-List
-href="Espresso_Yourself_Menu_Profitability_Analysis_files/filelist.xml">
+href="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/filelist.xml">
 <![if !supportTabStrip]>
-<link id="shLink" href="Espresso_Yourself_Menu_Profitability_Analysis_files/sheet001.htm">
+<link id="shLink" href="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/sheet001.htm">
 
 <link id="shLink">
 
@@ -20,7 +20,7 @@ href="Espresso_Yourself_Menu_Profitability_Analysis_files/filelist.xml">
  var c_lTabs=1;
 
  var c_rgszSh=new Array(c_lTabs);
- c_rgszSh[0] = "Profitability�Analysis";
+ c_rgszSh[0] = "Profitability Analysis";
 
 
 
@@ -300,11 +300,11 @@ function fnSetActiveSheet(iSh)
    <x:ExcelWorksheet>
     <x:Name>Profitability Analysis</x:Name>
     <x:WorksheetSource
-     HRef="Espresso_Yourself_Menu_Profitability_Analysis_files/sheet001.htm"/>
+     HRef="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/sheet001.htm"/>
    </x:ExcelWorksheet>
   </x:ExcelWorksheets>
   <x:Stylesheet
-   HRef="Espresso_Yourself_Menu_Profitability_Analysis_files/stylesheet.css"/>
+   HRef="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/stylesheet.css"/>
   <x:WindowHeight>6510</x:WindowHeight>
   <x:WindowWidth>19200</x:WindowWidth>
   <x:WindowTopX>32767</x:WindowTopX>
@@ -316,8 +316,8 @@ function fnSetActiveSheet(iSh)
 </head>
 
 <frameset rows="*,39" border=0 width=0 frameborder=no framespacing=0>
- <frame src="Espresso_Yourself_Menu_Profitability_Analysis_files/sheet001.htm" name="frSheet">
- <frame src="Espresso_Yourself_Menu_Profitability_Analysis_files/tabstrip.htm" name="frTabs" marginwidth=0 marginheight=0>
+ <frame src="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/sheet001.htm" name="frSheet">
+ <frame src="Espresso_Yourself_Menu_Profitability_Analysis_v3_files/tabstrip.htm" name="frTabs" marginwidth=0 marginheight=0>
  <noframes>
   <body>
    <p>This page uses frames, but your browser doesn't support them.</p>

@@ -1803,9 +1803,15 @@ async function recalculateOrderTotals(orderId: string | number) {
     }
   });
 
+  const { data: order } = await supabase.from('orders_espresso').select('status').eq('id', orderId).single();
+  const updatePayload: any = { subtotal: newSubtotal, total: newSubtotal };
+  if (order && order.status === 'voided') {
+    updatePayload.status = 'open';
+  }
+
   await supabase
     .from('orders_espresso')
-    .update({ subtotal: newSubtotal, total: newSubtotal })
+    .update(updatePayload)
     .eq('id', orderId);
 
   return newSubtotal;

@@ -15,5 +15,5 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 -- Default admin user
 INSERT INTO public.users (branch_id, username, email, password, role, full_name) 
-VALUES (1, 'admin', 'philip@allsetdigital.com', 'admin123', 'admin', 'System Administrator')
+VALUES (1, 'admin', 'junrel@allsetdigital.com', 'admin123', 'admin', 'Junrel Ejurango')
 ON CONFLICT (username) DO NOTHING;

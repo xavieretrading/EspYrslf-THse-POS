@@ -764,10 +764,10 @@ export default function Orders() {
                       <span className={cn(
                         "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border",
                         order.payment_method.toLowerCase() === 'cash' ? "bg-slate-50 border-slate-200 text-slate-600" :
-                        order.payment_method.toLowerCase() === 'gcash' ? "bg-blue-50 border-blue-200 text-blue-600" :
-                        order.payment_method.toLowerCase() === 'credit_card' ? "bg-purple-50 border-purple-200 text-purple-600" :
-                        order.payment_method.toLowerCase() === 'voucher' ? "bg-amber-50 border-amber-200 text-amber-600" :
-                        "bg-slate-50 border-slate-200 text-slate-600"
+                          order.payment_method.toLowerCase() === 'gcash' ? "bg-blue-50 border-blue-200 text-blue-600" :
+                            order.payment_method.toLowerCase() === 'credit_card' ? "bg-purple-50 border-purple-200 text-purple-600" :
+                              order.payment_method.toLowerCase() === 'voucher' ? "bg-amber-50 border-amber-200 text-amber-600" :
+                                "bg-slate-50 border-slate-200 text-slate-600"
                       )}>
                         {order.payment_method.toUpperCase() === 'CREDIT_CARD' ? 'CARD' : order.payment_method.toUpperCase()}
                         {order.reference_number ? ` | REF: ${order.reference_number}` : ''}
@@ -1516,7 +1516,6 @@ export default function Orders() {
                     <div className="flex justify-center mb-1 text-center">
                       {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
                     </div>
-                    <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
                     {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                   </div>

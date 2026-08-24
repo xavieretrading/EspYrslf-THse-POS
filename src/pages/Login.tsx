@@ -47,7 +47,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
         }
 
         // Auto-migrate or Auto-signup for default user for development convenience
-        if (authError.message.includes('Invalid login credentials') && email === 'philip@allsetdigital.com') {
+        if (authError.message.includes('Invalid login credentials') && email === 'junrel@allsetdigital.com') {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
@@ -67,7 +67,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
             id: 1,
             email,
             role: 'admin',
-            full_name: 'Philip Macairan',
+            full_name: 'Junrel Ejurango',
             permissions: {
               '/': 'admin',
               '/pos': 'admin',

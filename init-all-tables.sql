@@ -277,7 +277,7 @@ ON CONFLICT DO NOTHING;
 
 -- Default Admin User
 INSERT INTO public.users_espresso (branch_id, username, email, password, role, full_name, permissions) 
-VALUES (1, 'admin', 'philip@allsetdigital.com', 'admin123', 'admin', 'System Administrator', 
+VALUES (1, 'admin', 'junrel@allsetdigital.com', 'admin123', 'admin', 'Junrel Ejurango', 
 '{"/": "admin", "/pos": "admin", "/orders": "admin", "/kitchen": "admin", "/tables": "admin", "/inventory": "admin", "/vouchers": "admin", "/reports": "admin", "/settings": "admin"}'::jsonb)
 ON CONFLICT (username) DO NOTHING;
 
@@ -378,7 +378,7 @@ ON CONFLICT DO NOTHING;
 
 -- 6. Insert Default Admin User
 INSERT INTO public.users_espresso (branch_id, username, email, password, role, full_name, permissions) 
-VALUES (1, 'admin', 'philip@allsetdigital.com', 'admin123', 'admin', 'System Administrator', 
+VALUES (1, 'admin', 'junrel@allsetdigital.com', 'admin123', 'admin', 'Junrel Ejurango', 
 '{"/": "admin", "/pos": "admin", "/orders": "admin", "/kitchen": "admin", "/tables": "admin", "/inventory": "admin", "/vouchers": "admin", "/reports": "admin", "/settings": "admin"}'::jsonb)
 ON CONFLICT (username) DO NOTHING;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import qz from 'qz-tray';
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown } from 'lucide-react';
@@ -98,6 +98,25 @@ export default function POS() {
   const { settings } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isProcessingOrderRef = useRef(false);
+  const isProcessingPayRef = useRef(false);
+
+  const [customBanks, setCustomBanks] = useState<string[]>(() => {
+    const saved = localStorage.getItem('laundry_custom_banks');
+    const defaults = ['GCash', 'RCBC', 'BDO', 'BPI', 'PayMaya', 'Metrobank', 'UnionBank'];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return Array.from(new Set([...defaults, ...parsed]));
+        }
+      } catch (e) {}
+    }
+    return defaults;
+  });
+  const [bankInput, setBankInput] = useState('');
+  const [showBankSuggestions, setShowBankSuggestions] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<{ id: number, name: string, division?: string }[]>([]);
@@ -1255,7 +1274,8 @@ export default function POS() {
   };
 
   const handlePlaceOrder = async () => {
-    if (isProcessingPayment) return;
+    if (isProcessingPayment || isProcessingOrderRef.current) return;
+    isProcessingOrderRef.current = true;
     // We now allow dine-in without a table (e.g. for walk-in dine-in customers not assigned to a specific table)
 
     setIsProcessingPayment(true);
@@ -1346,6 +1366,7 @@ export default function POS() {
       }
     } finally {
       setIsProcessingPayment(false);
+      isProcessingOrderRef.current = false;
     }
   };
 
@@ -1542,7 +1563,8 @@ export default function POS() {
   }, [showZReading, activeBranch]);
 
   const handlePay = async () => {
-    if (isProcessingPayment) return;
+    if (isProcessingPayment || isProcessingPayRef.current) return;
+    isProcessingPayRef.current = true;
     if (!activeOrderId) {
       swalAlert('No Active Order', 'Please place the order first', 'warning');
       return;
@@ -1593,6 +1615,18 @@ export default function POS() {
       if (res.ok) {
         const { receipt } = await res.json();
 
+        // Save custom bank to localStorage if it's new
+        if (isLaundryBranch && paymentMethod !== 'cash' && bankInput.trim()) {
+          const trimmed = bankInput.trim();
+          const normalized = trimmed.toLowerCase();
+          const exists = customBanks.some(b => b.toLowerCase() === normalized);
+          if (!exists) {
+            const updated = [...customBanks, trimmed];
+            setCustomBanks(updated);
+            localStorage.setItem('laundry_custom_banks', JSON.stringify(updated));
+          }
+        }
+
         if (activeOrderId) {
           localStorage.setItem(`order_pax_${activeOrderId}`, JSON.stringify({ paxCount, discountPaxCount }));
         }
@@ -1630,6 +1664,7 @@ export default function POS() {
         setDiscountChildName('');
         setDiscountChildBirthdate('');
         setDiscountChildAge('');
+        setBankInput('');
         setActiveOrderId(null);
         fetch(`/api/tables?branch_id=${activeBranch?.id}`).then(res => res.json()).then(setTables);
       } else {
@@ -1649,6 +1684,7 @@ export default function POS() {
       swalAlert('Payment Error', err?.message || 'A network error occurred. Please try again.', 'error');
     } finally {
       setIsProcessingPayment(false);
+      isProcessingPayRef.current = false;
     }
   };
 
@@ -2901,7 +2937,15 @@ export default function POS() {
                 >
                   All Items
                 </button>
-                {categories.filter(c => !isLaundryBranch || (c.division || 'coffee') === selectedDivision).map(c => (
+                {categories.filter(c => {
+                  const matchesDiv = !isLaundryBranch || (c.division || 'coffee') === selectedDivision;
+                  if (!matchesDiv) return false;
+                  return products.some(p => 
+                    p.category_name === c.name && 
+                    (p as any).is_sellable !== 0 && 
+                    (!isLaundryBranch || p.division === selectedDivision)
+                  );
+                }).map(c => (
                   <button
                     key={c.id}
                     onClick={() => setSelectedCategory(c.name)}
@@ -3605,44 +3649,118 @@ export default function POS() {
 
                     <div>
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Payment Method</label>
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <button
-                          type="button"
-                          onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                            paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                          )}
-                        >
-                          <Banknote size={18} />
-                          <span className="text-[10px] font-bold mt-1">Cash</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setPaymentMethod('gcash'); setSelectedStoreCredit(null); }}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                            paymentMethod === 'gcash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                          )}
-                        >
-                          <Smartphone size={18} />
-                          <span className="text-[10px] font-bold mt-1">GCash</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setPaymentMethod('rcbc'); setSelectedStoreCredit(null); }}
-                          className={cn(
-                            "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                            paymentMethod === 'rcbc' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                          )}
-                        >
-                          <Smartphone size={18} />
-                          <span className="text-[10px] font-bold mt-1">RCBC</span>
-                        </button>
-                      </div>
+                      {isLaundryBranch ? (
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <Banknote size={18} />
+                            <span className="text-[10px] font-bold mt-1">Cash</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const defaultBank = bankInput || customBanks[0] || 'GCash';
+                              setBankInput(defaultBank);
+                              setPaymentMethod(defaultBank);
+                              setSelectedStoreCredit(null);
+                            }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod !== 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <Smartphone size={18} />
+                            <span className="text-[10px] font-bold mt-1">E-Wallet / Bank</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2 mb-3">
+                          <button
+                            type="button"
+                            onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <Banknote size={18} />
+                            <span className="text-[10px] font-bold mt-1">Cash</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setPaymentMethod('gcash'); setSelectedStoreCredit(null); }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'gcash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <Smartphone size={18} />
+                            <span className="text-[10px] font-bold mt-1">GCash</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setPaymentMethod('rcbc'); setSelectedStoreCredit(null); }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'rcbc' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <Smartphone size={18} />
+                            <span className="text-[10px] font-bold mt-1">RCBC</span>
+                          </button>
+                        </div>
+                      )}
 
                       {paymentMethod !== 'cash' && (
-                        <div className="mb-3">
+                        <div className="space-y-2 mb-3">
+                          {isLaundryBranch && (
+                            <div className="relative">
+                              <input
+                                type="text"
+                                placeholder="Search or Type Bank/Wallet (e.g. GCash, BDO)"
+                                value={bankInput}
+                                onFocus={() => setShowBankSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowBankSuggestions(false), 200)}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setBankInput(val);
+                                  setPaymentMethod(val || 'Bank');
+                                }}
+                                className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-sm"
+                              />
+                              {showBankSuggestions && (
+                                <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 max-h-40 overflow-y-auto custom-scrollbar">
+                                  {customBanks
+                                    .filter(b => b.toLowerCase().includes(bankInput.toLowerCase()))
+                                    .map((b, idx) => (
+                                      <button
+                                        key={idx}
+                                        type="button"
+                                        onMouseDown={() => {
+                                          setBankInput(b);
+                                          setPaymentMethod(b);
+                                          setShowBankSuggestions(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-700 font-bold text-sm transition-colors"
+                                      >
+                                        {b}
+                                      </button>
+                                    ))}
+                                  {customBanks.filter(b => b.toLowerCase().includes(bankInput.toLowerCase())).length === 0 && (
+                                    <div className="px-4 py-2 text-slate-400 text-xs italic">
+                                      New custom bank: "{bankInput}" (will be saved)
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
                           <input
                             type="text"
                             placeholder="Reference Number"
@@ -4100,7 +4218,6 @@ export default function POS() {
                     <div className="flex justify-center mb-1 text-center">
                       {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
                     </div>
-                    <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
                     {/* <p className="hidden print:hidden" data-print-hidden="true">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                   </div>

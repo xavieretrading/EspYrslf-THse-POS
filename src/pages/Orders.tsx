@@ -1473,6 +1473,12 @@ export default function Orders() {
                         <span>Payment Method:</span>
                         <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
                       </div>
+                      {receiptData.reference_number && (
+                        <div className="flex justify-between row-item text-[9.5pt]">
+                          <span>Ref No:</span>
+                          <span className="font-bold">{receiptData.reference_number}</span>
+                        </div>
+                      )}
                       {receiptData.payment_method?.toLowerCase() === 'cash' && (
                         <>
                           <div className="flex justify-between row-item text-[9.5pt]">
@@ -1594,6 +1600,12 @@ export default function Orders() {
                           <span>{receiptData.payment_method || 'CASH'}</span>
                           <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
                         </div>
+                        {receiptData.reference_number && (
+                          <div className="flex justify-between row-item text-[9.5pt] italic">
+                            <span>Ref No:</span>
+                            <span>{receiptData.reference_number}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between print-bold-text print-change row-item font-bold text-[11.5pt]">
                           <span>Change</span>
                           <span>₱{(receiptData.change || 0).toFixed(2)}</span>

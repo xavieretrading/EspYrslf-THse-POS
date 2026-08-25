@@ -3675,7 +3675,7 @@ if (!fs.existsSync(AUDIT_LOGS_FILE)) {
 
 app.get('/api/audit-logs', (req, res) => {
   try {
-    const { user, start_date, end_date } = req.query;
+    const { user, start_date, end_date, branch_id } = req.query;
     let logs = [];
     
     if (fs.existsSync(AUDIT_LOGS_FILE)) {
@@ -3685,6 +3685,11 @@ app.get('/api/audit-logs', (req, res) => {
       } catch (e) {
         logs = [];
       }
+    }
+
+    if (branch_id) {
+      const bid = Number(branch_id);
+      logs = logs.filter((log: any) => !log.branch_id || log.branch_id === bid);
     }
 
     if (user) {
@@ -3718,7 +3723,8 @@ app.post('/api/audit-logs', (req, res) => {
       timestamp: new Date().toISOString(),
       user: req.body.user || 'System',
       activity: req.body.activity || 'Unknown Action',
-      details: req.body.details || ''
+      details: req.body.details || '',
+      branch_id: req.body.branch_id ? Number(req.body.branch_id) : null
     };
     
     let logs = [];

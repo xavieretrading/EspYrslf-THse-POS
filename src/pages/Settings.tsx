@@ -56,6 +56,7 @@ export default function Settings() {
     setAuditError(null);
     try {
       let url = '/api/audit-logs?';
+      if (activeBranch) url += `branch_id=${activeBranch.id}&`;
       if (auditFilters.user) url += `user=${encodeURIComponent(auditFilters.user)}&`;
       if (auditFilters.startDate) url += `start_date=${auditFilters.startDate}&`;
       if (auditFilters.endDate) url += `end_date=${auditFilters.endDate}&`;

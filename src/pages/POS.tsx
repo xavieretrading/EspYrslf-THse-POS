@@ -94,7 +94,7 @@ export function getReceiptCalculations(receipt: any, settings?: any) {
 }
 
 export default function POS() {
-  const { activeBranch } = useBranch();
+  const { branches, activeBranch, setActiveBranch } = useBranch();
   const { settings } = useSettings();
   const location = useLocation();
   const navigate = useNavigate();
@@ -409,15 +409,18 @@ export default function POS() {
     if (localUser) {
       const u = JSON.parse(localUser);
       setCurrentUser(u);
-      // Skip shift check for laundry branches (S1p/Sp1n) — always open
-      const isLaundryBranchLocal = activeBranch?.name?.toLowerCase().includes('laundry') ||
-        activeBranch?.name?.toLowerCase().includes('s1p') ||
-        activeBranch?.name?.toLowerCase().includes('spin');
-      if (activeBranch && !isLaundryBranchLocal) {
-        checkShift(u.id, activeBranch.id);
-      } else if (activeBranch && isLaundryBranchLocal) {
-        // Laundry branch: treat as always having an open shift
-        setCurrentShift({ id: 'laundry-always-open', branch_id: activeBranch.id });
+
+      // Force active branch to match cashier's assigned branch_id if different
+      if (u && u.branch_id && u.role !== 'admin') {
+        const userBranch = branches.find(b => b.id === Number(u.branch_id));
+        if (userBranch && (!activeBranch || activeBranch.id !== userBranch.id)) {
+          setActiveBranch(userBranch);
+        }
+      }
+
+      // Always treat as having an open shift — skip shift check for all branches
+      if (activeBranch) {
+        setCurrentShift({ id: 'always-open', branch_id: activeBranch.id });
         setShowShiftModal(false);
       }
     }
@@ -508,7 +511,7 @@ export default function POS() {
         });
       }
     });
-  }, [activeBranch, location.search]);
+  }, [activeBranch, location.search, branches]);
 
   const filteredProducts = products.filter(p => {
     const isSellable = (p as any).is_sellable !== 0;
@@ -2093,21 +2096,7 @@ export default function POS() {
             </div>
             {/* Action buttons — shift button hidden for laundry branch */}
             <div className="flex items-center gap-2">
-              {!isLaundryBranch && (
-                <button
-                  onClick={() => {
-                    setShiftAction(currentShift ? 'end' : 'start');
-                    setShiftAmount('');
-                    setShowShiftModal(true);
-                  }}
-                  className={cn(
-                    "px-4 py-2 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm",
-                    currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
-                  )}
-                >
-                  <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
-                </button>
-              )}
+              {/* Shift buttons disabled system-wide */}
             </div>
           </div>
 
@@ -2857,21 +2846,7 @@ export default function POS() {
                       X/Z-Reading
                     </button>
                     {/* END SHIFT button hidden for laundry branch */}
-                    {!isLaundryBranch && (
-                      <button
-                        onClick={() => {
-                          setShiftAction(currentShift ? 'end' : 'start');
-                          setShiftAmount('');
-                          setShowShiftModal(true);
-                        }}
-                        className={cn(
-                          "px-2.5 py-1 text-white rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 min-h-[32px]",
-                          currentShift ? "bg-amber-600 hover:bg-amber-700" : "bg-emerald-600 hover:bg-emerald-700"
-                        )}
-                      >
-                        <Clock size={14} /> {currentShift ? 'END SHIFT' : 'START SHIFT'}
-                      </button>
-                    )}
+                    {/* Shift buttons disabled system-wide */}
                   </>
                 )}
 
@@ -4690,8 +4665,8 @@ export default function POS() {
         </div>
       )}
 
-      {/* Shift Management Modal — hidden for laundry branch */}
-      {showShiftModal && !isLaundryBranch && (
+      {/* Shift Management Modal — disabled system-wide */}
+      {false && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-md">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full m-4 border border-slate-100">
             <div className="flex flex-col items-center text-center mb-6">

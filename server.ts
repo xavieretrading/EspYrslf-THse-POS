@@ -3673,11 +3673,9 @@ if (!fs.existsSync(AUDIT_LOGS_FILE)) {
   }
 }
 
-app.get('/api/audit-logs', (req, res) => {
+function saveLocalAuditLog(logEntry: any) {
   try {
-    const { user, start_date, end_date, branch_id } = req.query;
     let logs = [];
-    
     if (fs.existsSync(AUDIT_LOGS_FILE)) {
       const data = fs.readFileSync(AUDIT_LOGS_FILE, 'utf8');
       try {
@@ -3686,62 +3684,118 @@ app.get('/api/audit-logs', (req, res) => {
         logs = [];
       }
     }
+    logs.unshift(logEntry);
+    if (logs.length > 1000) logs = logs.slice(0, 1000);
+    fs.writeFileSync(AUDIT_LOGS_FILE, JSON.stringify(logs, null, 2), 'utf8');
+  } catch (e) {
+    console.error('Local audit log fallback write failed:', e);
+  }
+}
+
+app.get('/api/audit-logs', async (req, res) => {
+  try {
+    const { user, start_date, end_date, branch_id } = req.query;
+
+    let query = supabase
+      .from('audit_logs_espresso')
+      .select('*')
+      .order('timestamp', { ascending: false });
 
     if (branch_id) {
-      const bid = Number(branch_id);
-      logs = logs.filter((log: any) => !log.branch_id || log.branch_id === bid);
+      query = query.eq('branch_id', Number(branch_id));
     }
-
     if (user) {
-      logs = logs.filter((log: any) => log.user === user);
+      query = query.eq('user_name', user);
+    }
+    if (start_date) {
+      query = query.gte('timestamp', `${start_date}T00:00:00Z`);
+    }
+    if (end_date) {
+      query = query.lte('timestamp', `${end_date}T23:59:59Z`);
     }
 
-    if (start_date || end_date) {
-      logs = logs.filter((log: any) => {
-        if (!log.timestamp) return false;
-        const logDate = new Date(log.timestamp).toISOString().split('T')[0];
-        const s = start_date as string;
-        const e = end_date as string;
-        if (s && e) return logDate >= s && logDate <= e;
-        if (s) return logDate >= s;
-        if (e) return logDate <= e;
-        return true;
-      });
+    const { data: dbLogs, error } = await query.limit(500);
+
+    if (error) {
+      console.warn('Failed to load audit logs from Supabase, loading from fallback JSON:', error.message);
+      // Fallback to local logs JSON if DB query fails
+      let logs = [];
+      if (fs.existsSync(AUDIT_LOGS_FILE)) {
+        const fileData = fs.readFileSync(AUDIT_LOGS_FILE, 'utf8');
+        try {
+          logs = fileData ? JSON.parse(fileData) : [];
+        } catch (e) {
+          logs = [];
+        }
+      }
+      if (branch_id) {
+        const bid = Number(branch_id);
+        logs = logs.filter((log: any) => !log.branch_id || log.branch_id === bid);
+      }
+      if (user) {
+        logs = logs.filter((log: any) => log.user === user);
+      }
+      return res.json(logs);
     }
 
-    res.json(logs);
+    // Map DB entries back to UI shape
+    const uiLogs = dbLogs.map((log: any) => ({
+      id: log.id.toString(),
+      timestamp: log.timestamp,
+      user: log.user_name,
+      activity: log.activity,
+      details: log.details,
+      branch_id: log.branch_id
+    }));
+
+    res.json(uiLogs);
   } catch (error: any) {
     console.error('Audit Log GET Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/audit-logs', (req, res) => {
+app.post('/api/audit-logs', async (req, res) => {
   try {
+    const { user, activity, details, branch_id } = req.body;
     const logEntry = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-      timestamp: new Date().toISOString(),
-      user: req.body.user || 'System',
-      activity: req.body.activity || 'Unknown Action',
-      details: req.body.details || '',
-      branch_id: req.body.branch_id ? Number(req.body.branch_id) : null
+      user_name: user || 'System',
+      activity: activity || 'Unknown Action',
+      details: details || '',
+      branch_id: branch_id ? Number(branch_id) : null
     };
-    
-    let logs = [];
-    if (fs.existsSync(AUDIT_LOGS_FILE)) {
-      const data = fs.readFileSync(AUDIT_LOGS_FILE, 'utf8');
-      try {
-        logs = data ? JSON.parse(data) : [];
-      } catch (e) {
-        logs = [];
-      }
+
+    const { data, error } = await supabase
+      .from('audit_logs_espresso')
+      .insert(logEntry)
+      .select()
+      .single();
+
+    if (error) {
+      console.warn('Failed to save audit log to Supabase, writing to local fallback:', error.message);
+      // Fallback to local logs JSON if DB save fails
+      saveLocalAuditLog({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        timestamp: new Date().toISOString(),
+        user: user || 'System',
+        activity: activity || 'Unknown Action',
+        details: details || '',
+        branch_id: branch_id ? Number(branch_id) : null
+      });
+      return res.json({ id: 'fallback', ...logEntry, timestamp: new Date().toISOString() });
     }
-    
-    logs.unshift(logEntry); // Add to beginning
-    if (logs.length > 1000) logs = logs.slice(0, 1000); // Keep last 1000
-    
-    fs.writeFileSync(AUDIT_LOGS_FILE, JSON.stringify(logs, null, 2), 'utf8');
-    res.json(logEntry);
+
+    // Map DB response columns back to UI structure
+    const responseLog = {
+      id: data.id.toString(),
+      timestamp: data.timestamp,
+      user: data.user_name,
+      activity: data.activity,
+      details: data.details,
+      branch_id: data.branch_id
+    };
+
+    res.json(responseLog);
   } catch (error: any) {
     console.error('Audit Log POST Error:', error);
     res.status(500).json({ error: error.message });

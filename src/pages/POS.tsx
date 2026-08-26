@@ -2961,7 +2961,7 @@ export default function POS() {
                       onClick={() => addToCart(product)}
                       disabled={isLocked}
                       className={cn(
-                        "bg-white rounded-xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden",
+                        "rounded-xl shadow-sm border transition-all text-left flex flex-col group relative active:scale-[0.97] overflow-hidden aspect-square w-full",
                         isLocked
                           ? "opacity-60 border-slate-200 bg-slate-50/50 hover:border-slate-200 hover:shadow-sm cursor-not-allowed"
                           : isPisoPromo
@@ -2969,65 +2969,77 @@ export default function POS() {
                             : "border-slate-200 hover:border-emerald-500 hover:shadow-lg"
                       )}
                     >
-                      {/* Product Image */}
-                      <div className="w-full h-16 md:h-20 overflow-hidden bg-slate-50 border-b border-slate-100 relative flex items-center justify-center">
+                      {/* Full-Bleed Product Image */}
+                      <div className="absolute inset-0 w-full h-full bg-slate-100 flex items-center justify-center">
                         <img
                           src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
                           onError={(e) => {
                             const imgTarget = e.currentTarget as HTMLImageElement;
-                            imgTarget.style.display = 'none';
+                            imgTarget.style.opacity = '0';
                           }}
                           alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0 z-10"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 absolute inset-0 z-10"
                         />
-                        <div className="text-slate-300 flex flex-col items-center justify-center p-1">
-                          <Package size={14} strokeWidth={1.5} className="text-slate-400/80 mb-0.5" />
-                          <span className="text-[6px] font-black uppercase tracking-widest text-slate-400/60 leading-none">No Picture</span>
+                        
+                        {/* Placeholder No Picture (rendered underneath) */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-2 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                          <Package size={20} strokeWidth={1.5} className="text-slate-400 mb-1 opacity-70" />
+                          <span className="text-[7px] font-black uppercase tracking-widest text-slate-400/60 leading-none">No Picture</span>
                         </div>
-
-                        {/* Piso Promo Badge Overlay */}
-                        {isPisoPromo && (
-                          <div className="absolute top-1.5 right-1.5 z-20">
-                            <span className="bg-gradient-to-r from-red-500 to-amber-500 text-white px-1.5 py-0.5 rounded text-[6.5px] font-black uppercase shadow-xs tracking-wider animate-pulse border border-red-400">
-                              PISO PROMO
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Stock Badge Overlay */}
-                        <div className="absolute top-1.5 left-1.5 z-20">
-                          <span className={cn(
-                            "px-1 py-0.2 rounded text-[6px] font-black uppercase shadow-xs border backdrop-blur-xs",
-                            product.stock <= 0
-                              ? "bg-rose-500 text-white border-rose-600"
-                              : product.stock < 10
-                                ? "bg-amber-400 text-slate-900 border-amber-500 font-extrabold"
-                                : "bg-white/90 text-slate-600 border-slate-200"
-                          )}>
-                            {product.stock <= 0 ? 'Out' : `${product.stock} L`}
-                          </span>
-                        </div>
-
-                        {!isLocked && (
-                          <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="bg-emerald-500 text-white p-0.5 rounded">
-                              <Plus size={8} />
-                            </div>
-                          </div>
-                        )}
                       </div>
 
-                      {/* Card Content */}
-                      <div className="p-2.5 flex-1 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[7.5px] font-bold text-emerald-600 uppercase tracking-tighter block opacity-80 leading-none mb-1">{product.category_name}</span>
-                          <h3 className={cn(
-                            "font-bold text-slate-900 leading-tight text-[9.5px] md:text-[10.5px] line-clamp-2",
-                            isLocked ? "text-slate-500" : "group-hover:text-emerald-700"
-                          )}>{product.name}</h3>
+                      {/* Semi-transparent / Dark Gradient Overlay for Readability */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5 z-15 pointer-events-none group-hover:from-black/90 transition-all duration-300" />
+
+                      {/* Stock Badge Overlay (Top Left) */}
+                      <div className="absolute top-2 left-2 z-20">
+                        <span className={cn(
+                          "px-1.5 py-0.5 rounded-md text-[6.5px] font-black uppercase shadow-sm border backdrop-blur-md",
+                          product.stock <= 0
+                            ? "bg-rose-500 text-white border-rose-600"
+                            : product.stock < 10
+                              ? "bg-amber-400 text-slate-900 border-amber-500 font-extrabold"
+                              : "bg-white/90 text-slate-600 border-slate-200"
+                        )}>
+                          {product.stock <= 0 ? 'Out' : `${product.stock} L`}
+                        </span>
+                      </div>
+
+                      {/* Piso Promo Badge Overlay (Top Right) */}
+                      {isPisoPromo && (
+                        <div className="absolute top-2 right-2 z-20">
+                          <span className="bg-gradient-to-r from-red-500 to-amber-500 text-white px-1.5 py-0.5 rounded text-[6.5px] font-black uppercase shadow-xs tracking-wider animate-pulse border border-red-400">
+                            PISO PROMO
+                          </span>
                         </div>
-                        <div className="mt-2 pt-1.5 border-t border-slate-55 flex justify-between items-center">
-                          <span className="text-[9px] md:text-[10px] font-black text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded-md">₱{product.price.toFixed(2)}</span>
+                      )}
+
+                      {/* Hover Plus Indicator (Top Right) */}
+                      {!isLocked && !isPisoPromo && (
+                        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-emerald-500 text-white p-0.5 rounded-md shadow-sm">
+                            <Plus size={8} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Text/Content Overlaid directly on the bottom-left */}
+                      <div className="absolute bottom-0 left-0 right-0 p-2 z-20 flex flex-col justify-end pointer-events-none">
+                        <span className="text-[6.5px] font-black text-emerald-400 uppercase tracking-wider opacity-90 leading-none mb-0.5">
+                          {product.category_name}
+                        </span>
+                        
+                        <h3 className={cn(
+                          "font-bold text-white leading-tight text-[9px] md:text-[10px] line-clamp-2 drop-shadow-sm mb-1",
+                          isLocked && "text-slate-300 opacity-80"
+                        )}>
+                          {product.name}
+                        </h3>
+
+                        <div className="flex items-center">
+                          <span className="text-[8.5px] md:text-[9.5px] font-black text-white bg-white/20 px-1.5 py-0.5 rounded-md backdrop-blur-md">
+                            ₱{product.price.toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </button>

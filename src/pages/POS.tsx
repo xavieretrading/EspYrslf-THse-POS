@@ -11,8 +11,35 @@ import { swalAlert, swalConfirm } from '../lib/swal';
 import Swal from 'sweetalert2';
 import BarbershopView from '../components/barbershop/BarbershopView';
 
-export const getProductImage = (name: string) => {
-  return '';
+export const getProductImage = (name: string): string => {
+  const lowercase = name.toLowerCase().trim();
+  if (lowercase.includes('americano')) return '/americano.jpg';
+  if (lowercase.includes('cappuccino')) return '/cappuccino.jpg';
+  if (lowercase.includes('coke zero') || lowercase.includes('coca cola zero') || lowercase.includes('coca-cola zero')) return '/coke-zero.jpg';
+  if (lowercase.includes('coke') || lowercase.includes('coca-cola') || lowercase.includes('coca cola')) return '/coke-regular.jpg';
+  if (lowercase.includes('evian')) return '/evian-550ml.jpg';
+  if (lowercase.includes('espresso')) return '/espresso.jpg';
+  if (lowercase.includes('hot choco') || lowercase.includes('chocolate')) return '/hot-chocolate.jpg';
+  if (lowercase.includes('mocha')) return '/mocha.jpg';
+  if (lowercase.includes('croissant')) return '/CroissantAlmond.jpg';
+  if (lowercase.includes('durrian') || (lowercase.includes('durian') && lowercase.includes('frappe'))) return '/durrian-coffee-frappe.jpg';
+  if (lowercase.includes('hot durian')) return '/hot-durian-latte.jpg';
+  if (lowercase.includes('iced durian')) return '/iced-durian-latte.jpg';
+  if (lowercase.includes('mango coconut')) return '/mango-coconut-coffee.jpg';
+  if (lowercase.includes('mango') && (lowercase.includes('coffee') || lowercase.includes('frappe'))) return '/mango-coffee-frappe.jpg';
+  if (lowercase.includes('perrier')) return '/perrier.jpg';
+  if (lowercase.includes('pocari')) return '/pocari-sweet-500ml.jpg';
+  if (lowercase.includes('red horse')) return '/red-horse-can.jpg';
+  if (lowercase.includes('redbull') || lowercase.includes('red bull')) return '/redbull.jpg';
+  if (lowercase.includes('sprite')) return '/sprite.jpg';
+  if (lowercase.includes('summit')) return '/summit-water.jpg';
+  if (lowercase.includes('pale pilsen')) return '/pale-pilsen.jpg';
+  if (lowercase.includes('san mig')) return '/san-miglight.jpg';
+  if (lowercase.includes('royal')) return '/royal-orange.jpg';
+  
+  // Clean fallback slug name ending check
+  const slug = lowercase.replace(/[^a-z0-9]+/g, '-');
+  return '/' + (slug.endsWith('-') ? slug.slice(0, -1) : slug) + '.jpg';
 };
 
 type Product = { id: number; name: string; price: number; category_name: string; stock: number };
@@ -2972,7 +2999,7 @@ export default function POS() {
                       {/* Full-Bleed Product Image */}
                       <div className="absolute inset-0 w-full h-full bg-slate-100 flex items-center justify-center">
                         <img
-                          src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
+                          src={(product as any).image_url || getProductImage(product.name)}
                           onError={(e) => {
                             const imgTarget = e.currentTarget as HTMLImageElement;
                             imgTarget.style.opacity = '0';

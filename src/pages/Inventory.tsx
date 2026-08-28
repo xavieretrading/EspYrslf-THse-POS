@@ -94,7 +94,7 @@ export default function Inventory() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDivision, setNewCategoryDivision] = useState<'coffee' | 'laundry'>('coffee');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '', is_sellable: '1', unit: 'pcs' });
+  const [formData, setFormData] = useState({ name: '', cost: '', price: '', category_id: '', stock: '', is_sellable: '1', unit: 'pcs', received_date: '', expire_date: '', no_expiry: true });
   const [uploadedImageBase64, setUploadedImageBase64] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -194,7 +194,7 @@ export default function Inventory() {
       body: JSON.stringify({
         product_id: selectedProduct.id,
         type: transactionType,
-        quantity: parseInt(quantity),
+        quantity: parseFloat(quantity),
         remarks
       })
     });
@@ -258,7 +258,9 @@ export default function Inventory() {
         stock: isService ? 9999 : parseInt(formData.stock || '0'),
         image_url: imageUrl,
         is_sellable: parseInt(formData.is_sellable || '1'),
-        unit: formData.unit || 'pcs'
+        unit: formData.unit || 'pcs',
+        received_date: formData.received_date || null,
+        expire_date: formData.no_expiry ? null : (formData.expire_date || null)
       })
     });
 
@@ -287,6 +289,7 @@ export default function Inventory() {
     setEditingProduct(null);
     setUploadedImageBase64(null);
     const firstCatOfDivision = categories.find(c => c.division === selectedDivision);
+    const todayStr = new Date().toISOString().split('T')[0];
     setFormData({
       name: '',
       cost: '',
@@ -294,7 +297,10 @@ export default function Inventory() {
       category_id: firstCatOfDivision?.id.toString() || categories[0]?.id.toString() || '',
       stock: '0',
       is_sellable: '1',
-      unit: 'pcs'
+      unit: 'pcs',
+      received_date: todayStr,
+      expire_date: '',
+      no_expiry: true
     });
     setIsProductModalOpen(true);
   };
@@ -302,14 +308,20 @@ export default function Inventory() {
   const openEditModal = (product: Product) => {
     setEditingProduct(product);
     setUploadedImageBase64((product as any).image_url || null);
+    const pAny = product as any;
+    const recDate = pAny.received_date ? new Date(pAny.received_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    const expDate = pAny.expire_date ? new Date(pAny.expire_date).toISOString().split('T')[0] : '';
     setFormData({
       name: product.name,
       cost: product.cost.toString(),
       price: product.price.toString(),
       category_id: product.category_id?.toString() || '',
       stock: (product.stock || 0).toString(),
-      is_sellable: (product as any).is_sellable !== 0 ? '1' : '0',
-      unit: (product as any).unit || 'pcs'
+      is_sellable: pAny.is_sellable !== 0 ? '1' : '0',
+      unit: pAny.unit || 'pcs',
+      received_date: recDate,
+      expire_date: expDate,
+      no_expiry: !pAny.expire_date
     });
     setIsProductModalOpen(true);
   };
@@ -653,6 +665,8 @@ export default function Inventory() {
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Cost</th>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Price</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Received</th>
+                      <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Expires</th>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Stock</th>
                       <th className="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Actions</th>
                     </tr>
@@ -679,6 +693,23 @@ export default function Inventory() {
                         <td className="p-4 text-slate-500 text-sm">{product.category_name}</td>
                         <td className="p-4 text-right text-slate-500 font-mono text-sm">₱{product.cost?.toFixed(2)}</td>
                         <td className="p-4 text-right text-slate-500 font-mono text-sm">₱{product.price?.toFixed(2)}</td>
+                        <td className="p-4 text-center text-slate-500 text-xs font-semibold">
+                          {(product as any).received_date ? new Date((product as any).received_date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : '-'}
+                        </td>
+                        <td className="p-4 text-center text-xs font-semibold">
+                          {(product as any).expire_date ? (
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-md",
+                              new Date((product as any).expire_date).getTime() < new Date().getTime()
+                                ? "bg-rose-100 text-rose-700 font-black animate-pulse"
+                                : "text-slate-500"
+                            )}>
+                              {new Date((product as any).expire_date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" })}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic">No Expiry</span>
+                          )}
+                        </td>
                         <td className="p-4 text-right">
                           <span className={cn(
                             "font-bold px-3 py-1 rounded-full cursor-pointer text-xs uppercase tracking-wide inline-block shadow-sm",
@@ -718,7 +749,7 @@ export default function Inventory() {
                     ))}
                     {filteredProducts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-12 text-center text-slate-400 font-medium italic">
+                        <td colSpan={8} className="p-12 text-center text-slate-400 font-medium italic">
                           No matching products found.
                         </td>
                       </tr>
@@ -830,6 +861,7 @@ export default function Inventory() {
                       type="number"
                       required
                       min="0"
+                      step="any"
                       value={quantity}
                       onChange={(e) => setQuantity(e.target.value)}
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none text-sm font-semibold"
@@ -1916,6 +1948,45 @@ export default function Inventory() {
                         <option value="ml" />
                         <option value="liters" />
                       </datalist>
+                    </div>
+                  </div>
+
+                  {/* Received & Expiration Dates */}
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="text-xs font-extrabold text-slate-705 mb-1.5 block uppercase tracking-widest">Received Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.received_date}
+                        onChange={e => setFormData({ ...formData, received_date: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <label className="text-xs font-extrabold text-slate-705 block uppercase tracking-widest">Expiration Date</label>
+                        <label className="flex items-center gap-1 text-[10px] text-slate-500 font-bold select-none cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.no_expiry}
+                            onChange={e => setFormData({ ...formData, no_expiry: e.target.checked, expire_date: e.target.checked ? '' : formData.expire_date })}
+                            className="w-3.5 h-3.5 text-emerald-600 border-slate-350 rounded focus:ring-emerald-500 accent-emerald-500 cursor-pointer"
+                          />
+                          No Expiry
+                        </label>
+                      </div>
+                      <input
+                        type="date"
+                        disabled={formData.no_expiry}
+                        required={!formData.no_expiry}
+                        value={formData.expire_date}
+                        onChange={e => setFormData({ ...formData, expire_date: e.target.value })}
+                        className={cn(
+                          "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none text-xs font-semibold",
+                          formData.no_expiry && "opacity-50 bg-slate-100 cursor-not-allowed"
+                        )}
+                      />
                     </div>
                   </div>
                 </>

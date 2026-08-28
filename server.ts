@@ -383,12 +383,14 @@ app.get('/api/products', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-  const { branch_id, category_id, name, price, cost, stock, image_url, is_sellable, unit } = req.body;
+  const { branch_id, category_id, name, price, cost, stock, image_url, is_sellable, unit, received_date, expire_date } = req.body;
 
   const insertObj: any = {
     branch_id, category_id, name, price, cost: cost || 0, stock: stock || 0, is_active: 1, image_url,
     is_sellable: is_sellable === undefined ? 1 : is_sellable,
-    unit: unit || 'pcs'
+    unit: unit || 'pcs',
+    received_date: received_date || null,
+    expire_date: expire_date || null
   };
 
   let { data, error } = await supabase.from('products_espresso').insert([insertObj]).select().single();
@@ -425,7 +427,7 @@ app.post('/api/products', async (req, res) => {
 });
 
 app.put('/api/products/:id', async (req, res) => {
-  const { name, price, cost, category_id, stock, image_url, is_sellable, unit } = req.body;
+  const { name, price, cost, category_id, stock, image_url, is_sellable, unit, received_date, expire_date } = req.body;
   const updates: any = {};
   if (name !== undefined) updates.name = name;
   if (price !== undefined) updates.price = price;
@@ -435,6 +437,8 @@ app.put('/api/products/:id', async (req, res) => {
   if (image_url !== undefined) updates.image_url = image_url;
   if (is_sellable !== undefined) updates.is_sellable = is_sellable;
   if (unit !== undefined) updates.unit = unit;
+  if (received_date !== undefined) updates.received_date = received_date;
+  if (expire_date !== undefined) updates.expire_date = expire_date;
   
   // Fetch existing stock value if stock is being modified
   let oldStock = 0;

@@ -1,0 +1,8 @@
+{
+  "appId": "com.groupofcompanies.pos",
+  "appName": "Group Of Companies POS",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "http"
+  }
+}

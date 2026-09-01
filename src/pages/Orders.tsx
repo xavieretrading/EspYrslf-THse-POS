@@ -114,10 +114,41 @@ export default function Orders() {
   const [claimFilter, setClaimFilter] = useState<'all' | 'unclaimed' | 'claimed'>('all');
 
   // Printer settings
-  const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || 'POSPrinter POS-80C');
+  const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || '');
   const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
   const [qzConnected, setQzConnected] = useState(false);
   const [qzError, setQzError] = useState<string | null>(null);
+  const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
+  const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
+
+  const fetchAvailablePrinters = async () => {
+    if (!qz.websocket.isActive()) return;
+    setIsLoadingPrinters(true);
+    try {
+      const list = await qz.printers.find();
+      if (Array.isArray(list) && list.length > 0) {
+        setAvailablePrinters(list);
+        const stored = localStorage.getItem('qz_printer_name');
+        if (!stored || !list.includes(stored)) {
+          const match = list.find((p: string) =>
+            p.toLowerCase().includes('pos') ||
+            p.toLowerCase().includes('receipt') ||
+            p.toLowerCase().includes('80') ||
+            p.toLowerCase().includes('generic') ||
+            p.toLowerCase().includes('thermal')
+          ) || list[0];
+          if (match) {
+            setQzPrinterName(match);
+            localStorage.setItem('qz_printer_name', match);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error("Error fetching printers:", e);
+    } finally {
+      setIsLoadingPrinters(false);
+    }
+  };
 
   useEffect(() => {
     if (!useQzTray) {
@@ -156,6 +187,7 @@ export default function Orders() {
         }
         setQzConnected(true);
         setQzError(null);
+        await fetchAvailablePrinters();
       } catch (err: any) {
         console.error("QZ connection failed:", err);
         setQzConnected(false);
@@ -1671,7 +1703,7 @@ export default function Orders() {
                     setUseQzTray(checked);
                     localStorage.setItem('qz_enabled', String(checked));
                   }}
-                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-blue-500"
+                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-emerald-500"
                 >
                   <option value="browser">Browser Print dialog</option>
                   <option value="qz">Direct print (QZ Tray)</option>
@@ -1681,24 +1713,51 @@ export default function Orders() {
               {useQzTray && (
                 <div className="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-slate-650">Printer Name:</span>
-                    <input
-                      type="text"
-                      value={qzPrinterName}
-                      onChange={e => {
-                        setQzPrinterName(e.target.value);
-                        localStorage.setItem('qz_printer_name', e.target.value);
-                      }}
-                      placeholder="e.g. POS-80"
-                      className="w-40 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 text-right"
-                    />
+                    <span className="font-bold text-slate-700">Printer:</span>
+                    <div className="flex items-center gap-1 flex-1 justify-end">
+                      {availablePrinters.length > 0 ? (
+                        <select
+                          value={qzPrinterName}
+                          onChange={e => {
+                            setQzPrinterName(e.target.value);
+                            localStorage.setItem('qz_printer_name', e.target.value);
+                          }}
+                          className="max-w-[210px] px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 truncate"
+                        >
+                          {availablePrinters.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={qzPrinterName}
+                          onChange={e => {
+                            setQzPrinterName(e.target.value);
+                            localStorage.setItem('qz_printer_name', e.target.value);
+                          }}
+                          placeholder="Printer name (e.g. POS-80)"
+                          className="w-40 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 text-right"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={fetchAvailablePrinters}
+                        disabled={isLoadingPrinters || !qzConnected}
+                        title="Scan Windows for connected printers"
+                        className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors shrink-0"
+                      >
+                        <RefreshCw size={12} className={isLoadingPrinters ? 'animate-spin' : ''} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">Connection Status:</span>
+
+                  <div className="flex items-center justify-between text-[10.5px] pt-1 border-t border-slate-200/60">
+                    <span className="text-slate-500">QZ Tray Status:</span>
                     {qzConnected ? (
-                      <span className="text-emerald-650 font-bold flex items-center gap-1">🟢 Connected</span>
+                      <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
                     ) : qzError ? (
-                      <span className="text-rose-500 font-bold cursor-pointer" title={qzError}>🔴 Disconnected</span>
+                      <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected (Start QZ Tray)</span>
                     ) : (
                       <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
                     )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Users, Tag, LayoutGrid, Database, Plus, Edit, Trash2, X, CheckCircle, ClipboardList, Printer, Calendar, Filter, Archive, RefreshCw } from 'lucide-react';
+import qz from 'qz-tray';
 import { useBranch } from '../BranchContext';
 import { useSettings, BusinessSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
@@ -46,6 +47,118 @@ export default function Settings() {
   // Archived Items state
   const [archivedItems, setArchivedItems] = useState<any[]>([]);
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
+
+  // Thermal Printer Configuration State
+  const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || '');
+  const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
+  const [qzConnected, setQzConnected] = useState(false);
+  const [qzError, setQzError] = useState<string | null>(null);
+  const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
+  const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
+  const [isTestPrinting, setIsTestPrinting] = useState(false);
+
+  const fetchAvailablePrinters = async () => {
+    if (!qz.websocket.isActive()) return;
+    setIsLoadingPrinters(true);
+    try {
+      const list = await qz.printers.find();
+      if (Array.isArray(list) && list.length > 0) {
+        setAvailablePrinters(list);
+        const stored = localStorage.getItem('qz_printer_name');
+        if (!stored || !list.includes(stored)) {
+          const match = list.find((p: string) =>
+            p.toLowerCase().includes('pos') ||
+            p.toLowerCase().includes('receipt') ||
+            p.toLowerCase().includes('80') ||
+            p.toLowerCase().includes('generic') ||
+            p.toLowerCase().includes('thermal')
+          ) || list[0];
+          if (match) {
+            setQzPrinterName(match);
+            localStorage.setItem('qz_printer_name', match);
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error("Error fetching printers:", e);
+    } finally {
+      setIsLoadingPrinters(false);
+    }
+  };
+
+  const connectQz = async () => {
+    try {
+      qz.security.setCertificatePromise((resolve, reject) => {
+        fetch('/api/qz/certificate')
+          .then(res => res.text())
+          .then(resolve)
+          .catch(reject);
+      });
+
+      qz.security.setSignaturePromise((toSign) => {
+        return (resolve, reject) => {
+          fetch('/api/qz/sign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request: toSign })
+          })
+            .then(res => res.text())
+            .then(resolve)
+            .catch(reject);
+        };
+      });
+
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect();
+      }
+      setQzConnected(true);
+      setQzError(null);
+      await fetchAvailablePrinters();
+    } catch (err: any) {
+      console.error("QZ connection failed:", err);
+      setQzConnected(false);
+      setQzError(err.message || "Could not connect to QZ Tray. Make sure it is running.");
+    }
+  };
+
+  const handleTestPrint = async () => {
+    if (!qzPrinterName) {
+      swalAlert('No Printer Selected', 'Please select a printer first.', 'warning');
+      return;
+    }
+    setIsTestPrinting(true);
+    try {
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect();
+      }
+      const config = qz.configs.create(qzPrinterName);
+      const testHtml = `
+        <div style="width: 80mm; font-family: Arial, sans-serif; text-align: center; padding: 10px; box-sizing: border-box;">
+          <h2 style="margin: 0; font-size: 14pt;">TEST RECEIPT</h2>
+          <p style="margin: 4px 0; font-size: 9.5pt;">${activeBranch?.name || 'Espresso Yourself & Tea House'}</p>
+          <hr style="border: 1px dashed black; margin: 8px 0;" />
+          <p style="margin: 4px 0; font-size: 10pt; font-weight: bold;">Printer Test Successful!</p>
+          <p style="margin: 4px 0; font-size: 8.5pt;">Selected: ${qzPrinterName}</p>
+          <p style="margin: 4px 0; font-size: 8.5pt;">Date: ${new Date().toLocaleString()}</p>
+          <hr style="border: 1px dashed black; margin: 8px 0;" />
+          <p style="margin: 0; font-size: 9pt;">Direct Thermal Printing Ready</p>
+        </div>
+      `;
+      const data = [{
+        type: 'pixel',
+        format: 'html',
+        flavor: 'plain',
+        data: testHtml
+      }];
+      await qz.print(config, data);
+      swalAlert('Success', `Test receipt printed to "${qzPrinterName}"!`, 'success');
+    } catch (e: any) {
+      console.error('Test print failed:', e);
+      swalAlert('Print Failed', e.message || 'Failed to print test receipt.', 'error');
+    } finally {
+      setIsTestPrinting(false);
+    }
+  };
 
   const getManilaDate = () => {
     return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -259,14 +372,17 @@ export default function Settings() {
   useEffect(() => {
     if (activeTab === 'discounts') {
       fetchDiscounts();
+    } else if (activeTab === 'printers') {
+      connectQz();
     }
   }, [activeTab]);
 
   const sections = [
     { id: 'discounts', title: 'Discounts & Promos', icon: Tag, description: 'Manage custom discounts & promos.', color: 'text-amber-500', bg: 'bg-amber-50 border border-amber-100' },
     { id: 'users', title: 'User Roles', icon: Users, description: 'Manage accounts & access levels.', color: 'text-purple-500', bg: 'bg-purple-50 border border-purple-100' },
+    { id: 'printers', title: 'Thermal Printer', icon: Printer, description: 'Auto-detect & test receipt printer.', color: 'text-blue-500', bg: 'bg-blue-50 border border-blue-100' },
     { id: 'terminals', title: 'POS Terminals', icon: LayoutGrid, description: 'Manage branch POS terminals.', color: 'text-indigo-500', bg: 'bg-indigo-50 border border-indigo-100' },
-    { id: 'system', title: 'System Config', icon: SettingsIcon, description: 'Update receipt & hardware details.', color: 'text-slate-500', bg: 'bg-slate-100' },
+    { id: 'system', title: 'System Config', icon: SettingsIcon, description: 'Update receipt & business details.', color: 'text-slate-500', bg: 'bg-slate-100' },
     { id: 'audit', title: 'Activity Logs', icon: ClipboardList, description: 'View system audit trails.', color: 'text-rose-500', bg: 'bg-rose-100' },
     { id: 'archive', title: 'Orders Archive', icon: Archive, description: 'View archived kitchen orders.', color: 'text-emerald-500', bg: 'bg-emerald-100' }
   ];
@@ -424,6 +540,156 @@ export default function Settings() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : activeTab === 'printers' ? (
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 flex-1 overflow-auto max-w-3xl mx-auto w-full">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900">Thermal Printer Setup</h2>
+            <p className="text-slate-500 text-sm mt-1">Configure and test direct thermal receipt printing with QZ Tray.</p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Status Card */}
+            <div className={cn(
+              "p-6 rounded-2xl border transition-all",
+              qzConnected ? "bg-emerald-50/70 border-emerald-200" : "bg-rose-50/70 border-rose-200"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl",
+                    qzConnected ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                  )}>
+                    <Printer size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-base text-slate-900">
+                      {qzConnected ? 'QZ Tray Connected' : 'QZ Tray Disconnected'}
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      {qzConnected
+                        ? `${availablePrinters.length} installed Windows printer(s) detected.`
+                        : 'QZ Tray application is not running on your computer.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={connectQz}
+                  disabled={isLoadingPrinters}
+                  className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
+                >
+                  <RefreshCw size={14} className={isLoadingPrinters ? 'animate-spin' : ''} />
+                  <span>{isLoadingPrinters ? 'Scanning...' : 'Refresh / Scan'}</span>
+                </button>
+              </div>
+
+              {!qzConnected && (
+                <div className="mt-4 pt-4 border-t border-rose-200/80 text-xs text-rose-800 space-y-1">
+                  <p className="font-bold">⚠️ How to connect your printer:</p>
+                  <ol className="list-decimal pl-5 space-y-1 text-slate-700">
+                    <li>Open <strong>QZ Tray</strong> from your Windows Start menu or desktop.</li>
+                    <li>Look for the green printer icon near your Windows taskbar clock.</li>
+                    <li>Click the <strong>Refresh / Scan</strong> button above to connect and auto-discover your printer.</li>
+                  </ol>
+                </div>
+              )}
+            </div>
+
+            {/* Print Mode */}
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+              <div>
+                <label className="text-sm font-bold text-slate-700 block mb-1">Print Mode</label>
+                <p className="text-xs text-slate-500 mb-3">Choose whether you want silent 1-click thermal printing or the standard browser popup dialog.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
+                    useQzTray ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200" : "bg-white border-slate-200 hover:bg-slate-50"
+                  )}>
+                    <input
+                      type="radio"
+                      name="printer_mode"
+                      checked={useQzTray}
+                      onChange={() => {
+                        setUseQzTray(true);
+                        localStorage.setItem('qz_enabled', 'true');
+                      }}
+                      className="text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Direct Thermal Printing (QZ Tray)</span>
+                      <span className="text-[11px] text-slate-500">1-Click silent printing directly to paper (Recommended)</span>
+                    </div>
+                  </label>
+                  <label className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
+                    !useQzTray ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200" : "bg-white border-slate-200 hover:bg-slate-50"
+                  )}>
+                    <input
+                      type="radio"
+                      name="printer_mode"
+                      checked={!useQzTray}
+                      onChange={() => {
+                        setUseQzTray(false);
+                        localStorage.setItem('qz_enabled', 'false');
+                      }}
+                      className="text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <span className="text-xs font-black text-slate-800 block">Standard Browser Print</span>
+                      <span className="text-[11px] text-slate-500">Uses regular browser print preview dialog</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Printer Selection */}
+              <div className="pt-4 border-t border-slate-200">
+                <label className="text-sm font-bold text-slate-700 block mb-1">Select Installed Windows Printer</label>
+                <p className="text-xs text-slate-500 mb-3">Choose the printer name matching your thermal receipt machine in Windows.</p>
+
+                <div className="flex gap-2 items-center">
+                  {availablePrinters.length > 0 ? (
+                    <select
+                      value={qzPrinterName}
+                      onChange={e => {
+                        setQzPrinterName(e.target.value);
+                        localStorage.setItem('qz_printer_name', e.target.value);
+                      }}
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
+                    >
+                      {availablePrinters.map(p => (
+                        <option key={p} value={p}>{p}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={qzPrinterName}
+                      onChange={e => {
+                        setQzPrinterName(e.target.value);
+                        localStorage.setItem('qz_printer_name', e.target.value);
+                      }}
+                      placeholder="e.g. POS-80 or Generic / Text Only"
+                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleTestPrint}
+                    disabled={isTestPrinting || !qzConnected || !qzPrinterName}
+                    className={cn(
+                      "px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md transition-all active:scale-[0.98] shrink-0 flex items-center gap-2",
+                      (!qzConnected || isTestPrinting || !qzPrinterName) && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <Printer size={16} />
+                    <span>{isTestPrinting ? 'Printing...' : 'Test Print'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       ) : activeTab === 'system' ? (

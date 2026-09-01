@@ -1586,6 +1586,51 @@ export default function POS() {
     }
   };
 
+  const handleOpenZReading = async () => {
+    const manilaDate = getManilaDate();
+    const hours = manilaDate.getHours();
+    const minutes = manilaDate.getMinutes();
+    const timeInMinutes = hours * 60 + minutes;
+    const todayStr = format(manilaDate, 'yyyy-MM-dd');
+    const timeFormatted = manilaDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    // Store closing window starts at 7:45 PM (19:45) = 1185 minutes
+    const closingTimeMinutes = 19 * 60 + 45;
+
+    const alreadyPrinted = localStorage.getItem(`z_reading_printed_${activeBranch?.id}_${todayStr}`);
+
+    if (timeInMinutes < closingTimeMinutes && currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+      swalAlert(
+        'Z-Reading Locked',
+        `Daily Z-Reading is only allowed once a day at store closing (7:45 PM – 8:00 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}`,
+        'warning'
+      );
+      return;
+    }
+
+    if (alreadyPrinted && currentUser?.role !== 'admin') {
+      swalAlert(
+        'Already Completed Today',
+        `Daily Z-Reading for today (${todayStr}) has already been generated and printed.\n\nUnder standard BIR procedures, Z-Reading is strictly performed once per business day.`,
+        'warning'
+      );
+      return;
+    }
+
+    setShowZReading(true);
+  };
+
+  const handlePrintZReading = () => {
+    const todayStr = format(getManilaDate(), 'yyyy-MM-dd');
+    localStorage.setItem(`z_reading_printed_${activeBranch?.id}_${todayStr}`, 'true');
+    logActivity(
+      currentUser?.full_name || currentUser?.username || 'Staff',
+      'Daily Z-Reading',
+      `Printed End-of-Day Z-Reading for ${todayStr}. Total: ₱${(zReadingData?.summary?.total_sales || 0).toFixed(2)}`
+    );
+    window.print();
+  };
+
   useEffect(() => {
     if (showZReading && activeBranch) {
       const today = format(getManilaDate(), 'yyyy-MM-dd');
@@ -2878,9 +2923,9 @@ export default function POS() {
                 {currentUser?.role !== 'waiter' && (
                   <>
                     <button
-                      onClick={() => setShowZReading(true)}
+                      onClick={handleOpenZReading}
                       className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px] flex items-center gap-1.5 shadow-sm"
-                      title="Generate End-of-Day Sales Report (Philippine Time)"
+                      title="Generate End-of-Day Sales Report (Philippine Time, 7:45 PM)"
                     >
                       Daily Z-Reading
                     </button>
@@ -4676,7 +4721,7 @@ export default function POS() {
                 Close
               </button>
               <button
-                onClick={() => window.print()}
+                onClick={handlePrintZReading}
                 className="flex-1 py-3 border border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-xl font-bold transition-colors"
               >
                 Print Report

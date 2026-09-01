@@ -42,6 +42,13 @@ export const getProductImage = (name: string): string => {
   return '/' + (slug.endsWith('-') ? slug.slice(0, -1) : slug) + '.jpg';
 };
 
+export const getValidImageUrl = (imageUrl?: string | null, name?: string): string => {
+  if (imageUrl && typeof imageUrl === 'string' && !imageUrl.includes('unsplash.com') && !imageUrl.includes('400x400')) {
+    return imageUrl;
+  }
+  return getProductImage(name || '');
+};
+
 type Product = { id: number; name: string; price: number; category_name: string; stock: number };
 type Table = { id: number; name: string; status: string };
 type Discount = { id: number; name: string; type: string; value: number };
@@ -586,37 +593,19 @@ export default function POS() {
       return;
     }
 
-    const isBeverage = !isLaundryBranch && (
-      product.category_name.toLowerCase().includes('coffee') ||
-      product.category_name.toLowerCase().includes('tea') ||
-      product.category_name.toLowerCase().includes('blend') ||
-      product.category_name.toLowerCase().includes('beverage')
-    );
-
-    if (isBeverage) {
-      setCustomSize('Medium (16 oz)');
-      setCustomSugar('100%');
-      setCustomIce('100%');
-      setCustomEspresso('Regular');
-      setCustomMilk('Whole Milk');
-      setCustomAddons([]);
-      setCustomInstructions('');
-      setCustomizingProduct(product);
-    } else {
-      setCart(prev => {
-        // Find matching item that hasn't been saved yet and has no custom notes
-        const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved && item.notes === '');
-        if (existingUnsavedIndex >= 0) {
-          const newCart = [...prev];
-          newCart[existingUnsavedIndex] = {
-            ...newCart[existingUnsavedIndex],
-            quantity: newCart[existingUnsavedIndex].quantity + 1
-          };
-          return newCart;
-        }
-        return [...prev, { ...product, quantity: 1, notes: '', _isSaved: false }];
-      });
-    }
+    setCart(prev => {
+      // Find matching item that hasn't been saved yet and has no custom notes
+      const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved && item.notes === '');
+      if (existingUnsavedIndex >= 0) {
+        const newCart = [...prev];
+        newCart[existingUnsavedIndex] = {
+          ...newCart[existingUnsavedIndex],
+          quantity: newCart[existingUnsavedIndex].quantity + 1
+        };
+        return newCart;
+      }
+      return [...prev, { ...product, quantity: 1, notes: '', _isSaved: false }];
+    });
   };
 
   const updateQuantity = (id: number, delta: number) => {
@@ -2999,7 +2988,7 @@ export default function POS() {
                       {/* Full-Bleed Product Image */}
                       <div className="absolute inset-0 w-full h-full bg-slate-100 flex items-center justify-center">
                         <img
-                          src={(product as any).image_url || getProductImage(product.name)}
+                          src={getValidImageUrl((product as any).image_url, product.name)}
                           onError={(e) => {
                             const imgTarget = e.currentTarget as HTMLImageElement;
                             imgTarget.style.opacity = '0';

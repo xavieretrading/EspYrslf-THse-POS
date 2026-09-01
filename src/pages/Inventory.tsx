@@ -29,7 +29,7 @@ import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
-import { getProductImage } from './POS';
+import { getProductImage, getValidImageUrl } from './POS';
 
 type Category = { id: number; name: string };
 type Product = { id: number; name: string; stock: number; category_name: string; category_id: number; cost: number; price: number; division?: string };
@@ -678,7 +678,7 @@ export default function Inventory() {
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 relative">
                               <img
-                                src={(product as any).image_url || `/${product.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}.jpg`}
+                                src={getValidImageUrl((product as any).image_url, product.name)}
                                 onError={(e) => {
                                   (e.currentTarget as HTMLImageElement).style.display = 'none';
                                 }}

@@ -163,27 +163,6 @@ export default function Orders() {
 
     const connectQz = async () => {
       try {
-        // Setup signature and certificate promises to enable silent, permission-free printing
-        qz.security.setCertificatePromise((resolve, reject) => {
-          fetch('/api/qz/certificate')
-            .then(res => res.text())
-            .then(resolve)
-            .catch(reject);
-        });
-
-        qz.security.setSignaturePromise((toSign) => {
-          return (resolve, reject) => {
-            fetch('/api/qz/sign', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ request: toSign })
-            })
-              .then(res => res.text())
-              .then(resolve)
-              .catch(reject);
-          };
-        });
-
         if (!qz.websocket.isActive()) {
           await qz.websocket.connect();
         }

@@ -4,14 +4,14 @@ const path = require('path');
 
 const publicDir = path.join(__dirname, 'public');
 if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir);
+  fs.mkdirSync(publicDir);
 }
 
 // Create a document
 const doc = new PDFDocument({ margin: 50 });
 
 // Pipe its output somewhere, like to a file or HTTP response
-doc.pipe(fs.createWriteStream(path.join(publicDir, 'AllSet-POS-User-Manual.pdf')));
+doc.pipe(fs.createWriteStream(path.join(publicDir, 'POS-User-Manual.pdf')));
 
 // Fonts and Styling
 const defaultFont = 'Helvetica';
@@ -22,12 +22,12 @@ const subHeaderSize = 12;
 const normalSize = 10;
 
 // Add a Title
-doc.font(boldFont).fontSize(titleSize).text('AllSet POS - User Manual', { align: 'center' });
+doc.font(boldFont).fontSize(titleSize).text('POS - User Manual', { align: 'center' });
 doc.moveDown(2);
 
 // Introduction
 doc.font(boldFont).fontSize(headerSize).text('1. Introduction');
-doc.font(defaultFont).fontSize(normalSize).text('Welcome to the AllSet POS system. This manual provides a comprehensive guide to using all the features of the point-of-sale application.');
+doc.font(defaultFont).fontSize(normalSize).text('Welcome to the POS system. This manual provides a comprehensive guide to using all the features of the point-of-sale application.');
 doc.moveDown(1);
 
 // 2. Login
@@ -80,7 +80,7 @@ doc.moveDown(1);
 doc.font(boldFont).fontSize(headerSize).text('7. System Settings');
 doc.font(defaultFont).fontSize(normalSize).text('Administrators can configure the core operations of the application:');
 doc.list([
-  'General Config: Update Company Name (default: AllSet Pos), Tax identification, address, and receipt texts.',
+  'General Config: Update Company Name (default: Pos), Tax identification, address, and receipt texts.',
   'Inventory / Products: Add or edit items, manage pricing, and stock levels.',
   'Users: Create and define roles/permissions for staff members.',
   'Hardware: Configure pos terminals and connection details.'
@@ -93,4 +93,4 @@ doc.font(defaultFont).fontSize(normalSize).text('This concludes the primary user
 // Finalize PDF file
 doc.end();
 
-console.log('PDF User Manual generated successfully in public/AllSet-POS-User-Manual.pdf');
+console.log('PDF User Manual generated successfully in public/POS-User-Manual.pdf');

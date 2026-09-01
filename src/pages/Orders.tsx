@@ -7,6 +7,7 @@ import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, Credi
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
+import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 
 type OrderItem = {
   id: number;
@@ -515,11 +516,12 @@ export default function Orders() {
             letter-spacing: 0.05em;
           }
           .receipt-ticket-content .receipt-logo {
-            max-width: 280px !important;
-            max-height: 85px !important;
+            width: 100% !important;
+            max-width: 100% !important;
             height: auto !important;
+            max-height: none !important;
             display: block !important;
-            margin: 0 auto 4px auto !important;
+            margin: 0 auto 6px auto !important;
             object-fit: contain !important;
           }
           .receipt-ticket-content .company-name {
@@ -636,11 +638,13 @@ export default function Orders() {
               <button onClick={() => setFilter('custom')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2", filter === 'custom' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}><CalendarIcon size={14} /> Custom</button>
             </div>
 
-            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-              <button onClick={() => setDivisionFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Orders</button>
-              <button onClick={() => setDivisionFilter('coffee')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'coffee' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Cafe Only</button>
-              <button onClick={() => setDivisionFilter('laundry')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'laundry' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Laundry Only</button>
-            </div>
+            {isLaundryBranch && (
+              <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <button onClick={() => setDivisionFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Orders</button>
+                <button onClick={() => setDivisionFilter('coffee')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'coffee' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Cafe Only</button>
+                <button onClick={() => setDivisionFilter('laundry')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", divisionFilter === 'laundry' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Laundry Only</button>
+              </div>
+            )}
 
             <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
               <button onClick={() => setStatusFilter('all')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", statusFilter === 'all' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>All Status</button>
@@ -1201,13 +1205,14 @@ export default function Orders() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -1297,13 +1302,14 @@ export default function Orders() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -1520,7 +1526,7 @@ export default function Orders() {
                   {/* Company Details */}
                   <div className="text-center section-block">
                     <div className="flex justify-center mb-1 text-center">
-                      {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
+                      {!isLaundryBranch && <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />}
                     </div>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
                     {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}

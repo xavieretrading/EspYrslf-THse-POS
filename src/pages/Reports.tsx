@@ -165,19 +165,19 @@ export default function Reports() {
           const pTxs = (txs || []).filter((t: any) => t.product_id === p.id);
           const rangeStart = new Date(`${dateRange.start}T00:00:00+08:00`);
           const rangeEnd = new Date(`${dateRange.end}T23:59:59+08:00`);
-          
+
           let endingStock = p.stock || 0;
           let stockIn = 0;
           let stockOut = 0;
-          
+
           pTxs.forEach((t: any) => {
             const txDate = new Date(t.created_at);
             const isInitial = t.remarks && (
-              t.remarks.toLowerCase().includes('initial') || 
-              t.remarks.toLowerCase().includes('setup') || 
+              t.remarks.toLowerCase().includes('initial') ||
+              t.remarks.toLowerCase().includes('setup') ||
               t.remarks.toLowerCase().includes('creation')
             );
-            
+
             if (txDate > rangeEnd) {
               if (t.type === 'in') {
                 endingStock -= t.quantity;
@@ -196,14 +196,14 @@ export default function Reports() {
               }
             }
           });
-          
+
           const beginningStock = endingStock - stockIn + stockOut;
-          
+
           const restockTxs = pTxs.filter((t: any) => {
             const txDate = new Date(t.created_at);
             const isInitial = t.remarks && (
-              t.remarks.toLowerCase().includes('initial') || 
-              t.remarks.toLowerCase().includes('setup') || 
+              t.remarks.toLowerCase().includes('initial') ||
+              t.remarks.toLowerCase().includes('setup') ||
               t.remarks.toLowerCase().includes('creation')
             );
             return t.type === 'in' && !isInitial && txDate >= rangeStart && txDate <= rangeEnd;
@@ -218,7 +218,7 @@ export default function Reports() {
               remarks: t.remarks || 'Restock'
             };
           });
-          
+
           return {
             ...p,
             beginningStock: p.stock >= 9997 ? 'Unlimited' : beginningStock,
@@ -569,7 +569,7 @@ export default function Reports() {
     if (!activeBranch) return;
     const user = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
     const period = `${dateRange.start} to ${dateRange.end}`;
-    const companyName = settings?.company_name || activeBranch?.name || 'AllSet POS';
+    const companyName = settings?.company_name || activeBranch?.name || 'POS';
     const nowStr = format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss');
 
     if (reportType === 'INVENTORY_STOCKS') {
@@ -834,13 +834,13 @@ export default function Reports() {
           </thead>
           <tbody>
             ${itemsSold && itemsSold.length > 0 ? itemsSold.map((it: any, idx: number) => {
-              const isCoffee = it.division !== 'laundry';
-              const divBadge = isCoffee
-                ? '<span style="background-color: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Coffee</span>'
-                : '<span style="background-color: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Laundry</span>';
-              const pct = totalUnitsSold > 0 ? ((it.quantity || 0) / totalUnitsSold * 100).toFixed(1) : '0.0';
-              const compText = it.comp_count > 0 ? ` <span style="color: #dc2626; font-size: 10px;">(${it.comp_count} Free/Comp)</span>` : '';
-              return `
+      const isCoffee = it.division !== 'laundry';
+      const divBadge = isCoffee
+        ? '<span style="background-color: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Coffee</span>'
+        : '<span style="background-color: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: bold;">Laundry</span>';
+      const pct = totalUnitsSold > 0 ? ((it.quantity || 0) / totalUnitsSold * 100).toFixed(1) : '0.0';
+      const compText = it.comp_count > 0 ? ` <span style="color: #dc2626; font-size: 10px;">(${it.comp_count} Free/Comp)</span>` : '';
+      return `
                 <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                   <td style="text-align: center; color: #64748b; font-family: monospace;">${idx + 1}</td>
                   <td style="font-weight: bold; color: #0f172a;">${it.name || 'Item'}${compText}</td>
@@ -852,7 +852,7 @@ export default function Reports() {
                   <td class="num" style="color: #64748b;">${pct}%</td>
                 </tr>
               `;
-            }).join('') : '<tr><td colSpan="8" style="text-align: center; color: #94a3b8;">No items sold recorded</td></tr>'}
+    }).join('') : '<tr><td colSpan="8" style="text-align: center; color: #94a3b8;">No items sold recorded</td></tr>'}
           </tbody>
           <tfoot>
             <tr class="total-row">
@@ -881,9 +881,9 @@ export default function Reports() {
           </thead>
           <tbody>
             ${dailyList.map((d: any) => {
-              const dItems = d.items || [];
-              if (dItems.length === 0) return '';
-              return dItems.map((it: any, iIdx: number) => `
+      const dItems = d.items || [];
+      if (dItems.length === 0) return '';
+      return dItems.map((it: any, iIdx: number) => `
                 <tr style="${iIdx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                   <td style="font-family: monospace; font-weight: bold; color: #1e293b;">${d.date}</td>
                   <td style="font-weight: bold; color: #0f172a;">${it.name}</td>
@@ -894,7 +894,7 @@ export default function Reports() {
                   <td class="num" style="color: #047857; font-weight: bold;">PHP ${(it.total_amount || 0).toFixed(2)}</td>
                 </tr>
               `).join('');
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
         ` : ''}
@@ -916,18 +916,18 @@ export default function Reports() {
           </thead>
           <tbody>
             ${shiftData.map((s: any, idx: number) => {
-              const cashierName = s.users?.full_name || s.users?.username || 'Cashier';
-              let shiftCash = 0;
-              if (s.orders) {
-                s.orders.forEach((o: any) => {
-                  if ((o.payment_method || 'CASH').toUpperCase() === 'CASH') shiftCash += (o.total || 0);
-                });
-              }
-              const expectedCash = (s.cash_in || 0) + shiftCash;
-              const diff = s.cash_out !== null && s.cash_out !== undefined ? s.cash_out - expectedCash : null;
-              const diffText = diff !== null ? (diff >= 0 ? `+PHP ${diff.toFixed(2)} (Over)` : `-PHP ${Math.abs(diff).toFixed(2)} (Short)`) : 'Active Shift';
-              const diffClass = diff !== null ? (diff >= 0 ? 'over-row' : 'short-row') : '';
-              return `
+      const cashierName = s.users?.full_name || s.users?.username || 'Cashier';
+      let shiftCash = 0;
+      if (s.orders) {
+        s.orders.forEach((o: any) => {
+          if ((o.payment_method || 'CASH').toUpperCase() === 'CASH') shiftCash += (o.total || 0);
+        });
+      }
+      const expectedCash = (s.cash_in || 0) + shiftCash;
+      const diff = s.cash_out !== null && s.cash_out !== undefined ? s.cash_out - expectedCash : null;
+      const diffText = diff !== null ? (diff >= 0 ? `+PHP ${diff.toFixed(2)} (Over)` : `-PHP ${Math.abs(diff).toFixed(2)} (Short)`) : 'Active Shift';
+      const diffClass = diff !== null ? (diff >= 0 ? 'over-row' : 'short-row') : '';
+      return `
                 <tr style="${idx % 2 === 1 ? 'background-color: #f8fafc;' : 'background-color: #ffffff;'}">
                   <td style="font-weight: bold;">${cashierName} (Shift #${s.id})</td>
                   <td>${s.time_in ? format(new Date(s.time_in), 'MM/dd/yyyy hh:mm a') : ''}</td>
@@ -939,7 +939,7 @@ export default function Reports() {
                   <td class="num ${diffClass}">${diffText}</td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
         ` : ''}
@@ -1083,7 +1083,7 @@ export default function Reports() {
 
     return (
       <div className="w-full bg-white p-2 sm:p-4 rounded-2xl border border-slate-200 shadow-xs font-sans text-slate-800">
-        
+
         {/* Excel Header Banner */}
         <div className="bg-slate-900 text-white p-4 sm:p-5 rounded-t-2xl shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-700 pb-3 mb-3">
@@ -2698,27 +2698,27 @@ export default function Reports() {
 
     // 1. Exclude Hot Coffee, Iced & Blended, Non-Coffee, and Tea categories
     if (
-      catName.includes('hot coffee') || 
-      catName.includes('iced & blended') || 
-      catName.includes('non-coffee') || 
+      catName.includes('hot coffee') ||
+      catName.includes('iced & blended') ||
+      catName.includes('non-coffee') ||
       catName.includes('tea & alternatives')
     ) {
       return false;
     }
 
     // 2. Exclude Laundry service items (washing, ironing, dry cleaning, delivery, comforters, shoes, toys, curtains)
-    const isLaundryService = 
-      nameLower.includes('clothes:') || 
-      nameLower.includes('bedsheet') || 
-      nameLower.includes('comforter') || 
-      nameLower.includes('wash only') || 
-      nameLower.includes('dry clean') || 
-      nameLower.includes('ironing') || 
-      nameLower.includes('suits') || 
-      nameLower.includes('gown') || 
-      nameLower.includes('shoes') || 
-      nameLower.includes('dress') || 
-      nameLower.includes('formal shirt') || 
+    const isLaundryService =
+      nameLower.includes('clothes:') ||
+      nameLower.includes('bedsheet') ||
+      nameLower.includes('comforter') ||
+      nameLower.includes('wash only') ||
+      nameLower.includes('dry clean') ||
+      nameLower.includes('ironing') ||
+      nameLower.includes('suits') ||
+      nameLower.includes('gown') ||
+      nameLower.includes('shoes') ||
+      nameLower.includes('dress') ||
+      nameLower.includes('formal shirt') ||
       nameLower.includes('barong') ||
       nameLower.includes('trousers') ||
       nameLower.includes('button-up') ||
@@ -2730,23 +2730,23 @@ export default function Reports() {
       return false;
     }
     if (
-      catName.includes('wear') || 
-      catName.includes('ironing') || 
-      catName.includes('clean') || 
+      catName.includes('wear') ||
+      catName.includes('ironing') ||
+      catName.includes('clean') ||
       catName.includes('pressing')
     ) {
       return false;
     }
 
     // 3. Search query filter
-    const matchesSearch = s.name.toLowerCase().includes(itemSearch.toLowerCase()) || 
-                          (s.category_name && s.category_name.toLowerCase().includes(itemSearch.toLowerCase()));
+    const matchesSearch = s.name.toLowerCase().includes(itemSearch.toLowerCase()) ||
+      (s.category_name && s.category_name.toLowerCase().includes(itemSearch.toLowerCase()));
     if (!matchesSearch) return false;
 
     // 4. Division filter
     if (itemDivisionFilter === 'coffee' && s.division !== 'coffee') return false;
     if (itemDivisionFilter === 'laundry' && s.division !== 'laundry') return false;
-    
+
     return true;
   });
 
@@ -2758,7 +2758,7 @@ export default function Reports() {
             <h3 className="text-base font-extrabold text-slate-800 uppercase tracking-wide print:text-xs">Inventory Stocks Summary</h3>
             <p className="text-xs text-slate-500 font-semibold mt-0.5 print:text-[8px]">Showing Beginning Stock, Total Stock In, Total Stock Out, and Ending Stock levels</p>
           </div>
-          
+
           <div className="flex items-center gap-2 print:hidden">
             <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
               <button
@@ -2792,7 +2792,7 @@ export default function Reports() {
                 Laundry
               </button>
             </div>
-            
+
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
               <input
@@ -2826,7 +2826,7 @@ export default function Reports() {
               {filteredStocks.map((item: any) => {
                 const salesVal = (item.stockOut || 0) * (item.price || 0);
                 const isOutOfStock = item.endingStock !== 'Unlimited' && Number(item.endingStock) <= 0;
-                
+
                 return (
                   <tr key={item.id} className="hover:bg-slate-50/20 transition-all">
                     <td className="py-2 px-3 text-slate-400 text-center font-mono">{item.id}</td>
@@ -3171,13 +3171,13 @@ export default function Reports() {
               /* Layout and color styling for .printable-area container */
               .printable-area { 
                 width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
-                  ? (printSize === 'legal' ? '336mm' : '277mm')
-                  : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
-                } !important; 
+                ? (printSize === 'legal' ? '336mm' : '277mm')
+                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+              } !important; 
                 max-width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
-                  ? (printSize === 'legal' ? '336mm' : '277mm')
-                  : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
-                } !important; 
+                ? (printSize === 'legal' ? '336mm' : '277mm')
+                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+              } !important; 
                 margin: 0 !important; 
                 padding: ${printSize === '80mm' ? '4mm' : '6mm'} !important; 
                 border: none !important;

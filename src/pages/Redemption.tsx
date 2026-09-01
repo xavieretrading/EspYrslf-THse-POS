@@ -6,6 +6,7 @@ import { useSettings } from '../SettingsContext';
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert } from '../lib/swal';
+import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 
 type VoucherItem = {
   id: number;
@@ -401,13 +402,14 @@ export default function Redemption() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -473,13 +475,14 @@ export default function Redemption() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -515,7 +518,7 @@ export default function Redemption() {
               {/* Company Details */}
               <div className="text-center section-block">
                 <div className="flex justify-center mb-1 text-center">
-                  <img src="/logo.png" alt="Logo" className="receipt-logo" />
+                  <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />
                 </div>
                 <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                 <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>

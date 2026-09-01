@@ -3,13 +3,15 @@
 -- Target Branch: Espresso Yourself & Tea House - Cebu City Branch (branch_id = 30)
 -- Source File: recordsExcel/Daily_Sales_Record_Template.xlsx
 --
+-- Numbering: Starts from Order #000001 and Invoice #000001
 -- Features:
--- 1. Creates paid orders in orders_espresso with historical dates (Aug 8 - 19, 2026).
+-- 1. Creates paid orders in orders_espresso starting from Order #1 / Invoice #1.
 -- 2. Inserts line items into order_items_espresso.
 -- 3. Deducts Finished Product Stock in products_espresso.
 -- 4. Deducts ALL Recipe Raw Materials / Ingredients (Concept Blend 1, Arla Milk, Syrups, etc.).
--- 5. Inserts audit transaction logs for all products & recipe ingredients in inventory_transactions_espresso.
--- 6. Updates Receipt Counter & Grand Accumulating Total (GAT).
+-- 5. Inserts audit transaction logs for all products & recipe ingredients.
+-- 6. Sets Branch 30 Receipt Counter to 79.
+-- 7. Updates Grand Accumulating Total (GAT).
 -- ==========================================================================
 
 DO $$
@@ -18,16 +20,16 @@ DECLARE
 BEGIN
 
     -- --------------------------------------------------------------------------
-    -- Row 5: Hot americano (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 5: Order #000001 | Hot americano (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2001, '2026-08-08 09:00:00+08', '2026-08-08 09:00:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        1, 1, '2026-08-08 09:00:00+08', '2026-08-08 09:00:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -72,16 +74,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 6: French Vanilla (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 6: Order #000002 | French Vanilla (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2002, '2026-08-08 09:05:00+08', '2026-08-08 09:05:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        2, 2, '2026-08-08 09:05:00+08', '2026-08-08 09:05:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -148,16 +150,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 7: Caffe Latte (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 7: Order #000003 | Caffe Latte (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2003, '2026-08-08 09:10:00+08', '2026-08-08 09:10:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        3, 3, '2026-08-08 09:10:00+08', '2026-08-08 09:10:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -213,16 +215,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 8: Macadamia (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 8: Order #000004 | Macadamia (Hot 8 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2004, '2026-08-08 09:15:00+08', '2026-08-08 09:15:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        4, 4, '2026-08-08 09:15:00+08', '2026-08-08 09:15:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -289,16 +291,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 9: Iced Macadamia (Cold 16 oz) | Date: 2026-08-08 | Price: ₱149 | Qty: 1
+    -- Row 9: Order #000005 | Iced Macadamia (Cold 16 oz) | Date: 2026-08-08 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2005, '2026-08-08 10:20:00+08', '2026-08-08 10:20:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        5, 5, '2026-08-08 10:20:00+08', '2026-08-08 10:20:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -365,16 +367,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 10: Iced Irish Cream (Cold 16 oz) | Date: 2026-08-08 | Price: ₱149 | Qty: 1
+    -- Row 10: Order #000006 | Iced Irish Cream (Cold 16 oz) | Date: 2026-08-08 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2006, '2026-08-08 10:25:00+08', '2026-08-08 10:25:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        6, 6, '2026-08-08 10:25:00+08', '2026-08-08 10:25:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -397,16 +399,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 11: Lychee Soda (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 11: Order #000007 | Lychee Soda (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2007, '2026-08-08 10:30:00+08', '2026-08-08 10:30:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        7, 7, '2026-08-08 10:30:00+08', '2026-08-08 10:30:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -462,16 +464,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 12: Pink Guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 12: Order #000008 | Pink Guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2008, '2026-08-08 10:35:00+08', '2026-08-08 10:35:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        8, 8, '2026-08-08 10:35:00+08', '2026-08-08 10:35:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -527,16 +529,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 13: pink guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 13: Order #000009 | pink guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2009, '2026-08-08 11:40:00+08', '2026-08-08 11:40:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        9, 9, '2026-08-08 11:40:00+08', '2026-08-08 11:40:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -592,16 +594,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 14: Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 14: Order #000010 | Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2010, '2026-08-08 11:45:00+08', '2026-08-08 11:45:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        10, 10, '2026-08-08 11:45:00+08', '2026-08-08 11:45:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -657,16 +659,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 15: Pink Guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 15: Order #000011 | Pink Guava (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2011, '2026-08-08 11:50:00+08', '2026-08-08 11:50:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        11, 11, '2026-08-08 11:50:00+08', '2026-08-08 11:50:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -722,16 +724,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 16: Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 16: Order #000012 | Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2012, '2026-08-08 11:55:00+08', '2026-08-08 11:55:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        12, 12, '2026-08-08 11:55:00+08', '2026-08-08 11:55:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -787,16 +789,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 17: Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
+    -- Row 17: Order #000013 | Mango (Cold 16 oz) | Date: 2026-08-08 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2013, '2026-08-08 12:00:00+08', '2026-08-08 12:00:00+08', false, '[Imported Daily Sales: 2026-08-08]'
+        13, 13, '2026-08-08 12:00:00+08', '2026-08-08 12:00:00+08', false, '[Imported Daily Sales: 2026-08-08]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -852,16 +854,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 18: Spanish latte (Hot 8 oz) | Date: 2026-08-09 | Price: ₱99 | Qty: 1
+    -- Row 18: Order #000014 | Spanish latte (Hot 8 oz) | Date: 2026-08-09 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2014, '2026-08-09 12:05:00+08', '2026-08-09 12:05:00+08', false, '[Imported Daily Sales: 2026-08-09]'
+        14, 14, '2026-08-09 12:05:00+08', '2026-08-09 12:05:00+08', false, '[Imported Daily Sales: 2026-08-09]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -928,16 +930,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 19: Iced Latte (Cold 16 oz) | Date: 2026-08-09 | Price: ₱298 | Qty: 2
+    -- Row 19: Order #000015 | Iced Latte (Cold 16 oz) | Date: 2026-08-09 | Price: ₱298 | Qty: 2
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 596, NULL, 0,
         63.8571, 0, 596, 'cash', 596, 0,
-        2015, '2026-08-09 12:10:00+08', '2026-08-09 12:10:00+08', false, '[Imported Daily Sales: 2026-08-09]'
+        15, 15, '2026-08-09 12:10:00+08', '2026-08-09 12:10:00+08', false, '[Imported Daily Sales: 2026-08-09]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -993,16 +995,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 20: Hot Choco (Hot 8 oz) | Date: 2026-08-10 | Price: ₱99 | Qty: 1
+    -- Row 20: Order #000016 | Hot Choco (Hot 8 oz) | Date: 2026-08-10 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2016, '2026-08-10 12:15:00+08', '2026-08-10 12:15:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        16, 16, '2026-08-10 12:15:00+08', '2026-08-10 12:15:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1025,16 +1027,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 21: Hot Latte (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 21: Order #000017 | Hot Latte (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2017, '2026-08-10 13:20:00+08', '2026-08-10 13:20:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        17, 17, '2026-08-10 13:20:00+08', '2026-08-10 13:20:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1090,16 +1092,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 22: Hot Mocha (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 22: Order #000018 | Hot Mocha (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2018, '2026-08-10 13:25:00+08', '2026-08-10 13:25:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        18, 18, '2026-08-10 13:25:00+08', '2026-08-10 13:25:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1155,16 +1157,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 23: Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-10 | Price: ₱198 | Qty: 2
+    -- Row 23: Order #000019 | Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-10 | Price: ₱198 | Qty: 2
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 396, NULL, 0,
         42.4286, 0, 396, 'cash', 396, 0,
-        2019, '2026-08-10 13:30:00+08', '2026-08-10 13:30:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        19, 19, '2026-08-10 13:30:00+08', '2026-08-10 13:30:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1231,16 +1233,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 24: Macadamia (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 24: Order #000020 | Macadamia (Hot 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2020, '2026-08-10 13:35:00+08', '2026-08-10 13:35:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        20, 20, '2026-08-10 13:35:00+08', '2026-08-10 13:35:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1307,16 +1309,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 25: Americano (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 25: Order #000021 | Americano (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2021, '2026-08-10 14:40:00+08', '2026-08-10 14:40:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        21, 21, '2026-08-10 14:40:00+08', '2026-08-10 14:40:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1350,16 +1352,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 26: Macadamia (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 26: Order #000022 | Macadamia (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2022, '2026-08-10 14:45:00+08', '2026-08-10 14:45:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        22, 22, '2026-08-10 14:45:00+08', '2026-08-10 14:45:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1426,16 +1428,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 27: Spanish Latte (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 27: Order #000023 | Spanish Latte (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2023, '2026-08-10 14:50:00+08', '2026-08-10 14:50:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        23, 23, '2026-08-10 14:50:00+08', '2026-08-10 14:50:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1502,16 +1504,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 28: Macadamia (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
+    -- Row 28: Order #000024 | Macadamia (Cold 16 oz) | Date: 2026-08-10 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2024, '2026-08-10 14:55:00+08', '2026-08-10 14:55:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        24, 24, '2026-08-10 14:55:00+08', '2026-08-10 14:55:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1578,16 +1580,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 29: Mango Soda (Cold 16 oz) | Date: 2026-08-10 | Price: ₱99 | Qty: 1
+    -- Row 29: Order #000025 | Mango Soda (Cold 16 oz) | Date: 2026-08-10 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2025, '2026-08-10 15:00:00+08', '2026-08-10 15:00:00+08', false, '[Imported Daily Sales: 2026-08-10]'
+        25, 25, '2026-08-10 15:00:00+08', '2026-08-10 15:00:00+08', false, '[Imported Daily Sales: 2026-08-10]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1643,16 +1645,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 30: Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
+    -- Row 30: Order #000026 | Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2026, '2026-08-11 15:05:00+08', '2026-08-11 15:05:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        26, 26, '2026-08-11 15:05:00+08', '2026-08-11 15:05:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1697,16 +1699,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 31: Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
+    -- Row 31: Order #000027 | Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2027, '2026-08-11 15:10:00+08', '2026-08-11 15:10:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        27, 27, '2026-08-11 15:10:00+08', '2026-08-11 15:10:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1751,16 +1753,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 32: Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
+    -- Row 32: Order #000028 | Americano (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2028, '2026-08-11 15:15:00+08', '2026-08-11 15:15:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        28, 28, '2026-08-11 15:15:00+08', '2026-08-11 15:15:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1805,16 +1807,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 33: Americano (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
+    -- Row 33: Order #000029 | Americano (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2029, '2026-08-11 16:20:00+08', '2026-08-11 16:20:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        29, 29, '2026-08-11 16:20:00+08', '2026-08-11 16:20:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1848,16 +1850,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 34: Latte (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
+    -- Row 34: Order #000030 | Latte (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2030, '2026-08-11 16:25:00+08', '2026-08-11 16:25:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        30, 30, '2026-08-11 16:25:00+08', '2026-08-11 16:25:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1913,16 +1915,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 35: Spanish Latte (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
+    -- Row 35: Order #000031 | Spanish Latte (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2031, '2026-08-11 16:30:00+08', '2026-08-11 16:30:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        31, 31, '2026-08-11 16:30:00+08', '2026-08-11 16:30:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -1989,16 +1991,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 36: Latte (Hot 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
+    -- Row 36: Order #000032 | Latte (Hot 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2032, '2026-08-11 16:35:00+08', '2026-08-11 16:35:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        32, 32, '2026-08-11 16:35:00+08', '2026-08-11 16:35:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2054,16 +2056,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 37: Spanish Latte (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
+    -- Row 37: Order #000033 | Spanish Latte (Hot 8 oz) | Date: 2026-08-11 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2033, '2026-08-11 17:40:00+08', '2026-08-11 17:40:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        33, 33, '2026-08-11 17:40:00+08', '2026-08-11 17:40:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2130,16 +2132,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 38: Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
+    -- Row 38: Order #000034 | Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-11 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2034, '2026-08-11 17:45:00+08', '2026-08-11 17:45:00+08', false, '[Imported Daily Sales: 2026-08-11]'
+        34, 34, '2026-08-11 17:45:00+08', '2026-08-11 17:45:00+08', false, '[Imported Daily Sales: 2026-08-11]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2206,16 +2208,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 39: Macadamia (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
+    -- Row 39: Order #000035 | Macadamia (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2035, '2026-08-12 17:50:00+08', '2026-08-12 17:50:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        35, 35, '2026-08-12 17:50:00+08', '2026-08-12 17:50:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2282,16 +2284,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 40: Pomegranate (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
+    -- Row 40: Order #000036 | Pomegranate (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2036, '2026-08-12 17:55:00+08', '2026-08-12 17:55:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        36, 36, '2026-08-12 17:55:00+08', '2026-08-12 17:55:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2347,16 +2349,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 41: Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-12 | Price: ₱129 | Qty: 1
+    -- Row 41: Order #000037 | Pomegranate x Pink Guava (Cold 16 oz) | Date: 2026-08-12 | Price: ₱129 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 129, NULL, 0,
         13.8214, 0, 129, 'cash', 129, 0,
-        2037, '2026-08-12 18:00:00+08', '2026-08-12 18:00:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        37, 37, '2026-08-12 18:00:00+08', '2026-08-12 18:00:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2423,16 +2425,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 42: Latte (Hot 8 oz) | Date: 2026-08-12 | Price: ₱105 | Qty: 1
+    -- Row 42: Order #000038 | Latte (Hot 8 oz) | Date: 2026-08-12 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2038, '2026-08-12 18:05:00+08', '2026-08-12 18:05:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        38, 38, '2026-08-12 18:05:00+08', '2026-08-12 18:05:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2488,16 +2490,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 43: Spanish Latte (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
+    -- Row 43: Order #000039 | Spanish Latte (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2039, '2026-08-12 18:10:00+08', '2026-08-12 18:10:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        39, 39, '2026-08-12 18:10:00+08', '2026-08-12 18:10:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2564,16 +2566,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 44: irish cream (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
+    -- Row 44: Order #000040 | irish cream (Cold 16 oz) | Date: 2026-08-12 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2040, '2026-08-12 18:15:00+08', '2026-08-12 18:15:00+08', false, '[Imported Daily Sales: 2026-08-12]'
+        40, 40, '2026-08-12 18:15:00+08', '2026-08-12 18:15:00+08', false, '[Imported Daily Sales: 2026-08-12]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2596,16 +2598,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 45: Latte (Hot 8 oz) | Date: 2026-08-13 | Price: ₱105 | Qty: 1
+    -- Row 45: Order #000041 | Latte (Hot 8 oz) | Date: 2026-08-13 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2041, '2026-08-13 09:20:00+08', '2026-08-13 09:20:00+08', false, '[Imported Daily Sales: 2026-08-13]'
+        41, 41, '2026-08-13 09:20:00+08', '2026-08-13 09:20:00+08', false, '[Imported Daily Sales: 2026-08-13]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2661,16 +2663,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 46: Americano (Cold 16 oz) | Date: 2026-08-13 | Price: ₱240 | Qty: 2
+    -- Row 46: Order #000042 | Americano (Cold 16 oz) | Date: 2026-08-13 | Price: ₱240 | Qty: 2
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 480, NULL, 0,
         51.4286, 0, 480, 'cash', 480, 0,
-        2042, '2026-08-13 09:25:00+08', '2026-08-13 09:25:00+08', false, '[Imported Daily Sales: 2026-08-13]'
+        42, 42, '2026-08-13 09:25:00+08', '2026-08-13 09:25:00+08', false, '[Imported Daily Sales: 2026-08-13]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2704,16 +2706,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 47: Americano (Cold 16 oz) | Date: 2026-08-13 | Price: ₱120 | Qty: 1
+    -- Row 47: Order #000043 | Americano (Cold 16 oz) | Date: 2026-08-13 | Price: ₱120 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 120, NULL, 0,
         12.8571, 0, 120, 'cash', 120, 0,
-        2043, '2026-08-13 09:30:00+08', '2026-08-13 09:30:00+08', false, '[Imported Daily Sales: 2026-08-13]'
+        43, 43, '2026-08-13 09:30:00+08', '2026-08-13 09:30:00+08', false, '[Imported Daily Sales: 2026-08-13]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2747,16 +2749,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 48: Spanish Latte (Hot 8 oz) | Date: 2026-08-13 | Price: ₱105 | Qty: 1
+    -- Row 48: Order #000044 | Spanish Latte (Hot 8 oz) | Date: 2026-08-13 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2044, '2026-08-13 09:35:00+08', '2026-08-13 09:35:00+08', false, '[Imported Daily Sales: 2026-08-13]'
+        44, 44, '2026-08-13 09:35:00+08', '2026-08-13 09:35:00+08', false, '[Imported Daily Sales: 2026-08-13]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2823,16 +2825,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 49: Cappucino (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
+    -- Row 49: Order #000045 | Cappucino (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2045, '2026-08-14 10:40:00+08', '2026-08-14 10:40:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        45, 45, '2026-08-14 10:40:00+08', '2026-08-14 10:40:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2888,16 +2890,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 50: Pomegranate Tea (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
+    -- Row 50: Order #000046 | Pomegranate Tea (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 129, NULL, 0,
         13.8214, 0, 129, 'cash', 129, 0,
-        2046, '2026-08-14 10:45:00+08', '2026-08-14 10:45:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        46, 46, '2026-08-14 10:45:00+08', '2026-08-14 10:45:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -2953,16 +2955,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 51: latte (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
+    -- Row 51: Order #000047 | latte (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2047, '2026-08-14 10:50:00+08', '2026-08-14 10:50:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        47, 47, '2026-08-14 10:50:00+08', '2026-08-14 10:50:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3018,16 +3020,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 52: Black tea (Hot 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
+    -- Row 52: Order #000048 | Black tea (Hot 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 129, NULL, 0,
         13.8214, 0, 129, 'cash', 129, 0,
-        2048, '2026-08-14 10:55:00+08', '2026-08-14 10:55:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        48, 48, '2026-08-14 10:55:00+08', '2026-08-14 10:55:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3050,16 +3052,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 53: Cappucino (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
+    -- Row 53: Order #000049 | Cappucino (Hot 8 oz) | Date: 2026-08-14 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2049, '2026-08-14 11:00:00+08', '2026-08-14 11:00:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        49, 49, '2026-08-14 11:00:00+08', '2026-08-14 11:00:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3115,16 +3117,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 54: Pink Guava (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
+    -- Row 54: Order #000050 | Pink Guava (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 129, NULL, 0,
         13.8214, 0, 129, 'cash', 129, 0,
-        2050, '2026-08-14 11:05:00+08', '2026-08-14 11:05:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        50, 50, '2026-08-14 11:05:00+08', '2026-08-14 11:05:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3180,16 +3182,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 55: Black Tea (Hot 8 oz) | Date: 2026-08-14 | Price: ₱99 | Qty: 1
+    -- Row 55: Order #000051 | Black Tea (Hot 8 oz) | Date: 2026-08-14 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2051, '2026-08-14 11:10:00+08', '2026-08-14 11:10:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        51, 51, '2026-08-14 11:10:00+08', '2026-08-14 11:10:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3245,16 +3247,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 56: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-14 | Price: ₱149 | Qty: 1
+    -- Row 56: Order #000052 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-14 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2052, '2026-08-14 11:15:00+08', '2026-08-14 11:15:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        52, 52, '2026-08-14 11:15:00+08', '2026-08-14 11:15:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3277,16 +3279,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 57: Mocha + Oat Milk (Cold 16 oz) | Date: 2026-08-14 | Price: ₱199 | Qty: 1
+    -- Row 57: Order #000053 | Mocha + Oat Milk (Cold 16 oz) | Date: 2026-08-14 | Price: ₱199 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 199, NULL, 0,
         21.3214, 0, 199, 'cash', 199, 0,
-        2053, '2026-08-14 12:20:00+08', '2026-08-14 12:20:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        53, 53, '2026-08-14 12:20:00+08', '2026-08-14 12:20:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3342,16 +3344,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 58: Mango Soda (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
+    -- Row 58: Order #000054 | Mango Soda (Cold 16 oz) | Date: 2026-08-14 | Price: ₱129 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 129, NULL, 0,
         13.8214, 0, 129, 'cash', 129, 0,
-        2054, '2026-08-14 12:25:00+08', '2026-08-14 12:25:00+08', false, '[Imported Daily Sales: 2026-08-14]'
+        54, 54, '2026-08-14 12:25:00+08', '2026-08-14 12:25:00+08', false, '[Imported Daily Sales: 2026-08-14]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3407,16 +3409,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 59: White Chocolate Latte (Hot 16 oz) | Date: 2026-08-15 | Price: ₱149 | Qty: 1
+    -- Row 59: Order #000055 | White Chocolate Latte (Hot 16 oz) | Date: 2026-08-15 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2055, '2026-08-15 12:30:00+08', '2026-08-15 12:30:00+08', false, '[Imported Daily Sales: 2026-08-15]'
+        55, 55, '2026-08-15 12:30:00+08', '2026-08-15 12:30:00+08', false, '[Imported Daily Sales: 2026-08-15]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3439,16 +3441,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 60: Macadamia (Hot 16 oz) | Date: 2026-08-15 | Price: ₱149 | Qty: 1
+    -- Row 60: Order #000056 | Macadamia (Hot 16 oz) | Date: 2026-08-15 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2056, '2026-08-15 12:35:00+08', '2026-08-15 12:35:00+08', false, '[Imported Daily Sales: 2026-08-15]'
+        56, 56, '2026-08-15 12:35:00+08', '2026-08-15 12:35:00+08', false, '[Imported Daily Sales: 2026-08-15]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3515,16 +3517,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 61: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
+    -- Row 61: Order #000057 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2057, '2026-08-17 13:40:00+08', '2026-08-17 13:40:00+08', false, '[Imported Daily Sales: 2026-08-17]'
+        57, 57, '2026-08-17 13:40:00+08', '2026-08-17 13:40:00+08', false, '[Imported Daily Sales: 2026-08-17]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3547,16 +3549,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 62: Seasalt Matcha (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
+    -- Row 62: Order #000058 | Seasalt Matcha (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2058, '2026-08-17 13:45:00+08', '2026-08-17 13:45:00+08', false, '[Imported Daily Sales: 2026-08-17]'
+        58, 58, '2026-08-17 13:45:00+08', '2026-08-17 13:45:00+08', false, '[Imported Daily Sales: 2026-08-17]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3612,16 +3614,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 63: Americano (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
+    -- Row 63: Order #000059 | Americano (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2059, '2026-08-17 13:50:00+08', '2026-08-17 13:50:00+08', false, '[Imported Daily Sales: 2026-08-17]'
+        59, 59, '2026-08-17 13:50:00+08', '2026-08-17 13:50:00+08', false, '[Imported Daily Sales: 2026-08-17]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3655,16 +3657,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 64: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
+    -- Row 64: Order #000060 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-17 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'gcash', 149, 0,
-        2060, '2026-08-17 13:55:00+08', '2026-08-17 13:55:00+08', false, '[Imported Daily Sales: 2026-08-17]'
+        60, 60, '2026-08-17 13:55:00+08', '2026-08-17 13:55:00+08', false, '[Imported Daily Sales: 2026-08-17]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3687,16 +3689,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 65: Americano (Hot 8 oz) | Date: 2026-08-17 | Price: ₱99 | Qty: 1
+    -- Row 65: Order #000061 | Americano (Hot 8 oz) | Date: 2026-08-17 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2061, '2026-08-17 14:00:00+08', '2026-08-17 14:00:00+08', false, '[Imported Daily Sales: 2026-08-17]'
+        61, 61, '2026-08-17 14:00:00+08', '2026-08-17 14:00:00+08', false, '[Imported Daily Sales: 2026-08-17]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3741,16 +3743,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 66: Cappucino (Hot 8 oz) | Date: 2026-08-18 | Price: ₱105 | Qty: 1
+    -- Row 66: Order #000062 | Cappucino (Hot 8 oz) | Date: 2026-08-18 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2062, '2026-08-18 14:05:00+08', '2026-08-18 14:05:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        62, 62, '2026-08-18 14:05:00+08', '2026-08-18 14:05:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3806,16 +3808,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 67: Caramel Machiato (Hot 8 oz) | Date: 2026-08-18 | Price: ₱105 | Qty: 1
+    -- Row 67: Order #000063 | Caramel Machiato (Hot 8 oz) | Date: 2026-08-18 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2063, '2026-08-18 14:10:00+08', '2026-08-18 14:10:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        63, 63, '2026-08-18 14:10:00+08', '2026-08-18 14:10:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3882,16 +3884,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 68: Americano (Cold 16 oz) | Date: 2026-08-18 | Price: ₱120 | Qty: 1
+    -- Row 68: Order #000064 | Americano (Cold 16 oz) | Date: 2026-08-18 | Price: ₱120 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 120, NULL, 0,
         12.8571, 0, 120, 'gcash', 120, 0,
-        2064, '2026-08-18 14:15:00+08', '2026-08-18 14:15:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        64, 64, '2026-08-18 14:15:00+08', '2026-08-18 14:15:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -3925,16 +3927,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 69: Caramel Machiato (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 69: Order #000065 | Caramel Machiato (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2065, '2026-08-18 15:20:00+08', '2026-08-18 15:20:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        65, 65, '2026-08-18 15:20:00+08', '2026-08-18 15:20:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4001,16 +4003,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 70: White Chocolate (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 70: Order #000066 | White Chocolate (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2066, '2026-08-18 15:25:00+08', '2026-08-18 15:25:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        66, 66, '2026-08-18 15:25:00+08', '2026-08-18 15:25:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4033,16 +4035,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 71: Americano (Hot 8 oz) | Date: 2026-08-18 | Price: ₱120 | Qty: 1
+    -- Row 71: Order #000067 | Americano (Hot 8 oz) | Date: 2026-08-18 | Price: ₱120 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 120, NULL, 0,
         12.8571, 0, 120, 'cash', 120, 0,
-        2067, '2026-08-18 15:30:00+08', '2026-08-18 15:30:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        67, 67, '2026-08-18 15:30:00+08', '2026-08-18 15:30:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4087,16 +4089,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 72: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 72: Order #000068 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2068, '2026-08-18 15:35:00+08', '2026-08-18 15:35:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        68, 68, '2026-08-18 15:35:00+08', '2026-08-18 15:35:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4119,16 +4121,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 73: Macadamia (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 73: Order #000069 | Macadamia (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'gcash', 149, 0,
-        2069, '2026-08-18 16:40:00+08', '2026-08-18 16:40:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        69, 69, '2026-08-18 16:40:00+08', '2026-08-18 16:40:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4195,16 +4197,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 74: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 74: Order #000070 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'gcash', 149, 0,
-        2070, '2026-08-18 16:45:00+08', '2026-08-18 16:45:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        70, 70, '2026-08-18 16:45:00+08', '2026-08-18 16:45:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4227,16 +4229,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 75: Macadamia (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
+    -- Row 75: Order #000071 | Macadamia (Cold 16 oz) | Date: 2026-08-18 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2071, '2026-08-18 16:50:00+08', '2026-08-18 16:50:00+08', false, '[Imported Daily Sales: 2026-08-18]'
+        71, 71, '2026-08-18 16:50:00+08', '2026-08-18 16:50:00+08', false, '[Imported Daily Sales: 2026-08-18]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4303,16 +4305,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 76: Americano (Hot 8 oz) | Date: 2026-08-19 | Price: ₱99 | Qty: 1
+    -- Row 76: Order #000072 | Americano (Hot 8 oz) | Date: 2026-08-19 | Price: ₱99 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 99, NULL, 0,
         10.6071, 0, 99, 'cash', 99, 0,
-        2072, '2026-08-19 16:55:00+08', '2026-08-19 16:55:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        72, 72, '2026-08-19 16:55:00+08', '2026-08-19 16:55:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4357,16 +4359,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 77: Cappuccino (Hot 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 77: Order #000073 | Cappuccino (Hot 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2073, '2026-08-19 17:00:00+08', '2026-08-19 17:00:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        73, 73, '2026-08-19 17:00:00+08', '2026-08-19 17:00:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4422,16 +4424,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 78: Mocha (Hot 8oz) | Date: 2026-08-19 | Price: ₱105 | Qty: 1
+    -- Row 78: Order #000074 | Mocha (Hot 8oz) | Date: 2026-08-19 | Price: ₱105 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 105, NULL, 0,
         11.25, 0, 105, 'cash', 105, 0,
-        2074, '2026-08-19 17:05:00+08', '2026-08-19 17:05:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        74, 74, '2026-08-19 17:05:00+08', '2026-08-19 17:05:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4487,16 +4489,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 79: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 79: Order #000075 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2075, '2026-08-19 17:10:00+08', '2026-08-19 17:10:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        75, 75, '2026-08-19 17:10:00+08', '2026-08-19 17:10:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4519,16 +4521,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 80: Oreo Milk (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 80: Order #000076 | Oreo Milk (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2076, '2026-08-19 17:15:00+08', '2026-08-19 17:15:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        76, 76, '2026-08-19 17:15:00+08', '2026-08-19 17:15:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4551,16 +4553,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 81: Spanish Latte (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 81: Order #000077 | Spanish Latte (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2077, '2026-08-19 18:20:00+08', '2026-08-19 18:20:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        77, 77, '2026-08-19 18:20:00+08', '2026-08-19 18:20:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4627,16 +4629,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 82: White Chocolate (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 82: Order #000078 | White Chocolate (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'cash', 149, 0,
-        2078, '2026-08-19 18:25:00+08', '2026-08-19 18:25:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        78, 78, '2026-08-19 18:25:00+08', '2026-08-19 18:25:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4659,16 +4661,16 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Row 83: Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
+    -- Row 83: Order #000079 | Seasalt Biscoff (Cold 16 oz) | Date: 2026-08-19 | Price: ₱149 | Qty: 1
     -- --------------------------------------------------------------------------
     INSERT INTO public.orders_espresso (
         branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
         tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        receipt_number, created_at, updated_at, is_training_mode, notes
+        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
     ) VALUES (
         30, NULL, 'takeout', 'paid', 149, NULL, 0,
         15.9643, 0, 149, 'gcash', 149, 0,
-        2079, '2026-08-19 18:30:00+08', '2026-08-19 18:30:00+08', false, '[Imported Daily Sales: 2026-08-19]'
+        79, 79, '2026-08-19 18:30:00+08', '2026-08-19 18:30:00+08', false, '[Imported Daily Sales: 2026-08-19]'
     ) RETURNING id INTO v_order_id;
 
     -- 1. Insert Line Item
@@ -4691,18 +4693,18 @@ BEGIN
     );
 
     -- --------------------------------------------------------------------------
-    -- Update Branch 30 Receipt Counter & Grand Accumulating Total (GAT)
+    -- Set Branch 30 Receipt Counter to 79 & Grand Accumulating Total (GAT)
     -- --------------------------------------------------------------------------
     INSERT INTO public.receipt_counter_espresso (branch_id, current_value)
-    VALUES (30, 2079)
+    VALUES (30, 79)
     ON CONFLICT (branch_id) DO UPDATE
-    SET current_value = GREATEST(receipt_counter_espresso.current_value, 2079);
+    SET current_value = 79;
 
     INSERT INTO public.grand_accumulating_total_espresso (branch_id, total_sales, total_receipts, updated_at)
     VALUES (30, 11163, 79, NOW())
     ON CONFLICT (branch_id) DO UPDATE
-    SET total_sales = grand_accumulating_total_espresso.total_sales + 11163,
-        total_receipts = grand_accumulating_total_espresso.total_receipts + 79,
+    SET total_sales = 11163,
+        total_receipts = 79,
         updated_at = NOW();
 
     RAISE NOTICE 'Daily sales and recipe ingredients imported successfully. Total Orders: %, Total Sales: ₱%', 79, 11163;

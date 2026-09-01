@@ -1,6 +1,8 @@
 {
-  "name": "AllSet POS",
+  "name": "POS",
   "description": "A full-stack Food & Beverage POS system with inventory, kitchen display, and BIR reporting.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

@@ -7,12 +7,7 @@ const SUPABASE_URL = 'https://aziowvhzfrmtrbypiodm.supabase.co';
 const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6aW93dmh6ZnJtdHJieXBpb2RtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NDYxNDMxOCwiZXhwIjoyMTAwMTkwMzE4fQ.6TzWshOMqE72fhGKfAYhJY448s_1Fw_wIvVIgtKiS0o';
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-
-const EXCEL_FILE = path.join(__dirname, 'recordsExcel', 'Daily_Sales_Record_Template.xlsx');
-const wb = XLSX.readFile(EXCEL_FILE);
-const sheet = wb.Sheets['Detailed Product Sales'];
-const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-const dataRows = rows.slice(4).filter(r => r && r[0] !== undefined && r[1] !== undefined);
+const BRANCH_ID = 30;
 
 function resolveProduct(name, temp, size, price) {
   const n = (name || '').toLowerCase().trim();
@@ -78,40 +73,42 @@ function resolveProduct(name, temp, size, price) {
   return null;
 }
 
-async function generateFullSQL() {
-  console.log('Fetching products and recipes from Supabase...');
-  const { data: recipes } = await supabase.from('product_recipes').select('*');
-  const { data: products } = await supabase.from('products_espresso').select('id, name, unit').eq('branch_id', 30);
+async function runCleanImport() {
+  console.log('🧹 1. Clearing previous orders and duplicate records for Branch 30...');
+  const { data: oldOrders } = await supabase.from('orders_espresso').select('id').eq('branch_id', BRANCH_ID);
+  const oldIds = (oldOrders || []).map(o => o.id);
+  if (oldIds.length > 0) {
+    await supabase.from('order_items_espresso').delete().in('order_id', oldIds);
+    await supabase.from('orders_espresso').delete().eq('branch_id', BRANCH_ID);
+  }
+
+  const { data: prods } = await supabase.from('products_espresso').select('id, name, unit, is_sellable, stock').eq('branch_id', BRANCH_ID);
   const prodMap = {};
-  (products || []).forEach(p => { prodMap[p.id] = p; });
+  (prods || []).forEach(p => { prodMap[p.id] = p; });
+  const prodIds = Object.keys(prodMap);
+  if (prodIds.length > 0) {
+    await supabase.from('inventory_transactions_espresso').delete().in('product_id', prodIds);
+  }
 
-  let sql = `-- ==========================================================================
--- DAILY SALES RECORD & COMPLETE INVENTORY / RECIPE DEDUCTION SQL SCRIPT
--- Target Branch: Espresso Yourself & Tea House - Cebu City Branch (branch_id = 30)
--- Source File: recordsExcel/Daily_Sales_Record_Template.xlsx
---
--- Numbering: Starts from Order #000001 and Invoice #000001
--- Features:
--- 1. Creates paid orders in orders_espresso starting from Order #1 / Invoice #1.
--- 2. Inserts line items into order_items_espresso.
--- 3. Deducts Finished Product Stock in products_espresso.
--- 4. Deducts ALL Recipe Raw Materials / Ingredients (Concept Blend 1, Arla Milk, Syrups, etc.).
--- 5. Inserts audit transaction logs for all products & recipe ingredients.
--- 6. Sets Branch 30 Receipt Counter to 79.
--- 7. Updates Grand Accumulating Total (GAT).
--- ==========================================================================
+  // Reset initial stock levels
+  await supabase.from('products_espresso').update({ stock: 9999 }).eq('branch_id', BRANCH_ID).eq('is_sellable', 1);
+  await supabase.from('products_espresso').update({ stock: 10 }).eq('id', 420); // Concept Blend 1 initial 10 packs
 
-DO $$
-DECLARE
-    v_order_id BIGINT;
-BEGIN
-`;
+  console.log('📊 2. Loading Excel sales and Product Recipes...');
+  const wb = XLSX.readFile('recordsExcel/Daily_Sales_Record_Template.xlsx');
+  const sheet = wb.Sheets['Detailed Product Sales'];
+  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+  const dataRows = rows.slice(4).filter(r => r && r[0] !== undefined && r[1] !== undefined);
+  const { data: recipes } = await supabase.from('product_recipes').select('*');
+
+  console.log(`Found ${dataRows.length} sales rows.`);
 
   let orderSeq = 0;
   let totalSales = 0;
-  const ingredientSummary = {};
+  const ingredientDeductionSummary = {};
 
-  dataRows.forEach((r, idx) => {
+  for (let idx = 0; idx < dataRows.length; idx++) {
+    const r = dataRows[idx];
     let dateStr = r[0];
     if (typeof r[0] === 'number') {
       const p = XLSX.SSF.parse_date_code(r[0]);
@@ -134,95 +131,108 @@ BEGIN
     const minuteOffset = (idx % 12) * 5;
     const hour = 9 + Math.floor((idx % 40) / 4);
     const timeStr = String(hour).padStart(2, '0') + ':' + String(minuteOffset).padStart(2, '0') + ':00';
-    const timestamp = `${dateStr} ${timeStr}+08`;
+    const timestamp = `${dateStr}T${timeStr}.000Z`;
     const notes = `[TAKEOUT]${temp ? ` [${temp}]` : ''}${size ? ` [${size}]` : ''}`.trim();
     const vatAmount = Number((total - (total / 1.12)).toFixed(4));
 
-    // Find recipe ingredients
-    const itemRecipes = (recipes || []).filter(rc => rc.product_id === prod.id);
+    // 1. Insert order with order_number and receipt_number = orderSeq
+    const { data: createdOrder, error: orderErr } = await supabase
+      .from('orders_espresso')
+      .insert([{
+        branch_id: BRANCH_ID,
+        table_id: null,
+        order_type: 'takeout',
+        status: 'paid',
+        subtotal: total,
+        discount_id: null,
+        discount_amount: 0,
+        tax_amount: vatAmount,
+        service_charge: 0,
+        total: total,
+        payment_method: payMethod,
+        amount_tendered: total,
+        change: 0,
+        order_number: orderSeq,
+        receipt_number: orderSeq,
+        created_at: timestamp,
+        updated_at: timestamp,
+        is_training_mode: false,
+        notes: `[Imported Daily Sales: ${dateStr}]`
+      }])
+      .select('id')
+      .single();
 
-    sql += `
-    -- --------------------------------------------------------------------------
-    -- Row ${idx + 5}: Order #${String(orderSeq).padStart(6, '0')} | ${name} (${temp} ${size}) | Date: ${dateStr} | Price: ₱${price} | Qty: ${qty}
-    -- --------------------------------------------------------------------------
-    INSERT INTO public.orders_espresso (
-        branch_id, table_id, order_type, status, subtotal, discount_id, discount_amount,
-        tax_amount, service_charge, total, payment_method, amount_tendered, change,
-        order_number, receipt_number, created_at, updated_at, is_training_mode, notes
-    ) VALUES (
-        30, NULL, 'takeout', 'paid', ${total}, NULL, 0,
-        ${vatAmount}, 0, ${total}, '${payMethod}', ${total}, 0,
-        ${orderSeq}, ${orderSeq}, '${timestamp}', '${timestamp}', false, '[Imported Daily Sales: ${dateStr}]'
-    ) RETURNING id INTO v_order_id;
-
-    -- 1. Insert Line Item
-    INSERT INTO public.order_items_espresso (
-        order_id, product_id, quantity, price, status, notes, created_at, is_active
-    ) VALUES (
-        v_order_id, ${prod.id}, ${qty}, ${price}, 'ordered', '${notes}', '${timestamp}', 1
-    );
-
-    -- 2. Deduct Menu Product Stock
-    UPDATE public.products_espresso
-    SET stock = stock - ${qty}
-    WHERE id = ${prod.id};
-
-    -- 3. Log Menu Product Outflow
-    INSERT INTO public.inventory_transactions_espresso (
-        product_id, type, quantity, remarks, created_at
-    ) VALUES (
-        ${prod.id}, 'out', ${qty}, 'Sales Order #' || v_order_id || ' (${prod.name}) - Log Date ${dateStr}', '${timestamp}'
-    );
-`;
-
-    // 4. Deduct Raw Ingredients from Product Recipe
-    if (itemRecipes.length > 0) {
-      itemRecipes.forEach(rc => {
-        const ing = prodMap[rc.ingredient_id] || { name: 'Ingredient #' + rc.ingredient_id, unit: '' };
-        const usedQty = Number(rc.quantity || 0) * qty;
-        ingredientSummary[ing.name] = (ingredientSummary[ing.name] || 0) + usedQty;
-
-        sql += `
-    -- Deduct Recipe Raw Material: ${ing.name} (Ingredient ID #${rc.ingredient_id})
-    UPDATE public.products_espresso
-    SET stock = stock - ${usedQty}
-    WHERE id = ${rc.ingredient_id};
-
-    INSERT INTO public.inventory_transactions_espresso (
-        product_id, type, quantity, remarks, created_at
-    ) VALUES (
-        ${rc.ingredient_id}, 'out', ${usedQty}, 'Recipe Deduction: Order #' || v_order_id || ' (${prod.name}) used ${usedQty} ${ing.unit || ''}', '${timestamp}'
-    );
-`;
-      });
+    if (orderErr || !createdOrder) {
+      console.error(`Error inserting Order #${orderSeq}:`, orderErr?.message);
+      continue;
     }
+
+    const orderId = createdOrder.id;
+
+    // 2. Insert item
+    await supabase.from('order_items_espresso').insert([{
+      order_id: orderId,
+      product_id: prod.id,
+      quantity: qty,
+      price: price,
+      status: 'ordered',
+      notes: notes,
+      created_at: timestamp,
+      is_active: 1
+    }]);
+
+    // 3. Deduct product stock & log transaction
+    if (prodMap[prod.id]) {
+      prodMap[prod.id].stock = (prodMap[prod.id].stock || 0) - qty;
+      await supabase.from('products_espresso').update({ stock: prodMap[prod.id].stock }).eq('id', prod.id);
+      await supabase.from('inventory_transactions_espresso').insert([{
+        product_id: prod.id,
+        type: 'out',
+        quantity: qty,
+        remarks: `Sales Order #${orderSeq} (${prod.name}) - Log Date ${dateStr}`,
+        created_at: timestamp
+      }]);
+    }
+
+    // 4. Deduct recipes
+    const itemRecipes = (recipes || []).filter(rc => rc.product_id === prod.id);
+    for (const rc of itemRecipes) {
+      const usedAmt = Number(rc.quantity || 0) * qty;
+      const ing = prodMap[rc.ingredient_id];
+      if (ing) {
+        ing.stock = Number(ing.stock || 0) - usedAmt;
+        ingredientDeductionSummary[ing.name] = (ingredientDeductionSummary[ing.name] || 0) + usedAmt;
+
+        await supabase.from('products_espresso').update({ stock: ing.stock }).eq('id', rc.ingredient_id);
+        await supabase.from('inventory_transactions_espresso').insert([{
+          product_id: rc.ingredient_id,
+          type: 'out',
+          quantity: usedAmt,
+          remarks: `Recipe usage for Order #${orderSeq} (${prod.name})`,
+          created_at: timestamp
+        }]);
+      }
+    }
+  }
+
+  // 5. Update receipt counter to 79 and GAT
+  await supabase.from('receipt_counter_espresso').upsert({ branch_id: BRANCH_ID, current_value: orderSeq });
+  await supabase.from('grand_accumulating_total_espresso').upsert({
+    branch_id: BRANCH_ID,
+    total_sales: totalSales,
+    total_receipts: orderSeq,
+    updated_at: new Date().toISOString()
   });
 
-  sql += `
-    -- --------------------------------------------------------------------------
-    -- Set Branch 30 Receipt Counter to ${orderSeq} & Grand Accumulating Total (GAT)
-    -- --------------------------------------------------------------------------
-    INSERT INTO public.receipt_counter_espresso (branch_id, current_value)
-    VALUES (30, ${orderSeq})
-    ON CONFLICT (branch_id) DO UPDATE
-    SET current_value = ${orderSeq};
-
-    INSERT INTO public.grand_accumulating_total_espresso (branch_id, total_sales, total_receipts, updated_at)
-    VALUES (30, ${totalSales}, ${dataRows.length}, NOW())
-    ON CONFLICT (branch_id) DO UPDATE
-    SET total_sales = ${totalSales},
-        total_receipts = ${dataRows.length},
-        updated_at = NOW();
-
-    RAISE NOTICE 'Daily sales and recipe ingredients imported successfully. Total Orders: %, Total Sales: ₱%', ${dataRows.length}, ${totalSales};
-
-END $$;
-`;
-
-  fs.writeFileSync(path.join(__dirname, 'import-daily-sales-records.sql'), sql, 'utf8');
-  console.log(`✅ Generated import-daily-sales-records.sql starting from Order #000001 & Invoice #000001 up to #${String(orderSeq).padStart(6, '0')}!`);
+  console.log('\n======================================================');
+  console.log('🎉 CLEAN IMPORT COMPLETED SUCCESSFULLY!');
+  console.log(`✅ Total Orders: ${orderSeq} (Numbered #000001 to #${String(orderSeq).padStart(6, '0')})`);
+  console.log(`✅ Total Sales: ₱${totalSales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`);
+  console.log(`✅ Receipt Counter for Branch 30 set to: ${orderSeq}`);
+  console.log('✅ Concept Blend 1 Final Stock:', prodMap[420]?.stock?.toFixed(4), 'packs');
+  console.log('======================================================\n');
 }
 
-generateFullSQL().catch(e => {
-  console.error('Error generating SQL:', e);
+runCleanImport().catch(err => {
+  console.error('Fatal error:', err);
 });

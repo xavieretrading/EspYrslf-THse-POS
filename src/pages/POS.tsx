@@ -10,6 +10,7 @@ import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import Swal from 'sweetalert2';
 import BarbershopView from '../components/barbershop/BarbershopView';
+import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 
 export const getProductImage = (name: string): string => {
   const lowercase = name.toLowerCase().trim();
@@ -1945,11 +1946,12 @@ export default function POS() {
             letter-spacing: 0.05em;
           }
           .receipt-ticket-content .receipt-logo {
-            max-width: 280px !important;
-            max-height: 85px !important;
+            width: 100% !important;
+            max-width: 100% !important;
             height: auto !important;
+            max-height: none !important;
             display: block !important;
-            margin: 0 auto 4px auto !important;
+            margin: 0 auto 6px auto !important;
             object-fit: contain !important;
           }
           .receipt-ticket-content .company-name {
@@ -3884,13 +3886,14 @@ export default function POS() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -3984,13 +3987,14 @@ export default function POS() {
                   letter-spacing: 0.05em;
                 }
                 .printable-area .receipt-logo {
-                  max-width: 280px !important;
-                  max-height: 85px !important;
-                  height: auto !important;
-                  display: block !important;
-                  margin: 0 auto 4px auto !important;
-                  object-fit: contain !important;
-                }
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            display: block !important;
+            margin: 0 auto 6px auto !important;
+            object-fit: contain !important;
+          }
                 .printable-area .company-name {
                   font-size: 11.5pt !important;
                   font-weight: 700 !important;
@@ -4225,7 +4229,7 @@ export default function POS() {
                   {/* Company Details */}
                   <div className="text-center section-block">
                     <div className="flex justify-center mb-1 text-center">
-                      {!isLaundryBranch && <img src="/logo.png" alt="Logo" className="receipt-logo" />}
+                      {!isLaundryBranch && <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />}
                     </div>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
                     {/* <p className="hidden print:hidden" data-print-hidden="true">TIN: {settings?.tin || '899-352-898-00000'}</p> */}

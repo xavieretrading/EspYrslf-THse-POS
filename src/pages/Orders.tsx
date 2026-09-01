@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import qz from 'qz-tray';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
-import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus, RefreshCw } from 'lucide-react';
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
@@ -122,9 +122,11 @@ export default function Orders() {
   const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
 
   const fetchAvailablePrinters = async () => {
-    if (!qz.websocket.isActive()) return;
-    setIsLoadingPrinters(true);
     try {
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect();
+      }
+      setIsLoadingPrinters(true);
       const list = await qz.printers.find();
       if (Array.isArray(list) && list.length > 0) {
         setAvailablePrinters(list);
@@ -144,7 +146,7 @@ export default function Orders() {
         }
       }
     } catch (e: any) {
-      console.error("Error fetching printers:", e);
+      console.warn("Could not fetch printers from QZ Tray:", e?.message || e);
     } finally {
       setIsLoadingPrinters(false);
     }

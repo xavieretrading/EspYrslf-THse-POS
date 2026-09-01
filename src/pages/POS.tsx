@@ -206,9 +206,11 @@ export default function POS() {
   const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
 
   const fetchAvailablePrinters = async () => {
-    if (!qz.websocket.isActive()) return;
-    setIsLoadingPrinters(true);
     try {
+      if (!qz.websocket.isActive()) {
+        await qz.websocket.connect();
+      }
+      setIsLoadingPrinters(true);
       const list = await qz.printers.find();
       if (Array.isArray(list) && list.length > 0) {
         setAvailablePrinters(list);
@@ -228,7 +230,7 @@ export default function POS() {
         }
       }
     } catch (e: any) {
-      console.error("Error fetching printers:", e);
+      console.warn("Could not fetch printers from QZ Tray:", e?.message || e);
     } finally {
       setIsLoadingPrinters(false);
     }

@@ -4654,8 +4654,12 @@ export default function POS() {
                 <span className="font-bold">{zReadingData?.z_counter?.toString().padStart(6, '0') || '000000'}</span>
               </div>
               <div className="flex justify-between font-black text-xs pt-1 border-t border-dotted border-black mt-1">
-                <span>Grand Total:</span>
-                <span>₱{(zReadingData?.accumulated_grand_total || 0).toFixed(2)}</span>
+                <span>Grand Total (Today):</span>
+                <span>₱{(
+                  zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) - (zReadingData?.summary?.total_discounts || 0) :
+                    zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
+                      (zReadingData?.summary?.total_sales || 0)
+                ).toFixed(2)}</span>
               </div>
             </div>
 

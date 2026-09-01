@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import qz from 'qz-tray';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown, Lock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../App';
 import { useBranch } from '../BranchContext';
@@ -1586,6 +1586,20 @@ export default function POS() {
     }
   };
 
+  const isZReadingTime = () => {
+    const manilaDate = getManilaDate();
+    const hours = manilaDate.getHours();
+    const minutes = manilaDate.getMinutes();
+    const timeInMinutes = hours * 60 + minutes;
+    // 7:45 PM is 19:45 = 1185 minutes
+    return timeInMinutes >= (19 * 60 + 45);
+  };
+
+  const isZReadingAlreadyPrinted = () => {
+    const todayStr = format(getManilaDate(), 'yyyy-MM-dd');
+    return !!localStorage.getItem(`z_reading_printed_${activeBranch?.id}_${todayStr}`);
+  };
+
   const handleOpenZReading = async () => {
     const manilaDate = getManilaDate();
     const hours = manilaDate.getHours();
@@ -1597,21 +1611,20 @@ export default function POS() {
     // Store closing window starts at 7:45 PM (19:45) = 1185 minutes
     const closingTimeMinutes = 19 * 60 + 45;
 
-    const alreadyPrinted = localStorage.getItem(`z_reading_printed_${activeBranch?.id}_${todayStr}`);
-
-    if (timeInMinutes < closingTimeMinutes && currentUser?.role !== 'admin' && currentUser?.role !== 'manager') {
+    if (timeInMinutes < closingTimeMinutes) {
       swalAlert(
         'Z-Reading Locked',
-        `Daily Z-Reading is only allowed once a day at store closing (7:45 PM – 8:00 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}`,
+        `Daily Z-Reading can only be printed once a day during store closing (7:45 PM – 8:00 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}\n\nPlease come back at 7:45 PM to generate and print your End-of-Day report.`,
         'warning'
       );
       return;
     }
 
-    if (alreadyPrinted && currentUser?.role !== 'admin') {
+    const alreadyPrinted = localStorage.getItem(`z_reading_printed_${activeBranch?.id}_${todayStr}`);
+    if (alreadyPrinted) {
       swalAlert(
-        'Already Completed Today',
-        `Daily Z-Reading for today (${todayStr}) has already been generated and printed.\n\nUnder standard BIR procedures, Z-Reading is strictly performed once per business day.`,
+        'Already Printed Today',
+        `Daily Z-Reading for today (${todayStr}) has already been printed.\n\nUnder Philippine BIR regulations, Z-Reading is strictly performed only once per day.`,
         'warning'
       );
       return;
@@ -1629,6 +1642,7 @@ export default function POS() {
       `Printed End-of-Day Z-Reading for ${todayStr}. Total: ₱${(zReadingData?.summary?.total_sales || 0).toFixed(2)}`
     );
     window.print();
+    setShowZReading(false);
   };
 
   useEffect(() => {
@@ -2924,10 +2938,38 @@ export default function POS() {
                   <>
                     <button
                       onClick={handleOpenZReading}
-                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px] flex items-center gap-1.5 shadow-sm"
-                      title="Generate End-of-Day Sales Report (Philippine Time, 7:45 PM)"
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-all min-h-[32px] flex items-center gap-1.5 shadow-sm",
+                        isZReadingAlreadyPrinted()
+                          ? "bg-slate-200 text-slate-500 border border-slate-300 hover:bg-slate-200"
+                          : !isZReadingTime()
+                            ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
+                            : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200"
+                      )}
+                      title={
+                        isZReadingAlreadyPrinted()
+                          ? "Daily Z-Reading for today has already been printed"
+                          : !isZReadingTime()
+                            ? "Daily Z-Reading unlocks at 7:45 PM Philippine Time (Store Closing)"
+                            : "Daily Z-Reading is ready to print"
+                      }
                     >
-                      Daily Z-Reading
+                      {isZReadingAlreadyPrinted() ? (
+                        <>
+                          <CheckCircle size={14} className="text-emerald-600" />
+                          <span>Z-Reading Done Today</span>
+                        </>
+                      ) : !isZReadingTime() ? (
+                        <>
+                          <Lock size={14} className="text-amber-700" />
+                          <span>Daily Z-Reading (7:45 PM)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Printer size={14} />
+                          <span>Daily Z-Reading (Print)</span>
+                        </>
+                      )}
                     </button>
                     {/* END SHIFT button hidden for laundry branch */}
                     {/* Shift buttons disabled system-wide */}

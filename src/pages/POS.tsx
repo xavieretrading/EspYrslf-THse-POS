@@ -1591,8 +1591,8 @@ export default function POS() {
     const hours = manilaDate.getHours();
     const minutes = manilaDate.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
-    // 7:45 PM is 19:45 = 1185 minutes
-    return timeInMinutes >= (19 * 60 + 45);
+    // 7:45 PM is 19:45 (1185 min), 8:20 PM is 20:20 (1220 min)
+    return timeInMinutes >= (19 * 60 + 45) && timeInMinutes <= (20 * 60 + 20);
   };
 
   const isZReadingAlreadyPrinted = () => {
@@ -1608,13 +1608,14 @@ export default function POS() {
     const todayStr = format(manilaDate, 'yyyy-MM-dd');
     const timeFormatted = manilaDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-    // Store closing window starts at 7:45 PM (19:45) = 1185 minutes
-    const closingTimeMinutes = 19 * 60 + 45;
+    // Store closing window is strictly 7:45 PM (19:45) to 8:20 PM (20:20)
+    const startTimeMinutes = 19 * 60 + 45; // 7:45 PM
+    const endTimeMinutes = 20 * 60 + 20;   // 8:20 PM
 
-    if (timeInMinutes < closingTimeMinutes) {
+    if (timeInMinutes < startTimeMinutes || timeInMinutes > endTimeMinutes) {
       swalAlert(
         'Z-Reading Locked',
-        `Daily Z-Reading can only be printed once a day during store closing (7:45 PM – 8:00 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}\n\nPlease come back at 7:45 PM to generate and print your End-of-Day report.`,
+        `Daily Z-Reading can only be printed once a day during store closing (7:45 PM – 8:20 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}\n\nPlease generate and print this report between 7:45 PM and 8:20 PM.`,
         'warning'
       );
       return;
@@ -2950,7 +2951,7 @@ export default function POS() {
                         isZReadingAlreadyPrinted()
                           ? "Daily Z-Reading for today has already been printed"
                           : !isZReadingTime()
-                            ? "Daily Z-Reading unlocks at 7:45 PM Philippine Time (Store Closing)"
+                            ? "Daily Z-Reading unlocks at 7:45 PM – 8:20 PM Philippine Time (Store Closing)"
                             : "Daily Z-Reading is ready to print"
                       }
                     >
@@ -2962,7 +2963,7 @@ export default function POS() {
                       ) : !isZReadingTime() ? (
                         <>
                           <Lock size={14} className="text-amber-700" />
-                          <span>Daily Z-Reading (7:45 PM)</span>
+                          <span>Daily Z-Reading (7:45 PM - 8:20 PM)</span>
                         </>
                       ) : (
                         <>

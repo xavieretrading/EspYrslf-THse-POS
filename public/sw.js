@@ -1,7 +1,6 @@
-const CACHE_NAME = 'allset-pos-cache-v1';
+const CACHE_NAME = 'allset-pos-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
-  '/index.html',
   '/logo.png'
 ];
 

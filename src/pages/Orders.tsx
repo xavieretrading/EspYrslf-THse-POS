@@ -623,7 +623,15 @@ export default function Orders() {
         setReceiptData(null);
       } catch (err: any) {
         console.error("QZ print failed:", err);
-        swalAlert('Print Error', err.message || 'Failed to print via QZ Tray. Make sure it is running and your printer name is correct.', 'error');
+        const fallback = await swalConfirm(
+          'QZ Tray Print Issue',
+          `Direct print could not complete (${err.message || 'connection issue'}). Would you like to print using the standard Browser Print Dialog instead?`,
+          'warning'
+        );
+        if (fallback) {
+          window.print();
+          setReceiptData(null);
+        }
       }
     } else {
       window.print();
@@ -1733,14 +1741,34 @@ export default function Orders() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10.5px] pt-1 border-t border-slate-200/60">
-                    <span className="text-slate-500">QZ Tray Status:</span>
-                    {qzConnected ? (
-                      <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
-                    ) : qzError ? (
-                      <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected (Start QZ Tray)</span>
-                    ) : (
-                      <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                  <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-200/60 text-[10.5px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">QZ Tray Status:</span>
+                      {qzConnected ? (
+                        <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
+                      ) : qzError?.toLowerCase().includes('blocked') ? (
+                        <span className="text-rose-600 font-bold" title={qzError}>🔴 Blocked in QZ Site Manager</span>
+                      ) : qzError ? (
+                        <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected</span>
+                      ) : (
+                        <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                      )}
+                    </div>
+                    {qzError?.toLowerCase().includes('blocked') && (
+                      <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-800 space-y-1">
+                        <p className="font-bold">⚠️ Blocked by QZ Tray on this PC</p>
+                        <p className="text-slate-600">Right-click QZ Tray in taskbar ➔ Advanced ➔ Site Manager ➔ Delete site from Blocked list.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUseQzTray(false);
+                            localStorage.setItem('qz_enabled', 'false');
+                          }}
+                          className="w-full py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold transition-all text-center"
+                        >
+                          Use Browser Print Instead (No Setup Needed)
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>

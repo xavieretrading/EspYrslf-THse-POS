@@ -2052,7 +2052,14 @@ export default function POS() {
         swalAlert('Success', 'Receipt printed successfully via QZ Tray.', 'success');
       } catch (err: any) {
         console.error("QZ print failed:", err);
-        swalAlert('Print Error', err.message || 'Failed to print via QZ Tray. Make sure it is running and your printer name is correct.', 'error');
+        const fallback = await swalConfirm(
+          'QZ Tray Print Issue',
+          `Direct print could not complete (${err.message || 'connection issue'}). Would you like to print using the standard Browser Print Dialog instead?`,
+          'warning'
+        );
+        if (fallback) {
+          window.print();
+        }
       }
     } else {
       window.print();
@@ -4319,14 +4326,34 @@ export default function POS() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10.5px] pt-1 border-t border-slate-200/60">
-                    <span className="text-slate-500">QZ Tray Status:</span>
-                    {qzConnected ? (
-                      <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
-                    ) : qzError ? (
-                      <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected (Start QZ Tray)</span>
-                    ) : (
-                      <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                  <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-200/60 text-[10.5px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">QZ Tray Status:</span>
+                      {qzConnected ? (
+                        <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
+                      ) : qzError?.toLowerCase().includes('blocked') ? (
+                        <span className="text-rose-600 font-bold" title={qzError}>🔴 Blocked in QZ Site Manager</span>
+                      ) : qzError ? (
+                        <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected</span>
+                      ) : (
+                        <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
+                      )}
+                    </div>
+                    {qzError?.toLowerCase().includes('blocked') && (
+                      <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-800 space-y-1">
+                        <p className="font-bold">⚠️ Blocked by QZ Tray on this PC</p>
+                        <p className="text-slate-600">Right-click QZ Tray in taskbar ➔ Advanced ➔ Site Manager ➔ Delete site from Blocked list.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUseQzTray(false);
+                            localStorage.setItem('qz_enabled', 'false');
+                          }}
+                          className="w-full py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold transition-all text-center"
+                        >
+                          Use Browser Print Instead (No Setup Needed)
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -4494,69 +4521,100 @@ export default function POS() {
               </div>
             )}
 
-            <div className="text-center mb-4 print:mb-2 text-slate-800">
-              <p className="mb-2 font-black text-lg receipt-title">
+            <div className="text-center mb-3 print:mb-2 text-slate-800">
+              <p className="mb-1 font-black text-lg receipt-title">
                 {zReadingFilter === 'coffee' ? 'COFFEE SHOP SALES REPORT' :
                   zReadingFilter === 'laundry' ? 'LAUNDRY SHOP SALES REPORT' :
                     'X-READING / Z-READING'}
               </p>
-              <br className="print:hidden" />
-              <p className="font-black company-name">
+              <p className="font-black company-name text-base">
                 {zReadingFilter === 'laundry' ? 'SIP & SPIN LAUNDRY SHOP' : (settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE')}
               </p>
-              <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
-              {/* <p className="hidden">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
-              <p className="mt-2 font-black">***** END OF DAY SHIFT *****</p>
+              <p className="text-xs">{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
+              <p className="mt-2 font-black text-xs">***** END OF DAY SHIFT *****</p>
             </div>
 
-            <div className="flex justify-between mb-1">
-              <span>Date:</span>
-              <span>{getManilaDate().toLocaleDateString('en-US')}</span>
-            </div>
-            <div className="flex justify-between mb-1">
-              <span>Time:</span>
-              <span>{getManilaDate().toLocaleTimeString('en-US')}</span>
-            </div>
-            <div className="flex justify-between mb-4">
-              <span>Cashier:</span>
-              <span>{(() => {
-                try {
-                  const u = localStorage.getItem('resto_active_user');
-                  if (u) {
-                    const parsed = JSON.parse(u);
-                    return parsed.full_name || parsed.username || 'Staff';
-                  }
-                  return 'Staff';
-                } catch (e) { return 'Staff'; }
-              })()}</span>
+            <div className="text-xs space-y-1 mb-2">
+              <div className="flex justify-between">
+                <span>Date:</span>
+                <span className="font-bold">{getManilaDate().toLocaleDateString('en-US')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Time:</span>
+                <span className="font-bold">{getManilaDate().toLocaleTimeString('en-US')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Cashier:</span>
+                <span className="font-bold">{(() => {
+                  try {
+                    const u = localStorage.getItem('resto_active_user');
+                    if (u) {
+                      const parsed = JSON.parse(u);
+                      return parsed.full_name || parsed.username || 'Staff';
+                    }
+                    return 'Staff';
+                  } catch (e) { return 'Staff'; }
+                })()}</span>
+              </div>
             </div>
 
-            <div className="border-t border-dashed border-black my-2"></div>
+            {/* Itemized Sales Breakdown */}
+            <div className="border-t border-b border-dashed border-black py-2 my-2">
+              <div className="text-center font-black text-xs uppercase tracking-wider mb-2">
+                Itemized Sales / Items Sold
+              </div>
+              {(() => {
+                const items = (zReadingData?.items_sold || []).filter((item: any) => {
+                  if (zReadingFilter === 'coffee') return item.division !== 'laundry';
+                  if (zReadingFilter === 'laundry') return item.division === 'laundry';
+                  return true;
+                });
 
-            <div className="space-y-0.5 mt-2">
+                if (items.length === 0) {
+                  return <div className="text-center text-slate-500 py-1 italic text-xs">No items sold during this shift</div>;
+                }
+
+                return (
+                  <div className="space-y-1.5 text-xs">
+                    {items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-start">
+                        <div className="flex-1 pr-2">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-slate-800 ml-1.5 font-bold">x{item.quantity}</span>
+                        </div>
+                        <div className="font-bold text-right whitespace-nowrap">
+                          ₱{(item.total_amount || 0).toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="border-t border-dotted border-black/40 mt-2 pt-1.5 flex justify-between font-bold text-[11px]">
+                      <span>Total Items Qty:</span>
+                      <span>{items.reduce((sum: number, it: any) => sum + (it.quantity || 0), 0)} pcs</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Sales Totals */}
+            <div className="space-y-1 my-2 text-xs">
               <div className="flex justify-between">
                 <span>Gross Sales:</span>
-                <span>₱{(
+                <span className="font-bold">₱{(
                   zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) :
                     zReadingFilter === 'laundry' ? (zReadingData?.summary?.laundry_sales_total || 0) :
                       (zReadingData?.summary?.gross_sales || 0)
                 ).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Regular Discount:</span>
-                <span>₱{(
-                  zReadingFilter === 'laundry' ? 0 :
-                    (zReadingData?.summary?.total_discounts || 0)
-                ).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Service Charge:</span>
-                <span>₱{(
-                  zReadingFilter === 'laundry' ? 0 :
-                    (zReadingData?.summary?.total_service_charge || 0)
-                ).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-black mt-1">
+
+              {(zReadingData?.summary?.total_discounts || 0) > 0 && zReadingFilter !== 'laundry' && (
+                <div className="flex justify-between text-rose-600 font-medium">
+                  <span>Regular / Senior Discount:</span>
+                  <span>-₱{(zReadingData?.summary?.total_discounts || 0).toFixed(2)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between font-black text-sm border-t border-dashed border-black pt-1.5 mt-1">
                 <span>Net Sales:</span>
                 <span>₱{(
                   zReadingFilter === 'coffee' ? (zReadingData?.summary?.coffee_sales_total || 0) - (zReadingData?.summary?.total_discounts || 0) :
@@ -4565,40 +4623,44 @@ export default function POS() {
                 ).toFixed(2)}</span>
               </div>
 
-              {zReadingFilter === 'all' && (
-                <>
-                  <div className="border-t border-dashed border-black my-2"></div>
-                  <div className="flex justify-between">
-                    <span>VATable Sales:</span>
-                    <span>₱{(zReadingData?.summary?.vatable_sales || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>VAT Amount:</span>
-                    <span>₱{(zReadingData?.summary?.total_vat || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>VAT Exempt Sales:</span>
-                    <span>₱{(zReadingData?.summary?.vat_exempt_sales || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Zero Rated Sales:</span>
-                    <span>0.00</span>
-                  </div>
-                </>
+              {/* Payment Methods breakdown if available */}
+              {zReadingData?.payments && zReadingData.payments.length > 0 && (
+                <div className="border-t border-dotted border-black/40 pt-1.5 mt-1 space-y-0.5 text-[11px]">
+                  {zReadingData.payments.map((p: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-slate-700">
+                      <span className="uppercase">{p.method} ({p.count}x):</span>
+                      <span className="font-medium">₱{(p.amount || 0).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-            <div className="border-t border-dashed border-black my-2 mt-4"></div>
-
-            <div className="mb-2">
-              <p>Beginning Invoice No.: {zReadingData?.summary?.min_or?.toString().padStart(8, '0') || '00000000'}</p>
-              <p>Ending Invoice No.: {zReadingData?.summary?.max_or?.toString().padStart(8, '0') || '00000000'}</p>
-              <p>Z-Counter: {zReadingData?.z_counter?.toString().padStart(6, '0') || '000000'}</p>
-              <p className="font-bold mt-2">Grand Total: ₱{(zReadingData?.accumulated_grand_total || 0).toFixed(2)}</p>
+            <div className="border-t border-dashed border-black my-2 pt-2 text-xs space-y-0.5">
+              <div className="flex justify-between">
+                <span>Beginning Invoice No.:</span>
+                <span className="font-bold">{zReadingData?.summary?.min_or?.toString().padStart(8, '0') || '00000000'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Ending Invoice No.:</span>
+                <span className="font-bold">{zReadingData?.summary?.max_or?.toString().padStart(8, '0') || '00000000'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Transactions:</span>
+                <span className="font-bold">{zReadingData?.summary?.total_transactions || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Z-Counter:</span>
+                <span className="font-bold">{zReadingData?.z_counter?.toString().padStart(6, '0') || '000000'}</span>
+              </div>
+              <div className="flex justify-between font-black text-xs pt-1 border-t border-dotted border-black mt-1">
+                <span>Grand Total:</span>
+                <span>₱{(zReadingData?.accumulated_grand_total || 0).toFixed(2)}</span>
+              </div>
             </div>
 
-            <div className="text-center mt-6 print:mt-2">
-              <p className="font-black print:text-[14px] print:font-bold">END OF READING REPORT</p>
+            <div className="text-center mt-4 print:mt-2">
+              <p className="font-black print:text-[13px] print:font-bold">END OF READING REPORT</p>
             </div>
 
             <div className="mt-8 flex gap-3 print:hidden">

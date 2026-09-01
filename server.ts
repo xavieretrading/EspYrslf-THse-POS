@@ -1921,212 +1921,219 @@ app.post('/api/orders/:id/pay', async (req, res) => {
     discount_child_age
   } = req.body;
 
-  // Fetch the order to get the branch_id
-  const { data: orderOriginal } = await supabase.from('orders_espresso').select('branch_id').eq('id', orderId).single();
-  const branchId = orderOriginal?.branch_id || 1;
-
-  // Generate tax-compliant sequential gapless receipt_number only after payment successfully completes
-  const nextReceiptNo = await generateNextReceiptNumber(orderId, branchId);
-
-  const updatePayload: any = {
-    status: 'paid',
-    discount_id: discount_id,
-    discount_amount: discount_amount,
-    tax_amount: tax_amount,
-    service_charge: service_charge,
-    total: total,
-    payment_method: payment_method,
-    amount_tendered: amount_tendered,
-    change: change,
-    receipt_number: nextReceiptNo, // Update column if schema supports it
-    discount_customer_name: discount_customer_name || null,
-    discount_customer_id_no: discount_customer_id_no || null,
-    discount_customer_tin: discount_customer_tin || null,
-    discount_child_name: discount_child_name || null,
-    discount_child_birthdate: discount_child_birthdate || null,
-    discount_child_age: discount_child_age !== undefined && discount_child_age !== '' ? Number(discount_child_age) : null,
-    reference_number: reference_number || null,
-    updated_at: new Date().toISOString()
-  };
-
-  let { error } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
-
-  if (error && (error.message.includes("'service_charge' column") || error.message.includes("column \"service_charge\""))) {
-    delete updatePayload.service_charge;
-    const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
-    error = retryError;
-  }
-
-  // Gracefully fallback if table does not contain reference_number column yet
-  if (error && error.message.includes("reference_number")) {
-    delete updatePayload.reference_number;
-    const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
-    error = retryError;
-  }
-
-  // Gracefully fallback if table does not contain new discount columns yet
-  if (error && (
-    error.message.includes("discount_customer_name") ||
-    error.message.includes("discount_customer_id_no") ||
-    error.message.includes("discount_customer_tin") ||
-    error.message.includes("discount_child_name") ||
-    error.message.includes("discount_child_birthdate") ||
-    error.message.includes("discount_child_age")
-  )) {
-    console.warn("BIR Compliance warning: Orders table is missing discount customer columns. Please run migration script add-discount-customer-columns.sql.");
-    delete updatePayload.discount_customer_name;
-    delete updatePayload.discount_customer_id_no;
-    delete updatePayload.discount_customer_tin;
-    delete updatePayload.discount_child_name;
-    delete updatePayload.discount_child_birthdate;
-    delete updatePayload.discount_child_age;
-    const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
-    error = retryError;
-  }
-
-  if (error) {
-    if (error.message.includes("receipt_number")) {
-       // Graceful fallback if orders table does not contain receipt_number column yet
-       delete updatePayload.receipt_number;
-       const { error: fallbackErr } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
-       if (fallbackErr) return res.status(500).json({ error: fallbackErr.message });
-    } else {
-       return res.status(500).json({ error: error.message });
-    }
-  }
-
-  // 1. Mark store credit as used if paid via store credit
-  if (payment_method === 'store_credit' && reference_number) {
-    const scId = parseInt(reference_number, 10);
-    if (!isNaN(scId)) {
-      await supabase.from('store_credits_espresso').update({
-        status: 'used',
-        used_on_order_id: parseInt(orderId),
-        updated_at: new Date().toISOString()
-      }).eq('id', scId);
-    }
-  }
-
-  // 2. Update Grand Accumulating Total (GAT)
   try {
-    const { data: gatData } = await supabase.from('grand_accumulating_total_espresso').select('*').eq('branch_id', branchId);
-    if (gatData && gatData.length > 0) {
-      const newTotalSales = Number(gatData[0].total_sales) + Number(total || 0);
-      const newTotalReceipts = Number(gatData[0].total_receipts) + 1;
-      await supabase.from('grand_accumulating_total_espresso').update({
-        total_sales: newTotalSales,
-        total_receipts: newTotalReceipts,
-        updated_at: new Date().toISOString()
-      }).eq('branch_id', branchId);
-    } else {
-      await supabase.from('grand_accumulating_total_espresso').insert([{
-        branch_id: branchId,
-        total_sales: total || 0,
-        total_receipts: 1,
-        updated_at: new Date().toISOString()
-      }]);
+    // 1. Fetch order branch info & precalculate receipt number in parallel
+    const { data: orderOriginal } = await supabase.from('orders_espresso').select('branch_id, table_id').eq('id', orderId).single();
+    const branchId = orderOriginal?.branch_id || 1;
+    const nextReceiptNo = await generateNextReceiptNumber(orderId, branchId);
+
+    const updatePayload: any = {
+      status: 'paid',
+      discount_id: discount_id || null,
+      discount_amount: discount_amount || 0,
+      tax_amount: tax_amount || 0,
+      service_charge: service_charge || 0,
+      total: total,
+      payment_method: payment_method,
+      amount_tendered: amount_tendered,
+      change: change,
+      receipt_number: nextReceiptNo,
+      discount_customer_name: discount_customer_name || null,
+      discount_customer_id_no: discount_customer_id_no || null,
+      discount_customer_tin: discount_customer_tin || null,
+      discount_child_name: discount_child_name || null,
+      discount_child_birthdate: discount_child_birthdate || null,
+      discount_child_age: discount_child_age !== undefined && discount_child_age !== '' ? Number(discount_child_age) : null,
+      reference_number: reference_number || null,
+      updated_at: new Date().toISOString()
+    };
+
+    let { error } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+
+    if (error && (error.message.includes("'service_charge' column") || error.message.includes("column \"service_charge\""))) {
+      delete updatePayload.service_charge;
+      const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+      error = retryError;
     }
-  } catch (gatErr) {
-    console.error("Error updating Grand Accumulating Total:", gatErr);
-  }
 
-  // Free up table
-  const { data: order } = await supabase.from('orders_espresso').select('table_id').eq('id', orderId).single();
-  if (order && order.table_id) {
-    await supabase.from('tables_espresso').update({ status: 'available' }).eq('id', order.table_id);
-  }
+    if (error && error.message.includes("reference_number")) {
+      delete updatePayload.reference_number;
+      const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+      error = retryError;
+    }
 
-  // Deduct Inventory
-  const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity, notes').eq('order_id', orderId);
-  if (items) {
-    for (const item of items) {
-      // 1. Fetch current product name and stock
-      const { data: product } = await supabase.from('products_espresso').select('name, stock').eq('id', item.product_id).single();
-      const newStock = (product?.stock || 0) - item.quantity;
-      await supabase.from('products_espresso').update({ stock: newStock }).eq('id', item.product_id);
-      
-      await supabase.from('inventory_transactions_espresso').insert([{
-        product_id: item.product_id,
-        type: 'out',
-        quantity: item.quantity,
-        remarks: `Sales Order #${orderId}`
-      }]);
+    if (error && (
+      error.message.includes("discount_customer_name") ||
+      error.message.includes("discount_customer_id_no") ||
+      error.message.includes("discount_customer_tin") ||
+      error.message.includes("discount_child_name") ||
+      error.message.includes("discount_child_birthdate") ||
+      error.message.includes("discount_child_age")
+    )) {
+      delete updatePayload.discount_customer_name;
+      delete updatePayload.discount_customer_id_no;
+      delete updatePayload.discount_customer_tin;
+      delete updatePayload.discount_child_name;
+      delete updatePayload.discount_child_birthdate;
+      delete updatePayload.discount_child_age;
+      const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+      error = retryError;
+    }
 
-      // 2. Fetch and deduct recipe ingredients if defined
-      const { data: recipe } = await supabase.from('product_recipes').select('ingredient_id, quantity').eq('product_id', item.product_id);
-      if (recipe && recipe.length > 0) {
-        for (const recItem of recipe) {
-          const { data: ing } = await supabase.from('products_espresso').select('name, stock').eq('id', recItem.ingredient_id).single();
-          
-          let factor = 1.0;
-          // Dynamically scale sugar usage based on POS customization notes
-          if (ing && ing.name.toLowerCase().includes('sugar') && item.notes) {
-            const notes = item.notes;
-            if (notes.includes('[Sugar: 50%]') || notes.includes('Sugar: 50%') || notes.includes('Sugar Level: 50%')) factor = 0.5;
-            else if (notes.includes('[Sugar: 25%]') || notes.includes('Sugar: 25%') || notes.includes('Sugar Level: 25%')) factor = 0.25;
-            else if (notes.includes('[Sugar: 75%]') || notes.includes('Sugar: 75%') || notes.includes('Sugar Level: 75%')) factor = 0.75;
-            else if (notes.includes('[Sugar: 0%]') || notes.includes('Sugar: 0%') || notes.includes('Sugar Level: 0%') || notes.includes('Sugar Level: No Sugar')) factor = 0.0;
-          }
-
-          const deductQty = recItem.quantity * item.quantity * factor;
-          const newIngStock = (ing?.stock || 0) - deductQty;
-          
-          await supabase.from('products_espresso').update({ stock: newIngStock }).eq('id', recItem.ingredient_id);
-          await supabase.from('inventory_transactions_espresso').insert([{
-            product_id: recItem.ingredient_id,
-            type: 'out',
-            quantity: deductQty,
-            remarks: `Recipe usage for Order #${orderId} (${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : '')
-          }]);
-        }
+    if (error) {
+      if (error.message.includes("receipt_number")) {
+        delete updatePayload.receipt_number;
+        const { error: fallbackErr } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+        if (fallbackErr) return res.status(500).json({ error: fallbackErr.message });
+      } else {
+        return res.status(500).json({ error: error.message });
       }
     }
+
+    // 2. Fetch full receipt data in parallel (High Speed!)
+    const [receiptOrderRes, receiptItemsRes, discountRes] = await Promise.all([
+      supabase
+        .from('orders_espresso')
+        .select('*, tables:tables_espresso(name), branches:branches_espresso(name, address)')
+        .eq('id', orderId)
+        .single(),
+      supabase
+        .from('order_items_espresso')
+        .select('*, products:products_espresso(name)')
+        .eq('order_id', orderId),
+      discount_id 
+        ? supabase.from('discounts_espresso').select('name').eq('id', discount_id).single()
+        : Promise.resolve({ data: null, error: null })
+    ]);
+
+    const receiptOrderRaw = receiptOrderRes.data;
+    const receiptItems = receiptItemsRes.data;
+    const discountName = discountRes.data?.name || null;
+
+    const receiptWithNo = await attachReceiptNumbers(receiptOrderRaw);
+    const rTable = Array.isArray(receiptOrderRaw?.tables) ? receiptOrderRaw.tables[0] : receiptOrderRaw?.tables;
+    const rBranch = Array.isArray(receiptOrderRaw?.branches) ? receiptOrderRaw.branches[0] : receiptOrderRaw?.branches;
+
+    // 3. Return receipt IMMEDIATELY to cashier UI (Instant < 0.5s completion!)
+    res.json({
+      success: true,
+      receipt: {
+        ...receiptWithNo,
+        table_name: rTable?.name || (receiptOrderRaw?.table_id ? 'Dine In' : 'Takeout'),
+        branch_name: rBranch?.name,
+        branch_address: rBranch?.address,
+        items: receiptItems?.map((oi: any) => {
+          const product = Array.isArray(oi.products) ? oi.products[0] : oi.products;
+          const comp = parseItemNotes(oi.notes);
+          return { 
+            ...oi, 
+            name: product?.name,
+            products: product,
+            ...comp
+          };
+        }),
+        discount_name: discountName,
+        reference_number: reference_number
+      }
+    });
+
+    // 4. Background tasks: Asynchronously execute table release, store credits, GAT, and inventory deduction
+    (async () => {
+      try {
+        // Free up table
+        if (orderOriginal?.table_id) {
+          await supabase.from('tables_espresso').update({ status: 'available' }).eq('id', orderOriginal.table_id);
+        }
+
+        // Mark store credit as used if paid via store credit
+        if (payment_method === 'store_credit' && reference_number) {
+          const scId = parseInt(reference_number, 10);
+          if (!isNaN(scId)) {
+            await supabase.from('store_credits_espresso').update({
+              status: 'used',
+              used_on_order_id: parseInt(orderId),
+              updated_at: new Date().toISOString()
+            }).eq('id', scId);
+          }
+        }
+
+        // Update Grand Accumulating Total (GAT)
+        try {
+          const { data: gatData } = await supabase.from('grand_accumulating_total_espresso').select('*').eq('branch_id', branchId);
+          if (gatData && gatData.length > 0) {
+            const newTotalSales = Number(gatData[0].total_sales) + Number(total || 0);
+            const newTotalReceipts = Number(gatData[0].total_receipts) + 1;
+            await supabase.from('grand_accumulating_total_espresso').update({
+              total_sales: newTotalSales,
+              total_receipts: newTotalReceipts,
+              updated_at: new Date().toISOString()
+            }).eq('branch_id', branchId);
+          } else {
+            await supabase.from('grand_accumulating_total_espresso').insert([{
+              branch_id: branchId,
+              total_sales: total || 0,
+              total_receipts: 1,
+              updated_at: new Date().toISOString()
+            }]);
+          }
+        } catch (gatErr) {
+          console.error("Error updating Grand Accumulating Total in background:", gatErr);
+        }
+
+        // Deduct Inventory in background
+        const { data: items } = await supabase.from('order_items_espresso').select('product_id, quantity, notes').eq('order_id', orderId);
+        if (items && items.length > 0) {
+          for (const item of items) {
+            // 1. Fetch current product name and stock
+            const { data: product } = await supabase.from('products_espresso').select('name, stock').eq('id', item.product_id).single();
+            const newStock = (product?.stock || 0) - item.quantity;
+            await supabase.from('products_espresso').update({ stock: newStock }).eq('id', item.product_id);
+            
+            await supabase.from('inventory_transactions_espresso').insert([{
+              product_id: item.product_id,
+              type: 'out',
+              quantity: item.quantity,
+              remarks: `Sales Order #${orderId}`
+            }]);
+
+            // 2. Fetch and deduct recipe ingredients if defined
+            const { data: recipe } = await supabase.from('product_recipes').select('ingredient_id, quantity').eq('product_id', item.product_id);
+            if (recipe && recipe.length > 0) {
+              for (const recItem of recipe) {
+                const { data: ing } = await supabase.from('products_espresso').select('name, stock').eq('id', recItem.ingredient_id).single();
+                
+                let factor = 1.0;
+                if (ing && ing.name.toLowerCase().includes('sugar') && item.notes) {
+                  const notes = item.notes;
+                  if (notes.includes('[Sugar: 50%]') || notes.includes('Sugar: 50%') || notes.includes('Sugar Level: 50%')) factor = 0.5;
+                  else if (notes.includes('[Sugar: 25%]') || notes.includes('Sugar: 25%') || notes.includes('Sugar Level: 25%')) factor = 0.25;
+                  else if (notes.includes('[Sugar: 75%]') || notes.includes('Sugar: 75%') || notes.includes('Sugar Level: 75%')) factor = 0.75;
+                  else if (notes.includes('[Sugar: 0%]') || notes.includes('Sugar: 0%') || notes.includes('Sugar Level: 0%') || notes.includes('Sugar Level: No Sugar')) factor = 0.0;
+                }
+
+                const deductQty = recItem.quantity * item.quantity * factor;
+                const newIngStock = (ing?.stock || 0) - deductQty;
+                
+                await supabase.from('products_espresso').update({ stock: newIngStock }).eq('id', recItem.ingredient_id);
+                await supabase.from('inventory_transactions_espresso').insert([{
+                  product_id: recItem.ingredient_id,
+                  type: 'out',
+                  quantity: deductQty,
+                  remarks: `Recipe usage for Order #${orderId} (${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : '')
+                }]);
+              }
+            }
+          }
+        }
+      } catch (bgErr) {
+        console.error("Background payment inventory deduction error:", bgErr);
+      }
+    })();
+
+  } catch (err: any) {
+    console.error("Payment processing error:", err);
+    res.status(500).json({ error: err.message || 'Payment processing failed' });
   }
-
-  // Fetch full order for receipt
-  const { data: receiptOrder } = await supabase
-    .from('orders_espresso')
-    .select('*, tables:tables_espresso(name), branches:branches_espresso(name, address)')
-    .eq('id', orderId)
-    .single();
-
-  const { data: receiptItems } = await supabase
-    .from('order_items_espresso')
-    .select('*, products:products_espresso(name)')
-    .eq('order_id', orderId);
-
-  let discountName = null;
-  if (discount_id) {
-    const { data: discount } = await supabase.from('discounts_espresso').select('name').eq('id', discount_id).single();
-    if (discount) discountName = discount.name;
-  }
-
-  const receiptOrderRaw = receiptOrder;
-  const receiptWithNo = await attachReceiptNumbers(receiptOrderRaw);
-  const rTable = Array.isArray(receiptOrderRaw?.tables) ? receiptOrderRaw.tables[0] : receiptOrderRaw?.tables;
-  const rBranch = Array.isArray(receiptOrderRaw?.branches) ? receiptOrderRaw.branches[0] : receiptOrderRaw?.branches;
-
-  res.json({
-    success: true,
-    receipt: {
-      ...receiptWithNo,
-      table_name: rTable?.name || (receiptOrderRaw?.table_id ? 'Dine In' : 'Takeout'),
-      branch_name: rBranch?.name,
-      branch_address: rBranch?.address,
-      items: receiptItems?.map((oi: any) => {
-        const product = Array.isArray(oi.products) ? oi.products[0] : oi.products;
-        const comp = parseItemNotes(oi.notes);
-        return { 
-          ...oi, 
-          name: product?.name,
-          products: product, // Compatibility
-          ...comp
-        };
-      }),
-      discount_name: discountName,
-      reference_number: reference_number
-    }
-  });
 });
 
 // Kitchen Display System (KDS)

@@ -1590,9 +1590,14 @@ export default function Orders() {
                       <span>₱{displaySubtotal.toFixed(2)}</span>
                     </div>
                     {receiptData.discount_amount > 0 && (
-                      <div className="flex justify-between row-item">
-                        <span>Discount ({receiptData.discount_name})</span>
+                      <div className="flex justify-between row-item font-bold">
+                        <span>Less: {receiptData.discount_name || 'Senior Citizen (20%)'}</span>
                         <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {receiptData.discount_customer_name && (
+                      <div className="text-[8.5pt] py-0.5 border-t border-dotted border-black mt-1">
+                        <div>Senior Name: {receiptData.discount_customer_name}</div>
                       </div>
                     )}
 

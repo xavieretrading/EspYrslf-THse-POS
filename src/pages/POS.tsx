@@ -3207,9 +3207,41 @@ export default function POS() {
                           )}
                         </div>
 
+                        {/* 1-Click Senior Discount Toggle Button for this Item */}
+                        {!item._isSaved && (
+                          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-slate-100">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const seniorDisc = discounts.find(d => d.name.toLowerCase().includes('senior') || d.id === 1) || { id: 1, name: 'Senior Citizen (20%)', type: 'percentage', value: 20 };
+                                const isApplied = item.itemDiscount?.name?.toLowerCase().includes('senior') || item.itemDiscount?.id === 1;
+                                if (isApplied) {
+                                  updateItemDiscount(item.id, null);
+                                } else {
+                                  updateItemDiscount(item.id, seniorDisc);
+                                }
+                              }}
+                              className={cn(
+                                "px-2 py-0.5 rounded-md text-[10.5px] font-extrabold transition-all flex items-center gap-1 border select-none cursor-pointer",
+                                (item.itemDiscount?.name?.toLowerCase().includes('senior') || item.itemDiscount?.id === 1)
+                                  ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200"
+                              )}
+                            >
+                              <span>👵 Senior 20%</span>
+                              {(item.itemDiscount?.name?.toLowerCase().includes('senior') || item.itemDiscount?.id === 1) ? (
+                                <span className="bg-emerald-700/90 px-1 py-0.2 rounded text-[8.5px] font-black tracking-wide">✓ Applied (-₱{((item.price * item.quantity) * 0.2).toFixed(2)})</span>
+                              ) : (
+                                <span className="text-[9px] text-slate-400 font-normal">+ Apply</span>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
                         {/* Expandable Options Area (Only for unsaved items) */}
                         {!item._isSaved && isExpanded && (
-                          <div className="space-y-1.5 mt-1 pt-1.5 border-t border-slate-250/50">
+                          <div className="space-y-1.5 mt-1.5 pt-1.5 border-t border-slate-250/50">
                             <input
                               type="text"
                               placeholder="Add notes..."
@@ -3217,25 +3249,6 @@ export default function POS() {
                               onChange={(e) => updateNotes(item.id, e.target.value)}
                               className="w-full text-[10px] px-2 py-1 bg-white border border-slate-200 rounded focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 outline-none transition-all font-sans"
                             />
-                            <div className="flex gap-2 items-center hidden">
-                              <div className="bg-white border border-slate-200 rounded p-1 text-slate-400">
-                                <Percent size={10} />
-                              </div>
-                              <select
-                                className="flex-1 text-[10px] bg-white border border-slate-200 rounded px-1.5 py-1 outline-none focus:border-emerald-500 font-medium font-sans"
-                                disabled={item.isComplimentary}
-                                value={item.itemDiscount?.id || ''}
-                                onChange={(e) => {
-                                  const d = discounts.find(d => d.id === parseInt(e.target.value));
-                                  updateItemDiscount(item.id, d || null);
-                                }}
-                              >
-                                <option value="">No Item Discount</option>
-                                {discounts.map(d => (
-                                  <option key={d.id} value={d.id}>{d.name} ({d.value}%)</option>
-                                ))}
-                              </select>
-                            </div>
                           </div>
                         )}
 
@@ -3345,177 +3358,41 @@ export default function POS() {
                     ))}
                   </select>
                 </div>
-                {selectedDiscount && (
-                  selectedDiscount.name.toLowerCase().includes('senior') ||
-                  selectedDiscount.name.toLowerCase().includes('pwd') ||
-                  selectedDiscount.name.toLowerCase().includes('athlete') ||
-                  selectedDiscount.name.toLowerCase().includes('coach') ||
-                  selectedDiscount.name.toLowerCase().includes('solo') ||
-                  selectedDiscount.name.toLowerCase().includes('vat exempt') ||
-                  selectedDiscount.name.toLowerCase().includes('valor') ||
-                  selectedDiscount.name.toLowerCase().includes('medal')
-                ) && (() => {
-                  const nameLower = selectedDiscount.name.toLowerCase();
-                  const discountLabel = nameLower.includes('senior') ? 'Senior Count' :
-                    nameLower.includes('pwd') ? 'PWD Count' :
-                      nameLower.includes('athlete') || nameLower.includes('coach') ? 'Athlete/Coach Count' :
-                        nameLower.includes('solo') ? 'Solo Parent Count' :
-                          nameLower.includes('valor') || nameLower.includes('medal') ? 'Medal of Valor Count' : 'Discount Count';
-                  const isSolo = nameLower.includes('solo');
+                {(() => {
+                  const hasItemSenior = cart.some(i => i.itemDiscount?.name?.toLowerCase().includes('senior') || i.itemDiscount?.id === 1);
+                  const isSeniorOrder = selectedDiscount && (
+                    selectedDiscount.name.toLowerCase().includes('senior') ||
+                    selectedDiscount.name.toLowerCase().includes('pwd') ||
+                    selectedDiscount.name.toLowerCase().includes('athlete') ||
+                    selectedDiscount.name.toLowerCase().includes('coach') ||
+                    selectedDiscount.name.toLowerCase().includes('solo') ||
+                    selectedDiscount.name.toLowerCase().includes('vat exempt') ||
+                    selectedDiscount.name.toLowerCase().includes('valor') ||
+                    selectedDiscount.name.toLowerCase().includes('medal')
+                  );
+
+                  if (!hasItemSenior && !isSeniorOrder) return null;
 
                   return (
-                    <div className="bg-white p-3 rounded-xl border border-slate-200 transition-all animation-fade-in space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                            Total Customers
-                          </label>
-                          <input
-                            id="totalPaxInput"
-                            type="number"
-                            min="1"
-                            className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold"
-                            value={paxCount}
-                            onChange={(e) => {
-                              const val = Math.max(1, parseInt(e.target.value) || 1);
-                              setPaxCount(val);
-                              if (discountPaxCount > val) {
-                                setDiscountPaxCount(val);
-                              }
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                            {discountLabel}
-                          </label>
-                          <input
-                            id="discountPaxInput"
-                            type="number"
-                            min="1"
-                            max={paxCount}
-                            className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-emerald-600"
-                            value={discountPaxCount}
-                            onChange={(e) => {
-                              const val = Math.max(1, Math.min(paxCount, parseInt(e.target.value) || 1));
-                              setDiscountPaxCount(val);
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="border-t border-slate-100 pt-2 space-y-2.5">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                            Customer Full Name
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Required for BIR report"
-                            className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                            value={discountCustomerName}
-                            onChange={(e) => setDiscountCustomerName(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                              Card / ID Number
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="OSCA/PWD/Athlete/Solo/Valor ID"
-                              className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                              value={discountCustomerIdNo}
-                              onChange={(e) => setDiscountCustomerIdNo(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                              Customer TIN (Optional)
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="e.g. 123-456-789"
-                              className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                              value={discountCustomerTin}
-                              onChange={(e) => setDiscountCustomerTin(e.target.value)}
-                            />
-                          </div>
-                        </div>
-
-                        {isSolo && (
-                          <div className="border-t border-slate-100 pt-2 space-y-2.5">
-                            <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Solo Parent Child Information</p>
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                                Child's Full Name
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="Name of child (6 yrs & below)"
-                                className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                                value={discountChildName}
-                                onChange={(e) => setDiscountChildName(e.target.value)}
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                                  Child's Birthdate
-                                </label>
-                                <input
-                                  type="date"
-                                  className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                                  value={discountChildBirthdate}
-                                  onChange={(e) => {
-                                    const dateStr = e.target.value;
-                                    setDiscountChildBirthdate(dateStr);
-                                    if (!dateStr) {
-                                      setDiscountChildAge('');
-                                      return;
-                                    }
-                                    const birth = new Date(dateStr);
-                                    const today = new Date();
-                                    let age = today.getFullYear() - birth.getFullYear();
-                                    const m = today.getMonth() - birth.getMonth();
-                                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-                                      age--;
-                                    }
-                                    setDiscountChildAge(Math.max(0, age).toString());
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
-                                  Child's Age
-                                </label>
-                                <input
-                                  type="number"
-                                  disabled
-                                  placeholder="Auto-calculated"
-                                  className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-bold text-slate-700"
-                                  value={discountChildAge}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                    <div className="bg-white p-3 rounded-xl border border-slate-200 transition-all animation-fade-in space-y-2.5">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">
+                          Senior / Customer Name <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Juan (Optional)"
+                          className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white font-sans"
+                          value={discountCustomerName}
+                          onChange={(e) => setDiscountCustomerName(e.target.value)}
+                        />
                       </div>
                     </div>
                   );
                 })()}
 
                 <div className="space-y-3">
-                  {selectedDiscount && (
-                    selectedDiscount.name.toLowerCase().includes('senior') ||
-                    selectedDiscount.name.toLowerCase().includes('pwd') ||
-                    selectedDiscount.name.toLowerCase().includes('athlete') ||
-                    selectedDiscount.name.toLowerCase().includes('coach') ||
-                    selectedDiscount.name.toLowerCase().includes('solo') ||
-                    selectedDiscount.name.toLowerCase().includes('vat exempt')
-                  ) ? (
+                  {(selectedDiscount || cart.some(i => i.itemDiscount?.name?.toLowerCase().includes('senior') || i.itemDiscount?.id === 1)) ? (
                     <div className="space-y-1.5 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 shadow-xs relative">
                       <div className="flex justify-between text-slate-655">
                         <span className="font-medium text-slate-700">Menu Total (VAT Inclusive)</span>
@@ -3531,7 +3408,7 @@ export default function POS() {
                       </div>
                       <div className="flex justify-between text-emerald-600 font-bold text-[11px]">
                         <span className="flex items-center gap-1">
-                          {selectedDiscount.name}
+                          {selectedDiscount?.name || 'Senior Citizen (20%)'}
                           <span className="relative group cursor-pointer text-slate-400 hover:text-slate-600 transition-colors">
                             <span className="text-[10px]">ℹ️</span>
                             <span className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-52 p-2 bg-slate-800 text-white text-[9px] leading-relaxed font-normal rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-20 duration-200">
@@ -4299,9 +4176,14 @@ export default function POS() {
                       <span>₱{displaySubtotal.toFixed(2)}</span>
                     </div>
                     {receiptData.discount_amount > 0 && (
-                      <div className="flex justify-between row-item">
-                        <span>Discount ({receiptData.discount_name})</span>
+                      <div className="flex justify-between row-item font-bold">
+                        <span>Less: {receiptData.discount_name || 'Senior Citizen (20%)'}</span>
                         <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    {receiptData.discount_customer_name && (
+                      <div className="text-[8.5pt] py-0.5 border-t border-dotted border-black mt-1">
+                        <div>Senior Name: {receiptData.discount_customer_name}</div>
                       </div>
                     )}
 

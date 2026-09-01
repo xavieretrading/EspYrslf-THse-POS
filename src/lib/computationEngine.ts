@@ -93,7 +93,7 @@ export function computeOrderTotals(input: ComputeTotalsInput): CalculationResult
       const isItemSeniorPWD = itemDisc ? isSeniorPWDDiscount(itemDisc.name) : isSeniorPWD;
 
       if (isItemSeniorPWD) {
-        const f = discountPaxCount / paxCount;
+        const f = itemDisc ? 1 : (paxCount > 0 ? discountPaxCount / paxCount : 1);
         const scPortionGross = itemGross * f;
         const seniorVatExclusive = scPortionGross / 1.12;
         

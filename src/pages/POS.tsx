@@ -2879,9 +2879,10 @@ export default function POS() {
                   <>
                     <button
                       onClick={() => setShowZReading(true)}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px]"
+                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition-all min-h-[32px] flex items-center gap-1.5 shadow-sm"
+                      title="Generate End-of-Day Sales Report (Philippine Time)"
                     >
-                      X/Z-Reading
+                      Daily Z-Reading
                     </button>
                     {/* END SHIFT button hidden for laundry branch */}
                     {/* Shift buttons disabled system-wide */}
@@ -4525,7 +4526,7 @@ export default function POS() {
               <p className="mb-1 font-black text-lg receipt-title">
                 {zReadingFilter === 'coffee' ? 'COFFEE SHOP SALES REPORT' :
                   zReadingFilter === 'laundry' ? 'LAUNDRY SHOP SALES REPORT' :
-                    'X-READING / Z-READING'}
+                    'DAILY Z-READING (END OF DAY)'}
               </p>
               <p className="font-black company-name text-base">
                 {zReadingFilter === 'laundry' ? 'SIP & SPIN LAUNDRY SHOP' : (settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE')}

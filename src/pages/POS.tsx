@@ -14,10 +14,22 @@ import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 
 export const getProductImage = (name: string): string => {
   const lowercase = name.toLowerCase().trim();
+  
+  // Custom uploaded images in public folder
+  if (lowercase.includes('butterscotch') || lowercase.includes('butter scotch')) return '/Butterscotch.png';
+  if (lowercase.includes('caramel macchiato') || lowercase.includes('caramelmacchiato') || lowercase.includes('macchiato')) return '/CaramelMacchiato.png';
+  if (lowercase.includes('french vanilla') || lowercase.includes('frenchvanilla')) return '/French Vanilla.png';
+  if (lowercase.includes('irish cream') || lowercase.includes('irishcream') || lowercase.includes('irish')) return '/hotIrishCream.png';
+  if (lowercase.includes('spanish latte') || lowercase.includes('spanishlatte') || lowercase.includes('spanish')) return '/hotSpanishLatte.png';
+  if (lowercase.includes('macadamia latte') || lowercase.includes('macadamialatte') || lowercase.includes('macadamia')) return '/macadamialatte.png';
+  if (lowercase.includes('latte') && !lowercase.includes('durian') && !lowercase.includes('matcha')) return '/hotLatte.png';
+
+  // Beverages & Bakery
   if (lowercase.includes('americano')) return '/americano.jpg';
   if (lowercase.includes('cappuccino')) return '/cappuccino.jpg';
   if (lowercase.includes('coke zero') || lowercase.includes('coca cola zero') || lowercase.includes('coca-cola zero')) return '/coke-zero.jpg';
   if (lowercase.includes('coke') || lowercase.includes('coca-cola') || lowercase.includes('coca cola')) return '/coke-regular.jpg';
+  if (lowercase.includes('evian 330') || lowercase.includes('evian-330')) return '/evian-330ml.jpg';
   if (lowercase.includes('evian')) return '/evian-550ml.jpg';
   if (lowercase.includes('espresso')) return '/espresso.jpg';
   if (lowercase.includes('hot choco') || lowercase.includes('chocolate')) return '/hot-chocolate.jpg';
@@ -25,9 +37,11 @@ export const getProductImage = (name: string): string => {
   if (lowercase.includes('croissant')) return '/CroissantAlmond.jpg';
   if (lowercase.includes('durrian') || (lowercase.includes('durian') && lowercase.includes('frappe'))) return '/durrian-coffee-frappe.jpg';
   if (lowercase.includes('hot durian')) return '/hot-durian-latte.jpg';
-  if (lowercase.includes('iced durian')) return '/iced-durian-latte.jpg';
+  if (lowercase.includes('iced durian') || lowercase.includes('durian')) return '/iced-durian-latte.jpg';
   if (lowercase.includes('mango coconut')) return '/mango-coconut-coffee.jpg';
   if (lowercase.includes('mango') && (lowercase.includes('coffee') || lowercase.includes('frappe'))) return '/mango-coffee-frappe.jpg';
+  if (lowercase.includes('lemon')) return '/lemon-pou.jpg';
+  if (lowercase.includes('jack daniel') || lowercase.includes('jackdaniels')) return '/coca-cola-jackdaniel.jpg';
   if (lowercase.includes('perrier')) return '/perrier.jpg';
   if (lowercase.includes('pocari')) return '/pocari-sweet-500ml.jpg';
   if (lowercase.includes('red horse')) return '/red-horse-can.jpg';
@@ -37,6 +51,8 @@ export const getProductImage = (name: string): string => {
   if (lowercase.includes('pale pilsen')) return '/pale-pilsen.jpg';
   if (lowercase.includes('san mig')) return '/san-miglight.jpg';
   if (lowercase.includes('royal')) return '/royal-orange.jpg';
+  if (lowercase.includes('towel') || lowercase.includes('bedsheet')) return '/towels-bedsheets-.jpg';
+  if (lowercase.includes('sip') || lowercase.includes('spin') || lowercase.includes('wash') || lowercase.includes('dry')) return '/s1p and sp1n.jpg';
   
   // Clean fallback slug name ending check
   const slug = lowercase.replace(/[^a-z0-9]+/g, '-');
@@ -44,7 +60,7 @@ export const getProductImage = (name: string): string => {
 };
 
 export const getValidImageUrl = (imageUrl?: string | null, name?: string): string => {
-  if (imageUrl && typeof imageUrl === 'string' && !imageUrl.includes('unsplash.com') && !imageUrl.includes('400x400')) {
+  if (imageUrl && typeof imageUrl === 'string' && imageUrl.trim().length > 0 && !imageUrl.includes('unsplash.com') && !imageUrl.includes('400x400')) {
     return imageUrl;
   }
   return getProductImage(name || '');

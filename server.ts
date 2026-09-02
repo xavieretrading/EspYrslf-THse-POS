@@ -513,9 +513,14 @@ app.post('/api/products/upload-image', async (req, res) => {
   }
 
   try {
-    const filename = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') + '.jpg';
-    const filePath = path.join(process.cwd(), 'public', filename);
+    let ext = 'jpg';
+    if (base64Image.startsWith('data:image/png')) ext = 'png';
+    else if (base64Image.startsWith('data:image/webp')) ext = 'webp';
+    else if (base64Image.startsWith('data:image/jpeg') || base64Image.startsWith('data:image/jpg')) ext = 'jpg';
 
+    const cleanSlug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+    const filename = `${cleanSlug}.${ext}`;
+    
     // Ensure public folder exists
     const publicDir = path.join(process.cwd(), 'public');
     if (!fs.existsSync(publicDir)) {
@@ -525,9 +530,16 @@ app.post('/api/products/upload-image', async (req, res) => {
     const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
 
+    const filePath = path.join(publicDir, filename);
     fs.writeFileSync(filePath, buffer);
-    console.log(`Saved product image: ${filename}`);
 
+    // Also write to dist/ if dist folder exists (for instant production access without rebuild)
+    const distDir = path.join(process.cwd(), 'dist');
+    if (fs.existsSync(distDir)) {
+      fs.writeFileSync(path.join(distDir, filename), buffer);
+    }
+
+    console.log(`Saved product image: ${filename}`);
     res.json({ success: true, url: `/${filename}` });
   } catch (error: any) {
     console.error('Error saving uploaded product image:', error);

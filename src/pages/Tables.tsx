@@ -7,6 +7,7 @@ import { cn } from '../App';
 import { getReceiptCalculations } from './POS';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
+import { printReceiptViaBrowser, RECEIPT_PRINT_STYLES } from '../lib/receiptPrinter';
 
 type Table = { id: number; branch_id: number; name: string; capacity: number; status: string; active_order_id?: number | null };
 
@@ -133,9 +134,8 @@ export default function Tables() {
     }
   };
 
-  const handlePrintReceipt = () => {
-    window.print();
-    setReceiptData(null);
+  const handlePrintReceipt = async () => {
+    await printReceiptViaBrowser();
   };
 
   if (!activeBranch) return null;
@@ -268,112 +268,12 @@ export default function Tables() {
               )}
             </div>
           </div>
-        </div>      </div>
+        </div>
+      </div>
 
       {receiptData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
-          <div className="bg-white p-4 rounded-lg shadow-2xl max-w-[360px] w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area">
-            <style type="text/css" media="print">
-              {`
-                @page { size: 80mm auto; margin: 0; } 
-                html, body { 
-                  margin: 0; 
-                  padding: 0;
-                  print-color-adjust: exact; 
-                  -webkit-print-color-adjust: exact;
-                  color-scheme: light !important;
-                  background-color: white !important;
-                  background: white !important;
-                  color: black !important;
-                  width: 80mm !important;
-                } 
-                .print\\:hidden { display: none !important; }
-                .printable-area { 
-                  width: 80mm !important; 
-                  max-width: 80mm !important; 
-                  margin: 0 auto !important; 
-                  padding: 6px !important; 
-                  border: none !important;
-                  box-shadow: none !important;
-                  background: white !important;
-                }
-                .printable-area * {
-                  font-size: 9.5pt !important; 
-                  line-height: 1.2 !important; 
-                  color: black !important;
-                  font-family: Arial, Helvetica, sans-serif !important;
-                  font-weight: 400 !important;
-                }
-                .printable-area p, .printable-area div, .printable-area span {
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-                .printable-area .row-item {
-                  margin-top: 2.5px !important;
-                  margin-bottom: 2.5px !important;
-                }
-                .printable-area .section-block {
-                  margin-top: 5px !important;
-                  margin-bottom: 5px !important;
-                }
-                .printable-area .section-header {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  border-top: 1px dashed black !important;
-                  border-bottom: 1px dashed black !important;
-                  padding-top: 3px !important;
-                  padding-bottom: 3px !important;
-                  margin-top: 6px !important;
-                  margin-bottom: 6px !important;
-                  text-align: center;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                }
-                .printable-area .receipt-logo {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            display: block !important;
-            margin: 0 auto 6px auto !important;
-            object-fit: contain !important;
-          }
-                .printable-area .company-name {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .receipt-title {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .print-total,
-                .printable-area .print-total * {
-                  font-size: 13pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.4 !important;
-                }
-                .printable-area .print-change,
-                .printable-area .print-change * {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.3 !important;
-                }
-                .printable-area .font-bold,
-                .printable-area .font-black,
-                .printable-area .font-semibold,
-                .printable-area .print-bold-text {
-                  font-weight: 700 !important;
-                }
-              `}
-            </style>
+          <div className="bg-white p-4 rounded-xl shadow-2xl max-w-[360px] w-full max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area border border-slate-200">
             <style type="text/css">
               {`
                 @media print {
@@ -392,110 +292,30 @@ export default function Tables() {
                     background: white !important;
                   }
                 }
-                .printable-area { 
-                  padding: 6px !important; 
-                }
-                .printable-area * {
-                  font-size: 9.5pt !important;
-                  line-height: 1.2 !important;
-                  font-family: Arial, Helvetica, sans-serif !important;
-                  font-weight: 400 !important;
-                }
-                .printable-area p, .printable-area div, .printable-area span {
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-                .printable-area .row-item {
-                  margin-top: 2.5px !important;
-                  margin-bottom: 2.5px !important;
-                }
-                .printable-area .section-block {
-                  margin-top: 5px !important;
-                  margin-bottom: 5px !important;
-                }
-                .printable-area .section-header {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  border-top: 1px dashed black !important;
-                  border-bottom: 1px dashed black !important;
-                  padding-top: 3px !important;
-                  padding-bottom: 3px !important;
-                  margin-top: 6px !important;
-                  margin-bottom: 6px !important;
-                  text-align: center;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                }
-                .printable-area .receipt-logo {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            display: block !important;
-            margin: 0 auto 6px auto !important;
-            object-fit: contain !important;
-          }
-                .printable-area .company-name {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .receipt-title {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .print-total,
-                .printable-area .print-total * {
-                  font-size: 13pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.4 !important;
-                }
-                .printable-area .print-change,
-                .printable-area .print-change * {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.3 !important;
-                }
-                .printable-area .font-bold,
-                .printable-area .font-black,
-                .printable-area .font-semibold,
-                .printable-area .print-bold-text {
-                  font-weight: 700 !important;
-                }
+                ${RECEIPT_PRINT_STYLES}
               `}
             </style>
-
-
 
             {(() => {
               const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
               const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
               const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
-              const compTotal = receiptData.items?.filter((i: any) => i.is_complimentary || i.notes?.includes('[COMPLIMENTARY')).reduce((sum: number, item: any) => sum + ((item.price || 0) * (item.quantity || 1)), 0) || 0;
 
               return (
-                <div className="relative print:relative">
+                <div className="relative print:relative receipt-ticket-content">
                   {/* Company Details */}
                   <div className="text-center section-block">
                     <div className="flex justify-center mb-1 text-center">
                       <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />
                     </div>
-                    <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
+                    <p className="company-name font-bold">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
                     <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                   </div>
 
                   {/* Receipt Header Title & Metadata */}
                   <div className="text-center section-block pt-1">
                     <p className="receipt-title font-bold text-[11pt]">ORDER SUMMARY</p>
-                    <p className="print-bold-text">***** PRE-BILL *****</p>
+                    <p className="print-bold-text font-bold">***** PRE-BILL *****</p>
                   </div>
 
                   <div className="section-block pt-1">
@@ -552,18 +372,6 @@ export default function Tables() {
                     </div>
                   </div>
 
-                  {/* VAT Breakdown details */}
-                  {/* <div className="section-block pt-1">
-                    <div className="flex justify-between row-item">
-                      <span>VATable Sales</span>
-                      <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>VAT (12%)</span>
-                      <span>₱{receiptCalculations.vatAmount.toFixed(2)}</span>
-                    </div>
-                  </div> */}
-
                   {/* Dine In • Guests • Items summary */}
                   <div className="section-block pt-1 text-center">
                     <p className="row-item text-center">
@@ -573,7 +381,6 @@ export default function Tables() {
 
                   {/* Footer */}
                   <div className="text-center section-block border-t border-dashed border-black pt-1.5 mt-2">
-
                     <p className="font-bold print-bold-text mt-0.5">Thank you for your visit!</p>
                     <p className="font-bold print-bold-text mt-0.5">Enjoy!</p>
                     <p className="mt-1 text-[8pt]">
@@ -595,9 +402,9 @@ export default function Tables() {
               </button>
               <button
                 onClick={handlePrintReceipt}
-                className="flex-1 py-3 border border-amber-500 text-amber-600 hover:bg-amber-50 rounded-xl font-bold transition-colors"
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
               >
-                Print Summary
+                <Printer size={16} /> Print Summary
               </button>
             </div>
           </div>

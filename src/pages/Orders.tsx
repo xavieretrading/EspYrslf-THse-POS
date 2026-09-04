@@ -8,6 +8,7 @@ import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
+import { printReceiptViaBrowser, RECEIPT_PRINT_STYLES } from '../lib/receiptPrinter';
 
 type OrderItem = {
   id: number;
@@ -475,128 +476,6 @@ export default function Orders() {
           return;
         }
 
-        const printStyles = `
-          html, body { 
-            margin: 0; 
-            padding: 0;
-            background-color: white !important;
-            color: black !important;
-            width: 100% !important;
-            display: flex !important;
-            justify-content: center !important;
-          }
-          .receipt-ticket-content { 
-            width: 80mm !important; 
-            max-width: 80mm !important; 
-            margin: 0 auto !important; 
-            padding: 6px !important; 
-            background: white !important;
-            box-sizing: border-box !important;
-          }
-          .receipt-ticket-content * {
-            font-size: 9.5pt !important; 
-            line-height: 1.2 !important; 
-            color: black !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            font-weight: 400 !important;
-          }
-          .receipt-ticket-content p, .receipt-ticket-content div, .receipt-ticket-content span {
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          .receipt-ticket-content .row-item {
-            margin-top: 2.5px !important;
-            margin-bottom: 2.5px !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: flex-start !important;
-          }
-          .receipt-ticket-content .section-block {
-            margin-top: 5px !important;
-            margin-bottom: 5px !important;
-          }
-          .receipt-ticket-content .section-header {
-            font-size: 10.5pt !important;
-            font-weight: 700 !important;
-            border-top: 1px dashed black !important;
-            border-bottom: 1px dashed black !important;
-            padding-top: 3px !important;
-            padding-bottom: 3px !important;
-            margin-top: 6px !important;
-            margin-bottom: 6px !important;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-          }
-          .receipt-ticket-content .receipt-logo {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            display: block !important;
-            margin: 0 auto 6px auto !important;
-            object-fit: contain !important;
-          }
-          .receipt-ticket-content .company-name {
-            font-size: 11.5pt !important;
-            font-weight: 700 !important;
-            display: block;
-            text-align: center;
-            text-transform: uppercase;
-            margin-bottom: 2px !important;
-          }
-          .receipt-ticket-content .receipt-title {
-            font-size: 10.5pt !important;
-            font-weight: 700 !important;
-            display: block;
-            text-align: center;
-            text-transform: uppercase;
-            margin-bottom: 2px !important;
-          }
-          .receipt-ticket-content .print-total,
-          .receipt-ticket-content .print-total * {
-            font-size: 13pt !important;
-            font-weight: 700 !important;
-            line-height: 1.4 !important;
-          }
-          .receipt-ticket-content .print-change,
-          .receipt-ticket-content .print-change * {
-            font-size: 11.5pt !important;
-            font-weight: 700 !important;
-            line-height: 1.3 !important;
-          }
-          .receipt-ticket-content .font-bold,
-          .receipt-ticket-content .font-black,
-          .receipt-ticket-content .font-semibold,
-          .receipt-ticket-content .print-bold-text {
-            font-weight: 700 !important;
-          }
-          .text-center {
-            text-align: center !important;
-          }
-          .text-right {
-            text-align: right !important;
-          }
-          .border-t {
-            border-top: 1px dashed black !important;
-          }
-          .border-b {
-            border-bottom: 1px solid black !important;
-          }
-          .border-y {
-            border-top: 1px dashed black !important;
-            border-bottom: 1px dashed black !important;
-          }
-          .italic {
-            font-style: italic !important;
-          }
-          .truncate {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-        `;
-
         const printData = [
           {
             type: 'html',
@@ -606,7 +485,8 @@ export default function Orders() {
               <html>
                 <head>
                   <meta charset="utf-8">
-                  <style>${printStyles}</style>
+                  <title>Receipt Print</title>
+                  <style>${RECEIPT_PRINT_STYLES}</style>
                 </head>
                 <body>
                   <div class="receipt-ticket-content">
@@ -620,22 +500,18 @@ export default function Orders() {
 
         await qz.print(config, printData);
         swalAlert('Success', 'Receipt printed successfully via QZ Tray.', 'success');
-        setReceiptData(null);
       } catch (err: any) {
         console.error("QZ print failed:", err);
         const fallback = await swalConfirm(
           'QZ Tray Print Issue',
-          `Direct print could not complete (${err.message || 'connection issue'}). Would you like to print using the standard Browser Print Dialog instead?`,
-          'warning'
+          `Direct print could not complete (${err.message || 'connection issue'}). Would you like to print using the standard Browser Print Dialog instead?`
         );
         if (fallback) {
-          window.print();
-          setReceiptData(null);
+          await printReceiptViaBrowser();
         }
       }
     } else {
-      window.print();
-      setReceiptData(null);
+      await printReceiptViaBrowser();
     }
   };
 
@@ -1168,108 +1044,7 @@ export default function Orders() {
       {/* Printable Receipt Modal Overlay */}
       {receiptData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
-          <div className="bg-white p-4 rounded-lg shadow-2xl max-w-[360px] w-full max-h-[90vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area">
-            <style type="text/css" media="print">
-              {`
-                @page { size: 80mm auto; margin: 0; } 
-                html, body { 
-                  margin: 0; 
-                  padding: 0;
-                  print-color-adjust: exact; 
-                  -webkit-print-color-adjust: exact;
-                  color-scheme: light !important;
-                  background-color: white !important;
-                  background: white !important;
-                  color: black !important;
-                  width: 80mm !important;
-                } 
-                .print\\:hidden { display: none !important; }
-                .printable-area { 
-                  width: 80mm !important; 
-                  max-width: 80mm !important; 
-                  margin: 0 auto !important; 
-                  padding: 6px !important; 
-                  border: none !important;
-                  box-shadow: none !important;
-                  background: white !important;
-                }
-                .printable-area * {
-                  font-size: 9.5pt !important; 
-                  line-height: 1.2 !important; 
-                  color: black !important;
-                  font-family: Arial, Helvetica, sans-serif !important;
-                  font-weight: 400 !important;
-                }
-                .printable-area p, .printable-area div, .printable-area span {
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-                .printable-area .row-item {
-                  margin-top: 2.5px !important;
-                  margin-bottom: 2.5px !important;
-                }
-                .printable-area .section-block {
-                  margin-top: 5px !important;
-                  margin-bottom: 5px !important;
-                }
-                .printable-area .section-header {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  border-top: 1px dashed black !important;
-                  border-bottom: 1px dashed black !important;
-                  padding-top: 3px !important;
-                  padding-bottom: 3px !important;
-                  margin-top: 6px !important;
-                  margin-bottom: 6px !important;
-                  text-align: center;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                }
-                .printable-area .receipt-logo {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            display: block !important;
-            margin: 0 auto 6px auto !important;
-            object-fit: contain !important;
-          }
-                .printable-area .company-name {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .receipt-title {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .print-total,
-                .printable-area .print-total * {
-                  font-size: 13pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.4 !important;
-                }
-                .printable-area .print-change,
-                .printable-area .print-change * {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.3 !important;
-                }
-                .printable-area .font-bold,
-                .printable-area .font-black,
-                .printable-area .font-semibold,
-                .printable-area .print-bold-text {
-                  font-weight: 700 !important;
-                }
-              `}
-            </style>
+          <div className="bg-white p-4 rounded-xl shadow-2xl max-w-[360px] w-full max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area border border-slate-200">
             <style type="text/css">
               {`
                 @media print {
@@ -1288,83 +1063,7 @@ export default function Orders() {
                     background: white !important;
                   }
                 }
-                .printable-area { 
-                  padding: 6px !important; 
-                }
-                .printable-area * {
-                  font-size: 9.5pt !important;
-                  line-height: 1.2 !important;
-                  font-family: Arial, Helvetica, sans-serif !important;
-                  font-weight: 400 !important;
-                }
-                .printable-area p, .printable-area div, .printable-area span {
-                  margin: 0 !important;
-                  padding: 0 !important;
-                }
-                .printable-area .row-item {
-                  margin-top: 2.5px !important;
-                  margin-bottom: 2.5px !important;
-                }
-                .printable-area .section-block {
-                  margin-top: 5px !important;
-                  margin-bottom: 5px !important;
-                }
-                .printable-area .section-header {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  border-top: 1px dashed black !important;
-                  border-bottom: 1px dashed black !important;
-                  padding-top: 3px !important;
-                  padding-bottom: 3px !important;
-                  margin-top: 6px !important;
-                  margin-bottom: 6px !important;
-                  text-align: center;
-                  text-transform: uppercase;
-                  letter-spacing: 0.05em;
-                }
-                .printable-area .receipt-logo {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: auto !important;
-            max-height: none !important;
-            display: block !important;
-            margin: 0 auto 6px auto !important;
-            object-fit: contain !important;
-          }
-                .printable-area .company-name {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .receipt-title {
-                  font-size: 10.5pt !important;
-                  font-weight: 700 !important;
-                  display: block;
-                  text-align: center;
-                  text-transform: uppercase;
-                  margin-bottom: 2px !important;
-                }
-                .printable-area .print-total,
-                .printable-area .print-total * {
-                  font-size: 13pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.4 !important;
-                }
-                .printable-area .print-change,
-                .printable-area .print-change * {
-                  font-size: 11.5pt !important;
-                  font-weight: 700 !important;
-                  line-height: 1.3 !important;
-                }
-                .printable-area .font-bold,
-                .printable-area .font-black,
-                .printable-area .font-semibold,
-                .printable-area .print-bold-text {
-                  font-weight: 700 !important;
-                }
+                ${RECEIPT_PRINT_STYLES}
                 .void-watermark { 
                   position: absolute; 
                   top: 35%; 
@@ -1755,18 +1454,21 @@ export default function Orders() {
                       )}
                     </div>
                     {qzError?.toLowerCase().includes('blocked') && (
-                      <div className="p-2 bg-rose-50 border border-rose-200 rounded-lg text-[10px] text-rose-800 space-y-1">
-                        <p className="font-bold">⚠️ Blocked by QZ Tray on this PC</p>
-                        <p className="text-slate-600">Right-click QZ Tray in taskbar ➔ Advanced ➔ Site Manager ➔ Delete site from Blocked list.</p>
+                      <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-900 space-y-2 mt-1">
+                        <p className="font-bold flex items-center gap-1 text-rose-700">⚠️ Blocked by QZ Tray on this PC</p>
+                        <p className="text-slate-600 text-[10px] leading-tight">
+                          To unblock: Right-click green QZ Tray icon in taskbar ➔ <strong>Advanced</strong> ➔ <strong>Site Manager</strong> ➔ Select <code>localhost:8080</code> and click <strong>Delete</strong>.
+                        </p>
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             setUseQzTray(false);
                             localStorage.setItem('qz_enabled', 'false');
+                            await printReceiptViaBrowser();
                           }}
-                          className="w-full py-1 bg-slate-800 hover:bg-slate-900 text-white rounded font-bold transition-all text-center"
+                          className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
                         >
-                          Use Browser Print Instead (No Setup Needed)
+                          <Printer size={13} /> Print Now with Browser Print (No Setup Needed)
                         </button>
                       </div>
                     )}
@@ -1784,9 +1486,9 @@ export default function Orders() {
               </button>
               <button
                 onClick={handlePrintReceipt}
-                className="flex-1 py-3 border border-emerald-500 text-emerald-600 hover:bg-emerald-50 rounded-xl font-bold transition-colors"
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
               >
-                {receiptData.status === 'open' ? 'Print Summary' : 'Print Receipt'}
+                <Printer size={16} /> {receiptData.status === 'open' ? 'Print Summary' : 'Print Receipt'}
               </button>
             </div>
           </div>

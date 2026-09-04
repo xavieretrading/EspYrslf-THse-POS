@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../App';
 import { swalAlert } from '../../lib/swal';
+import { printReceiptViaBrowser } from '../../lib/receiptPrinter';
 
 type Product = {
   id: number;
@@ -253,8 +254,8 @@ export default function BarbershopView({ activeBranch, currentUser, settings }: 
     }
   };
 
-  const handlePrintReceipt = () => {
-    window.print();
+  const handlePrintReceipt = async () => {
+    await printReceiptViaBrowser();
   };
 
   const handleResetTicket = () => {
@@ -681,7 +682,7 @@ export default function BarbershopView({ activeBranch, currentUser, settings }: 
       ───────────────────────────────────────────────────────────────────────────── */}
       {isPrinting && receiptData && (
         <div className="fixed inset-0 bg-slate-900/70 flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border border-slate-200">
+          <div className="bg-white p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 receipt-ticket-content">
             <div className="text-center space-y-1 pb-3 border-b border-dashed border-slate-300">
               <h2 className="font-black text-sm uppercase tracking-wider text-slate-900">SLICK & DAPPER SALON & BARBERSHOP</h2>
               <p className="text-[11px] font-bold text-slate-600">{activeBranch?.name || 'CEBU BRANCH'}</p>

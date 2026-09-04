@@ -15,6 +15,12 @@ import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 export const getProductImage = (name: string): string => {
   const lowercase = name.toLowerCase().trim();
   
+  // Collectible Mugs & Merch
+  if (lowercase.includes('stitch')) return '/mugs/stitch_mug.jpg';
+  if (lowercase.includes('lotso')) return '/mugs/lotso_mug.jpg';
+  if (lowercase.includes('mickey')) return '/mugs/mickey_mug.jpg';
+  if (lowercase.includes('nick wilde') || lowercase.includes('sly fox') || lowercase.includes('nick fox')) return '/mugs/nick_fox_mug.jpg';
+
   // Custom uploaded images in public folder
   if (lowercase.includes('butterscotch') || lowercase.includes('butter scotch')) return '/Butterscotch.png';
   if (lowercase.includes('caramel macchiato') || lowercase.includes('caramelmacchiato') || lowercase.includes('macchiato')) return '/CaramelMacchiato.png';
@@ -64,6 +70,75 @@ export const getValidImageUrl = (imageUrl?: string | null, name?: string): strin
     return imageUrl;
   }
   return getProductImage(name || '');
+};
+
+export const isCoffeeProduct = (item: { name: string; category_name?: string }): boolean => {
+  const name = (item.name || '').toLowerCase().trim();
+  const category = (item.category_name || '').toLowerCase().trim();
+
+  // Exclude non-coffee canned sodas, waters, beers, liquors, merchandise, bakery, laundry
+  if (
+    name.includes('coke') ||
+    name.includes('coca-cola') ||
+    name.includes('coca cola') ||
+    name.includes('sprite') ||
+    name.includes('royal') ||
+    name.includes('red bull') ||
+    name.includes('redbull') ||
+    name.includes('evian') ||
+    name.includes('pocari') ||
+    name.includes('summit') ||
+    name.includes('perrier') ||
+    name.includes('san mig') ||
+    name.includes('pale pilsen') ||
+    name.includes('red horse') ||
+    name.includes('jack daniel') ||
+    name.includes('jackdaniels') ||
+    name.includes('mug') ||
+    name.includes('glass') ||
+    name.includes('tumbler') ||
+    name.includes('towel') ||
+    name.includes('croissant') ||
+    name.includes('cookie') ||
+    name.includes('bread') ||
+    name.includes('pastry') ||
+    name.includes('cake')
+  ) {
+    return false;
+  }
+
+  // Coffee categories
+  if (
+    category.includes('coffee') ||
+    category.includes('espresso') ||
+    category.includes('latte') ||
+    category.includes('frappe') ||
+    category.includes('cappuccino') ||
+    category.includes('brew')
+  ) {
+    return true;
+  }
+
+  // Coffee names
+  return (
+    name.includes('espresso') ||
+    name.includes('americano') ||
+    name.includes('latte') ||
+    name.includes('cappuccino') ||
+    name.includes('macchiato') ||
+    name.includes('mocha') ||
+    name.includes('coffee') ||
+    name.includes('frappe') ||
+    name.includes('butterscotch') ||
+    name.includes('french vanilla') ||
+    name.includes('spanish') ||
+    name.includes('macadamia') ||
+    name.includes('irish cream') ||
+    name.includes('hot choco') ||
+    name.includes('chocolate') ||
+    name.includes('matcha') ||
+    name.includes('durian')
+  );
 };
 
 type Product = { id: number; name: string; price: number; category_name: string; stock: number };
@@ -299,15 +374,13 @@ export default function POS() {
   const [storeCreditQuery, setStoreCreditQuery] = useState('');
   const [storeCreditsList, setStoreCreditsList] = useState<any[]>([]);
 
-  // Beverage Customization Modal States
+  // Add-ons Modal States (Espresso Branch Cart Item Customization)
+  const [addonEditingCartIndex, setAddonEditingCartIndex] = useState<number | null>(null);
+  const [addonEspressoCount, setAddonEspressoCount] = useState<number>(0);
+  const [addonSeaSaltCount, setAddonSeaSaltCount] = useState<number>(0);
+  const [addonOatmilkCount, setAddonOatmilkCount] = useState<number>(0);
+  const [addonSpecialNotes, setAddonSpecialNotes] = useState<string>('');
   const [customizingProduct, setCustomizingProduct] = useState<Product | null>(null);
-  const [customSize, setCustomSize] = useState<'Small (12 oz)' | 'Medium (16 oz)' | 'Large (22 oz)'>('Medium (16 oz)');
-  const [customSugar, setCustomSugar] = useState<'0%' | '25%' | '50%' | '75%' | '100%'>('100%');
-  const [customIce, setCustomIce] = useState<'No Ice' | '25%' | '50%' | '75%' | '100%'>('100%');
-  const [customEspresso, setCustomEspresso] = useState<'Regular' | '+1 Shot' | '+2 Shots'>('Regular');
-  const [customMilk, setCustomMilk] = useState<'Whole Milk' | 'Oat Milk' | 'Soy Milk' | 'Almond Milk'>('Whole Milk');
-  const [customAddons, setCustomAddons] = useState<string[]>([]);
-  const [customInstructions, setCustomInstructions] = useState('');
   const [laundryServiceSearch, setLaundryServiceSearch] = useState('');
   const [isLaundryDropdownOpen, setIsLaundryDropdownOpen] = useState(false);
   const [laundryServicesList, setLaundryServicesList] = useState<any[]>([]);
@@ -601,6 +674,114 @@ export default function POS() {
     return (a.name || '').localeCompare(b.name || '');
   });
 
+  const openCartItemAddonModal = (index: number) => {
+    const item = cart[index];
+    if (!item) return;
+
+    let espCount = 0;
+    let seaCount = 0;
+    let oatCount = 0;
+    const remainingNotes = item.notes || '';
+
+    if (remainingNotes.includes('Espresso 60ml')) {
+      const match = remainingNotes.match(/(\d+)x\s*Espresso 60ml/);
+      espCount = match ? parseInt(match[1], 10) : 1;
+    }
+    if (remainingNotes.includes('Sea Salt 20g')) {
+      const match = remainingNotes.match(/(\d+)x\s*Sea Salt 20g/);
+      seaCount = match ? parseInt(match[1], 10) : 1;
+    }
+    if (remainingNotes.includes('Oatmilk 120g')) {
+      const match = remainingNotes.match(/(\d+)x\s*Oatmilk 120g/);
+      oatCount = match ? parseInt(match[1], 10) : 1;
+    }
+
+    const cleanNotes = remainingNotes
+      .replace(/\+\s*(\d+x\s*)?Espresso 60ml\s*\(\+?₱\d+\),?/gi, '')
+      .replace(/\+\s*(\d+x\s*)?Sea Salt 20g\s*\(\+?₱\d+\),?/gi, '')
+      .replace(/\+\s*(\d+x\s*)?Oatmilk 120g\s*\(\+?₱\d+\),?/gi, '')
+      .replace(/\[DISCOUNT:.*?\]/g, '')
+      .replace(/\[COMPLIMENTARY:.*?\]/g, '')
+      .replace(/^[\s•,+]+|[\s•,+]+$/g, '')
+      .trim();
+
+    setAddonEditingCartIndex(index);
+    setAddonEspressoCount(espCount);
+    setAddonSeaSaltCount(seaCount);
+    setAddonOatmilkCount(oatCount);
+    setAddonSpecialNotes(cleanNotes);
+  };
+
+  const handleSaveCartItemAddons = () => {
+    if (addonEditingCartIndex === null) return;
+    const targetItem = cart[addonEditingCartIndex];
+    if (!targetItem) return;
+
+    const prod = products.find(p => p.id === targetItem.id);
+    const basePrice = prod ? prod.price : targetItem.price;
+
+    const extraPrice =
+      (addonEspressoCount * 50) +
+      (addonSeaSaltCount * 30) +
+      (addonOatmilkCount * 50);
+
+    const addonsList: string[] = [];
+    if (addonEspressoCount > 0) {
+      addonsList.push(addonEspressoCount === 1 ? 'Espresso 60ml (+₱50)' : `${addonEspressoCount}x Espresso 60ml (+₱${addonEspressoCount * 50})`);
+    }
+    if (addonSeaSaltCount > 0) {
+      addonsList.push(addonSeaSaltCount === 1 ? 'Sea Salt 20g (+₱30)' : `${addonSeaSaltCount}x Sea Salt 20g (+₱${addonSeaSaltCount * 30})`);
+    }
+    if (addonOatmilkCount > 0) {
+      addonsList.push(addonOatmilkCount === 1 ? 'Oatmilk 120g (+₱50)' : `${addonOatmilkCount}x Oatmilk 120g (+₱${addonOatmilkCount * 50})`);
+    }
+
+    let compiledNotes = '';
+    if (addonsList.length > 0) {
+      compiledNotes = `+ ${addonsList.join(', ')}`;
+    }
+    if (addonSpecialNotes.trim()) {
+      compiledNotes = compiledNotes ? `${compiledNotes} • ${addonSpecialNotes.trim()}` : addonSpecialNotes.trim();
+    }
+
+    const newPrice = basePrice + extraPrice;
+
+    setCart(prev => prev.map((item, idx) => {
+      if (idx === addonEditingCartIndex) {
+        return {
+          ...item,
+          price: newPrice,
+          notes: compiledNotes
+        };
+      }
+      return item;
+    }));
+
+    setAddonEditingCartIndex(null);
+  };
+
+  const handleClearCartItemAddons = () => {
+    if (addonEditingCartIndex === null) return;
+    const targetItem = cart[addonEditingCartIndex];
+    if (!targetItem) return;
+
+    const prod = products.find(p => p.id === targetItem.id);
+    const basePrice = prod ? prod.price : targetItem.price;
+
+    setCart(prev => prev.map((item, idx) => {
+      if (idx === addonEditingCartIndex) {
+        return {
+          ...item,
+          price: basePrice,
+          notes: addonSpecialNotes.trim()
+        };
+      }
+      return item;
+    }));
+
+    setAddonEditingCartIndex(null);
+  };
+
   const addToCart = async (product: Product) => {
     const isPisoPromo = product.name.toLowerCase().includes('piso promo') || product.name.toLowerCase().includes('piso sale');
     if (isPisoPromo) {
@@ -616,7 +797,7 @@ export default function POS() {
       return;
     }
     // Check total unsaved quantity of this item already in current cart
-    const currentUnsaved = cart.find(item => item.id === product.id && !item._isSaved);
+    const currentUnsaved = cart.find(item => item.id === product.id && !item._isSaved && item.notes === '');
     const currentUnsavedQty = currentUnsaved ? currentUnsaved.quantity : 0;
     if (currentUnsavedQty + 1 > product.stock) {
       swalAlert('Insufficient Stock', `Cannot add more than the available stock (${product.stock} units left)`, 'error');
@@ -625,7 +806,7 @@ export default function POS() {
 
     setCart(prev => {
       // Find matching item that hasn't been saved yet and has no custom notes
-      const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved && item.notes === '');
+      const existingUnsavedIndex = prev.findIndex(item => item.id === product.id && !item._isSaved && item.notes === '' && item.price === product.price);
       if (existingUnsavedIndex >= 0) {
         const newCart = [...prev];
         newCart[existingUnsavedIndex] = {
@@ -3157,11 +3338,18 @@ export default function POS() {
                         </div>
                       )}
 
-                      {/* Hover Plus Indicator (Top Right) */}
+                      {/* Hover Quick-Add 1-Click Indicator (Top Right) */}
                       {!isLocked && !isPisoPromo && (
-                        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="bg-emerald-500 text-white p-0.5 rounded-md shadow-sm">
-                            <Plus size={8} />
+                        <div 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(product);
+                          }}
+                          title="Quick 1-Click Add (No Add-ons)"
+                          className="absolute top-2 right-2 z-25 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        >
+                          <div className="bg-emerald-500 hover:bg-emerald-600 text-white p-1 rounded-md shadow-md active:scale-90 transition-transform">
+                            <Plus size={9} strokeWidth={3} />
                           </div>
                         </div>
                       )}
@@ -3332,9 +3520,9 @@ export default function POS() {
                           )}
                         </div>
 
-                        {/* 1-Click Senior Discount Toggle Button for this Item */}
+                        {/* 1-Click Senior Discount & Add-ons Buttons for this Item */}
                         {!item._isSaved && (
-                          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-slate-100">
+                          <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-slate-100 flex-wrap">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -3361,6 +3549,36 @@ export default function POS() {
                                 <span className="text-[9px] text-slate-400 font-normal">+ Apply</span>
                               )}
                             </button>
+
+                            {/* Add-ons Button (Only displayed for Coffee items) */}
+                            {isCoffeeProduct(item) && (() => {
+                              const hasAddons = item.notes && (item.notes.includes('Espresso 60ml') || item.notes.includes('Sea Salt 20g') || item.notes.includes('Oatmilk 120g'));
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const realIndex = cart.findIndex(c => c === item);
+                                    if (realIndex !== -1) {
+                                      openCartItemAddonModal(realIndex);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded-md text-[10.5px] font-extrabold transition-all flex items-center gap-1 border select-none cursor-pointer",
+                                    hasAddons
+                                      ? "bg-amber-500 text-white border-amber-600 shadow-xs"
+                                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200"
+                                  )}
+                                >
+                                  <span>✨ Add-ons</span>
+                                  {hasAddons ? (
+                                    <span className="bg-amber-700/80 px-1 py-0.2 rounded text-[8.5px] font-black tracking-wide">✓ Customized</span>
+                                  ) : (
+                                    <span className="text-[9px] text-slate-400 font-normal">+ Select</span>
+                                  )}
+                                </button>
+                              );
+                            })()}
                           </div>
                         )}
 
@@ -5416,279 +5634,307 @@ export default function POS() {
         </div>
       )}
 
-      {/* ================= DRINK CUSTOMIZATION MODAL ================= */}
-      {customizingProduct && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 font-sans overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl p-6 max-w-lg w-full border border-slate-100 flex flex-col max-h-[95vh]">
-            {/* Header */}
-            <div className="border-b border-slate-100 pb-3 mb-4 text-center">
-              <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-tight">{customizingProduct.name}</h2>
-              <span className="text-[9px] text-slate-400 font-bold tracking-widest uppercase">Customize Beverage</span>
-            </div>
+      {/* ================= CART ITEM ADD-ONS MODAL ================= */}
+      {addonEditingCartIndex !== null && cart[addonEditingCartIndex] && (() => {
+        const editingItem = cart[addonEditingCartIndex];
+        const prod = products.find(p => p.id === editingItem.id);
+        const baseUnitPrice = prod ? prod.price : editingItem.price;
 
-            {/* Customization Body */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs">
+        const extraUnitPrice =
+          (addonEspressoCount * 50) +
+          (addonSeaSaltCount * 30) +
+          (addonOatmilkCount * 50);
+        const finalUnitPrice = baseUnitPrice + extraUnitPrice;
+        const totalLinePrice = finalUnitPrice * editingItem.quantity;
 
-              {/* Size */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Size</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Small (12 oz)', 'Medium (16 oz)', 'Large (22 oz)'] as const).map(sz => (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() => setCustomSize(sz)}
+        return (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 font-sans overflow-y-auto animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 max-w-lg w-full border border-slate-150 flex flex-col max-h-[92vh] relative animate-in zoom-in-95 duration-200">
+              
+              {/* Modal Header */}
+              <div className="flex items-start justify-between pb-3.5 mb-3.5 border-b border-slate-150 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-xs shrink-0 flex items-center justify-center">
+                    <img
+                      src={getValidImageUrl((editingItem as any).image_url, editingItem.name)}
+                      alt={editingItem.name}
+                      onError={(e) => {
+                        const imgTarget = e.currentTarget as HTMLImageElement;
+                        imgTarget.style.opacity = '0';
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md border border-emerald-200/60 leading-none">
+                        {editingItem.category_name || 'Beverage'}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        Cart Item ({editingItem.quantity}x)
+                      </span>
+                    </div>
+                    <h2 className="text-base md:text-lg font-black text-slate-900 uppercase tracking-tight leading-tight mt-1 truncate">
+                      {editingItem.name}
+                    </h2>
+                    <p className="text-xs font-black text-emerald-600 font-mono mt-0.5">
+                      Base Unit Price: ₱{baseUnitPrice.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAddonEditingCartIndex(null)}
+                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Modal Body - Scrollable Content */}
+              <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs">
+                
+                {/* Available Add-ons Header */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>✨ Select Add-ons</span>
+                      <span className="text-[9px] font-normal text-slate-400 normal-case">(Tap to select or change qty)</span>
+                    </label>
+                    {extraUnitPrice > 0 && (
+                      <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        +₱{extraUnitPrice.toFixed(2)} extras / unit
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 3 Add-ons Grid */}
+                  <div className="grid grid-cols-1 gap-2.5">
+                    
+                    {/* Addon 1: Espresso 60ml (50 pesos) */}
+                    <div
+                      onClick={() => setAddonEspressoCount(prev => prev > 0 ? 0 : 1)}
                       className={cn(
-                        "py-2 px-2 text-center rounded-xl border text-[11px] transition-all font-bold",
-                        customSize === sz
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
+                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none shadow-2xs",
+                        addonEspressoCount > 0
+                          ? "border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30"
+                          : "border-slate-200 bg-slate-50/60 hover:bg-slate-100/60 hover:border-slate-300"
                       )}
                     >
-                      {sz}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Sugar Level */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Sugar Level</label>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {(['0%', '25%', '50%', '75%', '100%'] as const).map(sug => {
-                    const labelMap = { '0%': 'No', '25%': '25%', '50%': '50%', '75%': '75%', '100%': '100%' };
-                    return (
-                      <button
-                        key={sug}
-                        type="button"
-                        onClick={() => setCustomSugar(sug)}
-                        className={cn(
-                          "py-2 px-1 text-center rounded-xl border text-[10px] transition-all font-bold",
-                          customSugar === sug
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
-                        )}
-                      >
-                        {labelMap[sug]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Ice Level */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Ice Level</label>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {(['No Ice', '25%', '50%', '75%', '100%'] as const).map(iceOpt => (
-                    <button
-                      key={iceOpt}
-                      type="button"
-                      onClick={() => setCustomIce(iceOpt)}
-                      className={cn(
-                        "py-2 px-1 text-center rounded-xl border text-[10px] transition-all font-bold",
-                        customIce === iceOpt
-                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
-                      )}
-                    >
-                      {iceOpt.replace(' Ice', '')}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Espresso Shot */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Espresso Shot</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['Regular', '+1 Shot', '+2 Shots'] as const).map(sh => {
-                    const priceLabel = sh === '+1 Shot' ? ' (+₱30)' : sh === '+2 Shots' ? ' (+₱60)' : '';
-                    return (
-                      <button
-                        key={sh}
-                        type="button"
-                        onClick={() => setCustomEspresso(sh)}
-                        className={cn(
-                          "py-2 px-2 text-center rounded-xl border text-[10px] transition-all font-bold",
-                          customEspresso === sh
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
-                        )}
-                      >
-                        {sh}{priceLabel}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Milk Options */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Milk Options</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['Whole Milk', 'Oat Milk', 'Soy Milk', 'Almond Milk'] as const).map(mk => {
-                    const extraPrice = mk === 'Oat Milk' || mk === 'Soy Milk' ? 20 : mk === 'Almond Milk' ? 30 : 0;
-                    const priceLabel = extraPrice > 0 ? ` (+₱${extraPrice})` : '';
-                    return (
-                      <button
-                        key={mk}
-                        type="button"
-                        onClick={() => setCustomMilk(mk)}
-                        className={cn(
-                          "py-2.5 px-3 text-left rounded-xl border text-[10px] transition-all font-bold flex justify-between items-center",
-                          customMilk === mk
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
-                        )}
-                      >
-                        <span>{mk}</span>
-                        <span className="opacity-80 text-[9px]">{priceLabel}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Toppings / Add-ons */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Toppings / Add-ons</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'Whipped Cream', name: 'Whipped Cream', price: 20 },
-                    { id: 'Caramel Drizzle', name: 'Caramel Drizzle', price: 15 },
-                    { id: 'Chocolate Syrup', name: 'Chocolate Syrup', price: 15 },
-                    { id: 'Pearl', name: 'Pearl', price: 20 },
-                    { id: 'Coffee Jelly', name: 'Coffee Jelly', price: 20 }
-                  ].map(tp => {
-                    const isChecked = customAddons.includes(tp.id);
-                    return (
-                      <label
-                        key={tp.id}
-                        className={cn(
-                          "flex items-center justify-between p-2.5 rounded-xl border text-[10px] font-bold cursor-pointer transition-all select-none",
-                          isChecked
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100/50"
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setCustomAddons([...customAddons, tp.id]);
-                              } else {
-                                setCustomAddons(customAddons.filter(a => a !== tp.id));
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <div className={cn(
-                            "w-3.5 h-3.5 border rounded flex items-center justify-center transition-all",
-                            isChecked ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 bg-white"
-                          )}>
-                            {isChecked && <Check size={10} strokeWidth={3} />}
-                          </div>
-                          <span>{tp.name}</span>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all border",
+                          addonEspressoCount > 0
+                            ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200"
+                        )}>
+                          ☕
                         </div>
-                        <span className="text-[9px] opacity-80">+₱{tp.price}</span>
-                      </label>
-                    );
-                  })}
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-xs md:text-sm font-black text-slate-900">Espresso 60ml</h4>
+                            <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-200/60">
+                              60ml
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Extra double shot rich coffee extraction</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-xs font-black text-emerald-600 font-mono">+₱50</span>
+                        <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setAddonEspressoCount(prev => Math.max(0, prev - 1))}
+                            className="w-6 h-6 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs border border-slate-200"
+                          >
+                            <Minus size={11} />
+                          </button>
+                          <span className="w-5 text-center font-black text-xs text-slate-900 font-mono">
+                            {addonEspressoCount}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAddonEspressoCount(prev => prev + 1)}
+                            className="w-6 h-6 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-xs"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Addon 2: Sea Salt 20g (30 pesos) */}
+                    <div
+                      onClick={() => setAddonSeaSaltCount(prev => prev > 0 ? 0 : 1)}
+                      className={cn(
+                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none shadow-2xs",
+                        addonSeaSaltCount > 0
+                          ? "border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30"
+                          : "border-slate-200 bg-slate-50/60 hover:bg-slate-100/60 hover:border-slate-300"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all border",
+                          addonSeaSaltCount > 0
+                            ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200"
+                        )}>
+                          🧂
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-xs md:text-sm font-black text-slate-900">Sea Salt 20g</h4>
+                            <span className="text-[9px] font-extrabold text-blue-700 bg-blue-100/80 px-1.5 py-0.5 rounded border border-blue-200/60">
+                              20g
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Creamy whipped sea salt froth topping</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-xs font-black text-emerald-600 font-mono">+₱30</span>
+                        <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setAddonSeaSaltCount(prev => Math.max(0, prev - 1))}
+                            className="w-6 h-6 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs border border-slate-200"
+                          >
+                            <Minus size={11} />
+                          </button>
+                          <span className="w-5 text-center font-black text-xs text-slate-900 font-mono">
+                            {addonSeaSaltCount}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAddonSeaSaltCount(prev => prev + 1)}
+                            className="w-6 h-6 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-xs"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Addon 3: Oatmilk 120g (50 pesos) */}
+                    <div
+                      onClick={() => setAddonOatmilkCount(prev => prev > 0 ? 0 : 1)}
+                      className={cn(
+                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between select-none shadow-2xs",
+                        addonOatmilkCount > 0
+                          ? "border-emerald-500 bg-emerald-50/70 ring-1 ring-emerald-500/30"
+                          : "border-slate-200 bg-slate-50/60 hover:bg-slate-100/60 hover:border-slate-300"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 transition-all border",
+                          addonOatmilkCount > 0
+                            ? "bg-emerald-500 text-white border-emerald-600 shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200"
+                        )}>
+                          🥛
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h4 className="text-xs md:text-sm font-black text-slate-900">Oatmilk 120g</h4>
+                            <span className="text-[9px] font-extrabold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-200/60">
+                              120g
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-medium">Rich creamy plant-based barista oat milk</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-xs font-black text-emerald-600 font-mono">+₱50</span>
+                        <div className="flex items-center gap-1 bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setAddonOatmilkCount(prev => Math.max(0, prev - 1))}
+                            className="w-6 h-6 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs border border-slate-200"
+                          >
+                            <Minus size={11} />
+                          </button>
+                          <span className="w-5 text-center font-black text-xs text-slate-900 font-mono">
+                            {addonOatmilkCount}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setAddonOatmilkCount(prev => prev + 1)}
+                            className="w-6 h-6 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shadow-xs"
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Special Instructions */}
+                <div className="pt-1 border-t border-slate-100">
+                  <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">
+                    Special Notes (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Less ice, extra hot, etc."
+                    value={addonSpecialNotes}
+                    onChange={(e) => setAddonSpecialNotes(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-xs font-semibold focus:bg-white focus:border-emerald-500 transition-all font-sans"
+                  />
+                </div>
+
+              </div>
+
+              {/* Modal Footer Summary & Action Buttons */}
+              <div className="border-t border-slate-150 pt-3.5 mt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex items-center justify-between sm:flex-col sm:items-start">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    Item Total ({editingItem.quantity}x)
+                  </span>
+                  <div className="flex items-baseline gap-1.5 mt-0.5">
+                    <span className="text-xl font-black text-emerald-600 font-mono">
+                      ₱{totalLinePrice.toFixed(2)}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      (₱{finalUnitPrice.toFixed(2)} ea)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClearCartItemAddons}
+                    className="flex-1 sm:flex-none px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-[11px] uppercase tracking-wide transition-all active:scale-[0.98]"
+                  >
+                    Clear Add-ons
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveCartItemAddons}
+                    className="flex-1 sm:flex-none px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md uppercase tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                  >
+                    <span>Apply to Item</span>
+                    <span className="font-mono bg-emerald-700/60 px-1.5 py-0.5 rounded text-[10.5px]">
+                      ₱{totalLinePrice.toFixed(2)}
+                    </span>
+                  </button>
                 </div>
               </div>
 
-              {/* Special Instructions */}
-              <div>
-                <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">Special Instructions</label>
-                <input
-                  type="text"
-                  placeholder="e.g. extra hot, less sweet, no foam..."
-                  value={customInstructions}
-                  onChange={(e) => setCustomInstructions(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-250 rounded-xl outline-none text-xs font-semibold focus:bg-white focus:border-emerald-500 transition-all font-sans"
-                />
-              </div>
-
             </div>
-
-            {/* Footer Summary & Action buttons */}
-            <div className="border-t border-slate-100 pt-4 mt-4 flex items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider leading-none">Total Price</span>
-                <span className="text-lg font-black text-emerald-600 font-mono">
-                  ₱{(
-                    customizingProduct.price +
-                    (customEspresso === '+1 Shot' ? 30 : customEspresso === '+2 Shots' ? 60 : 0) +
-                    (customMilk === 'Oat Milk' || customMilk === 'Soy Milk' ? 20 : customMilk === 'Almond Milk' ? 30 : 0) +
-                    customAddons.reduce((sum, item) => sum + (item.includes('Caramel') || item.includes('Chocolate') ? 15 : 20), 0)
-                  ).toFixed(2)}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCustomizingProduct(null)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wide transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const extraPrice =
-                      (customEspresso === '+1 Shot' ? 30 : customEspresso === '+2 Shots' ? 60 : 0) +
-                      (customMilk === 'Oat Milk' || customMilk === 'Soy Milk' ? 20 : customMilk === 'Almond Milk' ? 30 : 0) +
-                      customAddons.reduce((sum, item) => sum + (item.includes('Caramel') || item.includes('Chocolate') ? 15 : 20), 0);
-
-                    const adjustedPrice = customizingProduct.price + extraPrice;
-
-                    // Compile bullet instructions notes
-                    const sizeShort = customSize.includes('12 oz') ? '12 oz' : customSize.includes('16 oz') ? '16 oz' : '22 oz';
-                    let bulletNotes = `(${sizeShort})`;
-                    bulletNotes += ` • Sugar: ${customSugar}`;
-                    bulletNotes += ` • Ice: ${customIce}`;
-
-                    if (customEspresso !== 'Regular') {
-                      bulletNotes += ` • ${customEspresso} Shot`;
-                    }
-                    if (customMilk !== 'Whole Milk') {
-                      bulletNotes += ` • ${customMilk}`;
-                    }
-                    customAddons.forEach(addon => {
-                      bulletNotes += ` • ${addon}`;
-                    });
-                    if (customInstructions.trim()) {
-                      bulletNotes += ` • Inst: ${customInstructions.trim()}`;
-                    }
-
-                    setCart(prev => {
-                      const existingUnsavedIndex = prev.findIndex(item => item.id === customizingProduct.id && !item._isSaved && item.notes === bulletNotes);
-                      if (existingUnsavedIndex >= 0) {
-                        const newCart = [...prev];
-                        newCart[existingUnsavedIndex] = {
-                          ...newCart[existingUnsavedIndex],
-                          quantity: newCart[existingUnsavedIndex].quantity + 1
-                        };
-                        return newCart;
-                      }
-                      return [...prev, { ...customizingProduct, price: adjustedPrice, quantity: 1, notes: bulletNotes, _isSaved: false }];
-                    });
-
-                    setCustomizingProduct(null);
-                  }}
-                  className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs rounded-xl shadow-md uppercase tracking-wide transition-all active:scale-[0.98]"
-                >
-                  Add to Order
-                </button>
-              </div>
-            </div>
-
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

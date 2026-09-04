@@ -272,139 +272,171 @@ export default function Tables() {
       </div>
 
       {receiptData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
-          <div className="bg-white p-4 rounded-xl shadow-2xl max-w-[360px] w-full max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area border border-slate-200">
-            <style type="text/css">
-              {`
-                @media print {
-                  body * {
-                    visibility: hidden !important;
-                  }
-                  .printable-area, .printable-area * {
-                    visibility: visible !important;
-                  }
-                  .printable-area {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 80mm !important;
-                    max-width: 80mm !important;
-                    background: white !important;
-                  }
-                }
-                ${RECEIPT_PRINT_STYLES}
-              `}
-            </style>
-
-            {(() => {
-              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
-              const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
-              const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
-
-              return (
-                <div className="relative print:relative receipt-ticket-content">
-                  {/* Company Details */}
-                  <div className="text-center section-block">
-                    <div className="flex justify-center mb-1 text-center">
-                      <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />
-                    </div>
-                    <p className="company-name font-bold">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
-                    <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                  </div>
-
-                  {/* Receipt Header Title & Metadata */}
-                  <div className="text-center section-block pt-1">
-                    <p className="receipt-title font-bold text-[11pt]">ORDER SUMMARY</p>
-                    <p className="print-bold-text font-bold">***** PRE-BILL *****</p>
-                  </div>
-
-                  <div className="section-block pt-1">
-                    <div className="flex justify-between row-item">
-                      <span>Invoice: {receiptData.receipt_number !== undefined && receiptData.receipt_number !== null ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : 'PENDING'}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>{receiptData.updated_at ? new Date(receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '') : new Date().toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
-                    </div>
-                  </div>
-
-                  {/* Receipt Items list */}
-                  <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
-                    <div className="flex justify-between font-semibold border-b border-black pb-1 mb-1">
-                      <span>Qty &nbsp;&nbsp; Item</span>
-                      <span>Amount</span>
-                    </div>
-                    {receiptData.items?.map((item: any) => (
-                      <div key={item.id} className="flex justify-between row-item">
-                        <span className="flex flex-col max-w-[75%]">
-                          <span>{item.quantity} &nbsp;&nbsp; {item.name || item.product_name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}</span>
-                          {item.notes && item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '').trim() !== '' && (
-                            <span className="text-[8pt] text-slate-600 italic">
-                              {item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '')}
-                            </span>
-                          )}
-                        </span>
-                        <span className="text-right">
-                          ₱{((item.price * item.quantity)).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Calculations & Totals */}
-                  <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
-                    <div className="flex justify-between row-item">
-                      <span>Subtotal</span>
-                      <span>₱{displaySubtotal.toFixed(2)}</span>
-                    </div>
-                    {receiptData.discount_amount > 0 && (
-                      <div className="flex justify-between row-item">
-                        <span>Discount ({receiptData.discount_name})</span>
-                        <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
-                      <span>TOTAL</span>
-                      <span>₱{calcTotal.toFixed(2)}</span>
-                    </div>
-                  </div>
-
-                  {/* Dine In • Guests • Items summary */}
-                  <div className="section-block pt-1 text-center">
-                    <p className="row-item text-center">
-                      {receiptData.table_name || 'Dine In'} • Guests: {receiptCalculations.paxCount || 1} • Items: {receiptData.items?.reduce((acc: number, item: any) => acc + item.quantity, 0)}
-                    </p>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="text-center section-block border-t border-dashed border-black pt-1.5 mt-2">
-                    <p className="font-bold print-bold-text mt-0.5">Thank you for your visit!</p>
-                    <p className="font-bold print-bold-text mt-0.5">Enjoy!</p>
-                    <p className="mt-1 text-[8pt]">
-                      {activeBranch?.is_bir_compliant
-                        ? "This document is not valid for claim of input tax."
-                        : "THIS IS NOT AN OFFICIAL RECEIPT"}
-                    </p>
-                  </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm p-4">
+          <div className="bg-slate-50 rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            {/* Modal Sticky Header */}
+            <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 print:hidden">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <Printer size={16} />
                 </div>
-              );
-            })()}
-
-            <div className="mt-8 flex gap-3 print:hidden">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm leading-tight">Table Bill Summary</h3>
+                  <p className="text-[10px] text-slate-500 font-mono">
+                    {receiptData.table_name || 'Active Table'} • Order #{(receiptData.order_number || receiptData.id || '').toString().padStart(6, '0')}
+                  </p>
+                </div>
+              </div>
               <button
+                type="button"
                 onClick={() => setReceiptData(null)}
-                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                title="Close preview"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Receipt Body (Paper View) */}
+            <div className="flex-1 overflow-y-auto p-4 flex justify-center bg-slate-100/70">
+              <div className="bg-white p-4 rounded-xl shadow-md max-w-[340px] w-full printable-area border border-slate-200 text-black">
+                <style type="text/css">
+                  {`
+                    @media print {
+                      body * {
+                        visibility: hidden !important;
+                      }
+                      .printable-area, .printable-area * {
+                        visibility: visible !important;
+                      }
+                      .printable-area {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 80mm !important;
+                        max-width: 80mm !important;
+                        background: white !important;
+                      }
+                    }
+                    ${RECEIPT_PRINT_STYLES}
+                  `}
+                </style>
+
+                {(() => {
+                  const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
+                  const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
+                  const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
+
+                  return (
+                    <div className="relative print:relative receipt-ticket-content">
+                      {/* Company Details */}
+                      <div className="text-center section-block">
+                        <div className="flex justify-center mb-1 text-center">
+                          <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />
+                        </div>
+                        <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
+                      </div>
+
+                      {/* Receipt Header Title & Metadata */}
+                      <div className="text-center section-block border-t border-dashed border-black pt-1.5">
+                        <p className="receipt-title font-bold text-[11pt]">ORDER SUMMARY</p>
+                      </div>
+
+                      <div className="section-block pt-1">
+                        <div className="flex justify-between row-item">
+                          <span>{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                        </div>
+                        <div className="flex justify-between row-item">
+                          <span>Table: {receiptData.table_name || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between row-item">
+                          <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
+                        </div>
+                        <div className="flex justify-between row-item">
+                          <span>Cashier: {receiptData.cashier_name || 'Staff'}</span>
+                        </div>
+                      </div>
+
+                      {/* Receipt Items list */}
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
+                        <div className="flex justify-between font-semibold border-b border-black pb-1 mb-1">
+                          <span>Qty &nbsp;&nbsp; Item</span>
+                          <span>Amount</span>
+                        </div>
+                        {receiptData.items?.map((item: any) => (
+                          <div key={item.id} className="flex justify-between row-item">
+                            <span className="flex flex-col max-w-[75%]">
+                              <span>{item.quantity} &nbsp;&nbsp; {item.name || item.product_name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}</span>
+                              {item.notes && item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '').trim() !== '' && (
+                                <span className="text-[8pt] text-slate-600 italic">
+                                  {item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '')}
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-right">
+                              ₱{((item.price * item.quantity)).toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Calculations & Totals */}
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
+                        <div className="flex justify-between row-item">
+                          <span>Subtotal</span>
+                          <span>₱{displaySubtotal.toFixed(2)}</span>
+                        </div>
+                        {receiptData.discount_amount > 0 && (
+                          <div className="flex justify-between row-item">
+                            <span>Discount ({receiptData.discount_name})</span>
+                            <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
+                          <span>TOTAL</span>
+                          <span>₱{calcTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {/* Dine In • Guests • Items summary */}
+                      <div className="section-block pt-1 text-center">
+                        <p className="row-item text-center">
+                          {receiptData.table_name || 'Dine In'} • Guests: {receiptCalculations.paxCount || 1} • Items: {receiptData.items?.reduce((acc: number, item: any) => acc + item.quantity, 0)}
+                        </p>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="text-center section-block border-t border-dashed border-black pt-1.5 mt-2">
+                        <p className="font-bold print-bold-text mt-0.5">Thank you for your visit!</p>
+                        <p className="font-bold print-bold-text mt-0.5">Enjoy!</p>
+                        <p className="mt-1 text-[8pt]">
+                          {activeBranch?.is_bir_compliant
+                            ? "This document is not valid for claim of input tax."
+                            : "THIS IS NOT AN OFFICIAL RECEIPT"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Modal Sticky Bottom Controls & Action Bar */}
+            <div className="p-3 bg-white border-t border-slate-200 shrink-0 flex gap-2 print:hidden">
+              <button
+                type="button"
+                onClick={() => setReceiptData(null)}
+                className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
               >
                 Close
               </button>
               <button
+                type="button"
                 onClick={handlePrintReceipt}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-all shadow-md active:scale-98 flex items-center justify-center gap-1.5"
               >
-                <Printer size={16} /> Print Summary
+                <Printer size={15} /> Print Summary
               </button>
             </div>
           </div>

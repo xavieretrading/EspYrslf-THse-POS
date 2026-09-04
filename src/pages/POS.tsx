@@ -3926,477 +3926,473 @@ export default function POS() {
       )}
 
       {receiptData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm">
-          <div className="bg-white p-4 rounded-xl shadow-2xl max-w-[360px] w-full max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:shadow-none print:w-[80mm] print:p-0 print:m-0 printable-area border border-slate-200">
-            <style type="text/css">
-              {`
-                @media print {
-                  body * {
-                    visibility: hidden !important;
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 print:bg-white print:items-start print:justify-center backdrop-blur-sm p-4">
+          <div className="bg-slate-50 rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-200">
+            {/* Modal Sticky Header */}
+            <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 print:hidden">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <Printer size={16} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm leading-tight">Receipt Preview</h3>
+                  <p className="text-[10px] text-slate-500 font-mono">
+                    {receiptData.receipt_number ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : `#${(receiptData.order_number || receiptData.id || '').toString().padStart(6, '0')}`}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReceiptData(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                title="Close preview"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Receipt Body (Paper View) */}
+            <div className="flex-1 overflow-y-auto p-4 flex justify-center bg-slate-100/70">
+              <div className="bg-white p-4 rounded-xl shadow-md max-w-[340px] w-full printable-area border border-slate-200 text-black">
+                <style type="text/css">
+                  {`
+                    @media print {
+                      body * {
+                        visibility: hidden !important;
+                      }
+                      .printable-area, .printable-area * {
+                        visibility: visible !important;
+                      }
+                      .printable-area {
+                        position: absolute !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                        width: 80mm !important;
+                        max-width: 80mm !important;
+                        background: white !important;
+                      }
+                    }
+                    ${RECEIPT_PRINT_STYLES}
+                    .void-watermark { 
+                      position: absolute; 
+                      top: 35%; 
+                      left: 5%; 
+                      width: 90%; 
+                      text-align: center; 
+                      font-size: 64px !important; 
+                      font-weight: 900 !important; 
+                      color: rgba(220, 38, 38, 0.18) !important; 
+                      border: 6px solid rgba(220, 38, 38, 0.18) !important; 
+                      padding: 8px !important; 
+                      transform: rotate(-25deg); 
+                      z-index: 10; 
+                      text-transform: uppercase;
+                      pointer-events: none;
+                    }
+                  `}
+                </style>
+
+                {['customer'].map((type, index) => {
+                  const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
+                  const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
+                  const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
+
+                  // Parse laundry metadata if any
+                  let laundryDetails: any = null;
+                  if (receiptData.notes && receiptData.notes.trim().startsWith('{')) {
+                    try {
+                      const parsed = JSON.parse(receiptData.notes);
+                      if (parsed.is_laundry) {
+                        laundryDetails = parsed;
+                      }
+                    } catch (e) { }
                   }
-                  .printable-area, .printable-area * {
-                    visibility: visible !important;
-                  }
-                  .printable-area {
-                    position: absolute !important;
-                    left: 0 !important;
-                    top: 0 !important;
-                    width: 80mm !important;
-                    max-width: 80mm !important;
-                    background: white !important;
-                  }
-                }
-                ${RECEIPT_PRINT_STYLES}
-                .void-watermark { 
-                  position: absolute; 
-                  top: 35%; 
-                  left: 5%; 
-                  width: 90%; 
-                  text-align: center; 
-                  font-size: 64px !important; 
-                  font-weight: 900 !important; 
-                  color: rgba(220, 38, 38, 0.18) !important; 
-                  border: 6px solid rgba(220, 38, 38, 0.18) !important; 
-                  padding: 8px !important; 
-                  transform: rotate(-25deg); 
-                  z-index: 10; 
-                  text-transform: uppercase;
-                  pointer-events: none;
-                }
-              `}
-            </style>
 
-            {['customer'].map((type, index) => {
-              const rawSubtotal = receiptData.items?.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0) || 0;
-              const displaySubtotal = rawSubtotal > 0 ? rawSubtotal : (receiptData.subtotal || 0);
-              const calcTotal = Math.max(0, displaySubtotal - (receiptData.discount_amount || 0));
+                  if (laundryDetails) {
+                    return (
+                      <div key={type} className={cn("relative print:relative text-black receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
+                        {receiptData.status === 'voided' && (
+                          <div className="void-watermark select-none pointer-events-none">VOID</div>
+                        )}
 
-              // Parse laundry metadata if any
-              let laundryDetails: any = null;
-              if (receiptData.notes && receiptData.notes.trim().startsWith('{')) {
-                try {
-                  const parsed = JSON.parse(receiptData.notes);
-                  if (parsed.is_laundry) {
-                    laundryDetails = parsed;
-                  }
-                } catch (e) { }
-              }
-
-              if (laundryDetails) {
-                return (
-                  <div key={type} className={cn("relative print:relative text-black receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
-                    {receiptData.status === 'voided' && (
-                      <div className="void-watermark select-none pointer-events-none">VOID</div>
-                    )}
-
-                    {/* Company Details */}
-                    <div className="text-center section-block">
-                      <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
-                      <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
-                      {/* <p className="text-[9.5pt] hidden">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
-                    </div>
-
-                    <div className="text-center section-block pt-1.5 pb-1">
-                      <p className="receipt-title font-bold text-[11pt] border-y border-dashed border-black py-0.5">
-                        {receiptData.status === 'voided' ? 'VOIDED LAUNDRY RECEIPT' : 'LAUNDRY RECEIPT'}
-                      </p>
-                    </div>
-
-                    <div className="section-block pt-1 font-mono text-[9.5pt]">
-                      <div className="flex justify-between row-item">
-                        <span>Receipt No: #{(receiptData.receipt_number || receiptData.id)}</span>
-                        <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
-                      </div>
-                      <div className="flex justify-between row-item">
-                        <span className="truncate max-w-[100%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
-                      </div>
-                    </div>
-
-                    <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
-                      <div className="flex justify-between row-item">
-                        <span>Customer:</span>
-                        <span className="font-bold">{laundryDetails.customer_name}</span>
-                      </div>
-                      {laundryDetails.phone && (
-                        <div className="flex justify-between row-item">
-                          <span>Phone:</span>
-                          <span>{laundryDetails.phone}</span>
+                        {/* Company Details */}
+                        <div className="text-center section-block">
+                          <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                          <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
+                          {/* <p className="text-[9.5pt] hidden">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                         </div>
-                      )}
-                      {laundryDetails.services && laundryDetails.services.length > 0 ? (
-                        <div className="space-y-1.5 border-b border-dashed border-black pb-1.5 mb-1.5">
-                          <div className="text-[8.5pt] font-bold uppercase tracking-wider mb-1">Services List</div>
-                          {laundryDetails.services.map((item: any, idx: number) => (
-                            <div key={idx} className="text-[9pt]">
-                              <div className="flex justify-between row-item font-bold">
-                                <span className="truncate max-w-[75%]">{item.name}</span>
-                                <span>₱{item.subtotal.toFixed(2)}</span>
-                              </div>
-                              <div className="flex justify-between row-item text-[8pt] text-slate-700 pl-1.5 font-mono">
-                                <span>
-                                  Qty/Weight: {item.weight.toFixed(1)} kg
-                                  {item.isPromo5Plus2 && item.freeKilos > 0 && ` (${item.freeKilos.toFixed(1)}kg Free)`}
-                                </span>
-                                <span>Rate: ₱{item.price.toFixed(2)}/kg</span>
-                              </div>
+
+                        <div className="text-center section-block pt-1.5 pb-1">
+                          <p className="receipt-title font-bold text-[11pt] border-y border-dashed border-black py-0.5">
+                            {receiptData.status === 'voided' ? 'VOIDED LAUNDRY RECEIPT' : 'LAUNDRY RECEIPT'}
+                          </p>
+                        </div>
+
+                        <div className="section-block pt-1 font-mono text-[9.5pt]">
+                          <div className="flex justify-between row-item">
+                            <span>Receipt No: #{(receiptData.receipt_number || receiptData.id)}</span>
+                            <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                          </div>
+                          <div className="flex justify-between row-item">
+                            <span className="truncate max-w-[100%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
+                          </div>
+                        </div>
+
+                        <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                          <div className="flex justify-between row-item">
+                            <span>Customer:</span>
+                            <span className="font-bold">{laundryDetails.customer_name}</span>
+                          </div>
+                          {laundryDetails.phone && (
+                            <div className="flex justify-between row-item">
+                              <span>Phone:</span>
+                              <span>{laundryDetails.phone}</span>
                             </div>
-                          ))}
+                          )}
+                          {laundryDetails.services && laundryDetails.services.length > 0 ? (
+                            <div className="space-y-1.5 border-b border-dashed border-black pb-1.5 mb-1.5">
+                              <div className="text-[8.5pt] font-bold uppercase tracking-wider mb-1">Services List</div>
+                              {laundryDetails.services.map((item: any, idx: number) => (
+                                <div key={idx} className="text-[9pt]">
+                                  <div className="flex justify-between row-item font-bold">
+                                    <span className="truncate max-w-[75%]">{item.name}</span>
+                                    <span>₱{item.subtotal.toFixed(2)}</span>
+                                  </div>
+                                  <div className="flex justify-between row-item text-[8pt] text-slate-700 pl-1.5 font-mono">
+                                    <span>
+                                      Qty/Weight: {item.weight.toFixed(1)} kg
+                                      {item.isPromo5Plus2 && item.freeKilos > 0 && ` (${item.freeKilos.toFixed(1)}kg Free)`}
+                                    </span>
+                                    <span>Rate: ₱{item.price.toFixed(2)}/kg</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : laundryDetails.subtotal > 0 ? (
+                            <>
+                              <div className="flex justify-between row-item">
+                                <span>Service:</span>
+                                <span className="font-bold">{laundryDetails.service_name}</span>
+                              </div>
+                              <div className="flex justify-between row-item">
+                                <span>Weight:</span>
+                                <span>{laundryDetails.weight} kg</span>
+                              </div>
+                              <div className="flex justify-between row-item">
+                                <span>Rate:</span>
+                                <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
+                              </div>
+                              <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
+                                <span>Subtotal</span>
+                                <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
+                              </div>
+                            </>
+                          ) : null}
                         </div>
-                      ) : laundryDetails.subtotal > 0 ? (
-                        <>
-                          <div className="flex justify-between row-item">
-                            <span>Service:</span>
-                            <span className="font-bold">{laundryDetails.service_name}</span>
-                          </div>
-                          <div className="flex justify-between row-item">
-                            <span>Weight:</span>
-                            <span>{laundryDetails.weight} kg</span>
-                          </div>
-                          <div className="flex justify-between row-item">
-                            <span>Rate:</span>
-                            <span>₱{laundryDetails.rate.toFixed(2)}/kg</span>
-                          </div>
-                          <div className="flex justify-between row-item border-t border-dotted border-black/50 pt-1 mt-1 font-bold">
-                            <span>Subtotal</span>
-                            <span>₱{laundryDetails.subtotal.toFixed(2)}</span>
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
 
-                    {/* Preferences */}
-                    {laundryDetails.preferences && laundryDetails.preferences.length > 0 && (
-                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9pt]">
-                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Preferences</div>
-                        {laundryDetails.preferences.map((pref: string, idx: number) => (
-                          <div key={idx} className="row-item pl-2 font-semibold">• {pref}</div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Add-ons */}
-                    {laundryDetails.addons && laundryDetails.addons.length > 0 && (
-                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
-                        <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Add-ons</div>
-                        {laundryDetails.addons.map((add: any, idx: number) => (
-                          <div key={idx} className="flex justify-between row-item pl-2">
-                            <span>{add.name}</span>
-                            <span className="font-bold">₱{add.price.toFixed(2)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Calculations & Totals */}
-                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 font-mono text-[10pt] space-y-1">
-                      <div className="flex justify-between row-item font-black text-[16pt] pt-1">
-                        <span>TOTAL</span>
-                        <span>₱{(receiptData.total || 0).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between row-item text-[9.5pt]">
-                        <span>Payment Method:</span>
-                        <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
-                      </div>
-                      {receiptData.reference_number && (
-                        <div className="flex justify-between row-item text-[9.5pt]">
-                          <span>Ref No:</span>
-                          <span className="font-bold">{receiptData.reference_number}</span>
-                        </div>
-                      )}
-                      {receiptData.payment_method?.toLowerCase() === 'cash' && (
-                        <>
-                          <div className="flex justify-between row-item text-[9.5pt]">
-                            <span>Cash Received:</span>
-                            <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between row-item text-[9.5pt] font-bold">
-                            <span>Change:</span>
-                            <span>₱{(receiptData.change || 0).toFixed(2)}</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Pickup Details */}
-                    <div className="section-block border-t border-dashed border-black pt-2 mt-2 text-center font-mono text-[9.5pt] bg-slate-50/50 p-1.5 rounded-lg">
-                      <div className="font-bold text-[8.5pt] uppercase tracking-wider">Estimated Pickup</div>
-                      <div className="font-bold text-[10.5pt] mt-0.5">
-                        {laundryDetails.pickup_date ? new Date(laundryDetails.pickup_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'} at {laundryDetails.pickup_time || 'N/A'}
-                      </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="text-center pt-3 border-t border-dashed border-black mt-3 text-[9.5pt]">
-                      <p className="font-bold">Thank you for choosing</p>
-                      <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
-                    </div>
-
-                  </div>
-                );
-              }
-
-              return (
-                <div key={type} className={cn("relative print:relative receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
-                  {/* VOID Watermark overlay */}
-                  {receiptData.status === 'voided' && (
-                    <div className="void-watermark select-none pointer-events-none">VOID</div>
-                  )}
-
-
-
-                  {/* Company Details */}
-                  <div className="text-center section-block">
-                    <div className="flex justify-center mb-1 text-center">
-                      {!isLaundryBranch && <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />}
-                    </div>
-                    <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
-                    {/* <p className="hidden print:hidden" data-print-hidden="true">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
-                  </div>
-
-                  {/* Receipt Header Title & Metadata */}
-                  <div className="text-center section-block pt-1">
-                    <p className="receipt-title font-bold text-[11pt]">
-                      {receiptData.status === 'open' ? 'ORDER SUMMARY' :
-                        receiptData.status === 'voided' ? (activeBranch?.is_bir_compliant ? 'VOIDED SALES INVOICE' : 'VOIDED RECEIPT') :
-                          receiptData.status === 'refunded' ? (activeBranch?.is_bir_compliant ? 'REFUNDED SALES INVOICE' : 'REFUNDED RECEIPT') :
-                            (activeBranch?.is_bir_compliant ? 'SALES INVOICE' : 'RECEIPT')}
-                    </p>
-                    {receiptData.status !== 'open' && (receiptData.reprint_count > 0 || receiptData.is_reprint) && (
-                      <p className="print-bold-text mt-0.5">- REPRINT -</p>
-                    )}
-                  </div>
-
-                  <div className="section-block pt-1 text-[9.5pt]">
-                    <div className="flex justify-between row-item">
-                      <span>Invoice: {receiptData.receipt_number !== undefined && receiptData.receipt_number !== null ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : 'PENDING'}</span>
-                      <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
-                      <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
-                    </div>
-                  </div>
-
-                  {/* Receipt Items list */}
-                  <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
-                    <div className="flex justify-between font-semibold border-b border-black pb-1 mb-1">
-                      <span>Qty &nbsp;&nbsp; Item</span>
-                      <span>Amount</span>
-                    </div>
-                    {receiptData.items
-                      ?.filter((item: any) => {
-                        if (receiptData.printType === 'voucher') {
-                          return item.notes?.includes('Voucher') || item.notes?.includes('(Voucher)');
-                        }
-                        if (receiptData.printType === 'complimentary') {
-                          return item.is_complimentary;
-                        }
-                        return true;
-                      })
-                      ?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between row-item">
-                          <span className="flex flex-col max-w-[75%]">
-                            <span>{item.quantity} &nbsp;&nbsp; {item.name || item.product_name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}</span>
-                            {item.notes && item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '').trim() !== '' && (
-                              <span className="text-[8pt] text-slate-600 italic">
-                                {item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '')}
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-right">
-                            ₱{((item.price * item.quantity)).toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-
-                  {/* Calculations & Totals */}
-                  <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
-                    <div className="flex justify-between row-item">
-                      <span>Subtotal</span>
-                      <span>₱{displaySubtotal.toFixed(2)}</span>
-                    </div>
-                    {receiptData.discount_amount > 0 && (
-                      <div className="flex justify-between row-item font-bold">
-                        <span>Less: {receiptData.discount_name || 'Senior Citizen (20%)'}</span>
-                        <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {receiptData.discount_customer_name && (
-                      <div className="text-[8.5pt] py-0.5 border-t border-dotted border-black mt-1">
-                        <div>Senior Name: {receiptData.discount_customer_name}</div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
-                      <span>TOTAL</span>
-                      <span>₱{calcTotal.toFixed(2)}</span>
-                    </div>
-                    {receiptData.status !== 'open' && (
-                      <>
-                        <div className="flex justify-between row-item text-[10.5pt]">
-                          <span>{receiptData.payment_method || 'CASH'}</span>
-                          <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
-                        </div>
-                        {receiptData.reference_number && (
-                          <div className="flex justify-between row-item text-[9.5pt] italic">
-                            <span>Ref No:</span>
-                            <span>{receiptData.reference_number}</span>
+                        {/* Preferences */}
+                        {laundryDetails.preferences && laundryDetails.preferences.length > 0 && (
+                          <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9pt]">
+                            <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Preferences</div>
+                            {laundryDetails.preferences.map((pref: string, idx: number) => (
+                              <div key={idx} className="row-item pl-2 font-semibold">• {pref}</div>
+                            ))}
                           </div>
                         )}
-                        <div className="flex justify-between print-bold-text row-item font-bold text-[11.5pt]">
-                          <span>Change</span>
-                          <span>₱{(receiptData.change || 0).toFixed(2)}</span>
+
+                        {/* Add-ons */}
+                        {laundryDetails.addons && laundryDetails.addons.length > 0 && (
+                          <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
+                            <div className="font-bold text-[8.5pt] uppercase tracking-wider mb-1">Add-ons</div>
+                            {laundryDetails.addons.map((add: any, idx: number) => (
+                              <div key={idx} className="flex justify-between row-item pl-2">
+                                <span>{add.name}</span>
+                                <span className="font-bold">₱{add.price.toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Calculations & Totals */}
+                        <div className="section-block border-t border-dashed border-black pt-2 mt-2 font-mono text-[10pt] space-y-1">
+                          <div className="flex justify-between row-item font-black text-[16pt] pt-1">
+                            <span>TOTAL</span>
+                            <span>₱{(receiptData.total || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between row-item text-[9.5pt]">
+                            <span>Payment Method:</span>
+                            <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
+                          </div>
+                          {receiptData.reference_number && (
+                            <div className="flex justify-between row-item text-[9.5pt]">
+                              <span>Ref No:</span>
+                              <span className="font-bold">{receiptData.reference_number}</span>
+                            </div>
+                          )}
+                          {receiptData.payment_method?.toLowerCase() === 'cash' && (
+                            <>
+                              <div className="flex justify-between row-item text-[9.5pt]">
+                                <span>Cash Received:</span>
+                                <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
+                              </div>
+                              <div className="flex justify-between row-item text-[9.5pt] font-bold">
+                                <span>Change:</span>
+                                <span>₱{(receiptData.change || 0).toFixed(2)}</span>
+                              </div>
+                            </>
+                          )}
                         </div>
-                      </>
-                    )}
-                  </div>
 
-                  {/* VAT Breakdown - always hidden from printed receipts */}
-                  {/* <div className="section-block pt-1 hidden print:hidden" data-print-hidden="true">
-                    <div className="flex justify-between row-item">
-                      <span>VATable Sales</span>
-                      <span>₱{receiptCalculations.vatableSales.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between row-item">
-                      <span>VAT (12%)</span>
-                      <span>₱{receiptCalculations.vatAmount.toFixed(2)}</span>
-                    </div>
-                  </div> */}
+                        {/* Pickup Details */}
+                        <div className="section-block border-t border-dashed border-black pt-2 mt-2 text-center font-mono text-[9.5pt] bg-slate-50/50 p-1.5 rounded-lg">
+                          <div className="font-bold text-[8.5pt] uppercase tracking-wider">Estimated Pickup</div>
+                          <div className="font-bold text-[10.5pt] mt-0.5">
+                            {laundryDetails.pickup_date ? new Date(laundryDetails.pickup_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'} at {laundryDetails.pickup_time || 'N/A'}
+                          </div>
+                        </div>
 
-                  {/* Dine In • Guests • Items summary */}
-                  <div className="section-block pt-1 text-center">
-                    <p className="row-item text-center">
-                      {receiptData.table_name || 'Dine In'} • Guests: {receiptCalculations.paxCount || 1} • Items: {receiptData.items?.reduce((acc: number, item: any) => acc + item.quantity, 0)}
-                    </p>
-                  </div>
+                        {/* Footer */}
+                        <div className="text-center pt-3 border-t border-dashed border-black mt-3 text-[9.5pt]">
+                          <p className="font-bold">Thank you for choosing</p>
+                          <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                        </div>
 
-                  {/* Footer */}
-                  <div className="text-center section-block border-t border-dashed border-black pt-1.5 mt-2">
+                      </div>
+                    );
+                  }
 
-                    <p className="font-bold print-bold-text mt-0.5">Thank you for your visit!</p>
-                    <p className="font-bold print-bold-text mt-0.5">Enjoy!</p>
-                    <p className="mt-1 text-[8pt]">
-                      {receiptData.status === 'open' ? 'THIS IS NOT AN OFFICIAL RECEIPT' :
-                        receiptData.status === 'voided' ? '*** VOIDED TRANSACTION ***' :
-                          receiptData.status === 'refunded' ? '*** REFUNDED TRANSACTION ***' :
-                            (activeBranch?.is_bir_compliant ? 'This serves as your Sales Invoice.' : 'This serves as your Receipt.')}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* QZ Tray Printer Configuration Panel */}
-            <div className="mt-4 pt-3 border-t border-slate-100 print:hidden text-left font-sans text-xs flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-slate-700">Printer Mode:</span>
-                <select
-                  value={useQzTray ? 'qz' : 'browser'}
-                  onChange={e => {
-                    const checked = e.target.value === 'qz';
-                    setUseQzTray(checked);
-                    localStorage.setItem('qz_enabled', String(checked));
-                  }}
-                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-bold text-slate-700 outline-none focus:border-emerald-500"
-                >
-                  <option value="browser">Browser Print dialog</option>
-                  <option value="qz">Direct print (QZ Tray)</option>
-                </select>
-              </div>
-
-              {useQzTray && (
-                <div className="space-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-slate-700">Printer:</span>
-                    <div className="flex items-center gap-1 flex-1 justify-end">
-                      {availablePrinters.length > 0 ? (
-                        <select
-                          value={qzPrinterName}
-                          onChange={e => {
-                            setQzPrinterName(e.target.value);
-                            localStorage.setItem('qz_printer_name', e.target.value);
-                          }}
-                          className="max-w-[210px] px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 truncate"
-                        >
-                          {availablePrinters.map(p => (
-                            <option key={p} value={p}>{p}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={qzPrinterName}
-                          onChange={e => {
-                            setQzPrinterName(e.target.value);
-                            localStorage.setItem('qz_printer_name', e.target.value);
-                          }}
-                          placeholder="Printer name (e.g. POS-80)"
-                          className="w-40 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none focus:border-emerald-500 text-right"
-                        />
+                  return (
+                    <div key={type} className={cn("relative print:relative receipt-ticket-content", index > 0 && "border-t border-dashed border-black pt-4 mt-4")}>
+                      {/* VOID Watermark overlay */}
+                      {receiptData.status === 'voided' && (
+                        <div className="void-watermark select-none pointer-events-none">VOID</div>
                       )}
-                      <button
-                        type="button"
-                        onClick={fetchAvailablePrinters}
-                        disabled={isLoadingPrinters || !qzConnected}
-                        title="Scan Windows for connected printers"
-                        className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors shrink-0"
-                      >
-                        <RefreshCw size={12} className={isLoadingPrinters ? 'animate-spin' : ''} />
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col gap-1.5 pt-1 border-t border-slate-200/60 text-[10.5px]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">QZ Tray Status:</span>
+                      {/* Company Details */}
+                      <div className="text-center section-block">
+                        <div className="flex justify-center mb-1 text-center">
+                          {!isLaundryBranch && <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />}
+                        </div>
+                        <p>{settings?.address || 'Room 1 Crown Bldg., North Road 6, Mabolo, Cebu City'}</p>
+                        {/* <p className="hidden print:hidden" data-print-hidden="true">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
+                      </div>
+
+                      {/* Receipt Header Title & Metadata */}
+                      <div className="text-center section-block pt-1">
+                        <p className="receipt-title font-bold text-[11pt]">
+                          {receiptData.status === 'open' ? 'ORDER SUMMARY' :
+                            receiptData.status === 'voided' ? (activeBranch?.is_bir_compliant ? 'VOIDED SALES INVOICE' : 'VOIDED RECEIPT') :
+                              receiptData.status === 'refunded' ? (activeBranch?.is_bir_compliant ? 'REFUNDED SALES INVOICE' : 'REFUNDED RECEIPT') :
+                                (activeBranch?.is_bir_compliant ? 'SALES INVOICE' : 'RECEIPT')}
+                        </p>
+                        {receiptData.status !== 'open' && (receiptData.reprint_count > 0 || receiptData.is_reprint) && (
+                          <p className="print-bold-text mt-0.5">- REPRINT -</p>
+                        )}
+                      </div>
+
+                      <div className="section-block pt-1 text-[9.5pt]">
+                        <div className="flex justify-between row-item">
+                          <span>Invoice: {receiptData.receipt_number !== undefined && receiptData.receipt_number !== null ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : 'PENDING'}</span>
+                          <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                        </div>
+                        <div className="flex justify-between row-item">
+                          <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
+                          <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
+                        </div>
+                      </div>
+
+                      {/* Receipt Items list */}
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
+                        <div className="flex justify-between font-semibold border-b border-black pb-1 mb-1">
+                          <span>Qty &nbsp;&nbsp; Item</span>
+                          <span>Amount</span>
+                        </div>
+                        {receiptData.items
+                          ?.filter((item: any) => {
+                            if (receiptData.printType === 'voucher') {
+                              return item.notes?.includes('Voucher') || item.notes?.includes('(Voucher)');
+                            }
+                            if (receiptData.printType === 'complimentary') {
+                              return item.is_complimentary;
+                            }
+                            return true;
+                          })
+                          ?.map((item: any) => (
+                            <div key={item.id} className="flex justify-between row-item">
+                              <span className="flex flex-col max-w-[75%]">
+                                <span>{item.quantity} &nbsp;&nbsp; {item.name || item.product_name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}</span>
+                                {item.notes && item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '').trim() !== '' && (
+                                  <span className="text-[8pt] text-slate-600 italic">
+                                    {item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '')}
+                                  </span>
+                                )}
+                              </span>
+                              <span className="text-right">
+                                ₱{((item.price * item.quantity)).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+
+                      {/* Calculations & Totals */}
+                      <div className="section-block border-t border-dashed border-black pt-1.5 mt-1">
+                        <div className="flex justify-between row-item">
+                          <span>Subtotal</span>
+                          <span>₱{displaySubtotal.toFixed(2)}</span>
+                        </div>
+                        {receiptData.discount_amount > 0 && (
+                          <div className="flex justify-between row-item font-bold">
+                            <span>Less: {receiptData.discount_name || 'Senior Citizen (20%)'}</span>
+                            <span>-₱{receiptData.discount_amount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        {receiptData.discount_customer_name && (
+                          <div className="text-[8.5pt] py-0.5 border-t border-dotted border-black mt-1">
+                            <div>Senior Name: {receiptData.discount_customer_name}</div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between print-total row-item pt-1 mt-1 font-bold text-[13pt]">
+                          <span>TOTAL</span>
+                          <span>₱{calcTotal.toFixed(2)}</span>
+                        </div>
+                        {receiptData.status !== 'open' && (
+                          <>
+                            <div className="flex justify-between row-item text-[10.5pt]">
+                              <span>{receiptData.payment_method || 'CASH'}</span>
+                              <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
+                            </div>
+                            {receiptData.reference_number && (
+                              <div className="flex justify-between row-item text-[9.5pt] italic">
+                                <span>Ref No:</span>
+                                <span>{receiptData.reference_number}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between print-bold-text row-item font-bold text-[11.5pt]">
+                              <span>Change</span>
+                              <span>₱{(receiptData.change || 0).toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Dine In • Guests • Items summary */}
+                      <div className="section-block pt-1 text-center">
+                        <p className="row-item text-center">
+                          {receiptData.table_name || 'Dine In'} • Guests: {receiptCalculations.paxCount || 1} • Items: {receiptData.items?.reduce((acc: number, item: any) => acc + item.quantity, 0)}
+                        </p>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="text-center section-block border-t border-dashed border-black pt-1.5 mt-2">
+                        <p className="font-bold print-bold-text mt-0.5">Thank you for your visit!</p>
+                        <p className="font-bold print-bold-text mt-0.5">Enjoy!</p>
+                        <p className="mt-1 text-[8pt]">
+                          {receiptData.status === 'open' ? 'THIS IS NOT AN OFFICIAL RECEIPT' :
+                            receiptData.status === 'voided' ? '*** VOIDED TRANSACTION ***' :
+                              receiptData.status === 'refunded' ? '*** REFUNDED TRANSACTION ***' :
+                                (activeBranch?.is_bir_compliant ? 'This serves as your Sales Invoice.' : 'This serves as your Receipt.')}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Sticky Bottom Controls & Action Bar */}
+            <div className="p-3 bg-white border-t border-slate-200 shrink-0 space-y-2.5 print:hidden">
+              {/* Printer Mode & Settings */}
+              <div className="space-y-1.5 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-slate-700">Printer Mode:</span>
+                  <select
+                    value={useQzTray ? 'qz' : 'browser'}
+                    onChange={e => {
+                      const checked = e.target.value === 'qz';
+                      setUseQzTray(checked);
+                      localStorage.setItem('qz_enabled', String(checked));
+                    }}
+                    className="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-700 outline-none focus:border-emerald-500 text-xs"
+                  >
+                    <option value="browser">Browser Print dialog (No setup needed)</option>
+                    <option value="qz">Direct print (QZ Tray)</option>
+                  </select>
+                </div>
+
+                {useQzTray && (
+                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-slate-600 text-[11px]">Thermal Printer:</span>
+                      <div className="flex items-center gap-1">
+                        {availablePrinters.length > 0 ? (
+                          <select
+                            value={qzPrinterName}
+                            onChange={e => {
+                              setQzPrinterName(e.target.value);
+                              localStorage.setItem('qz_printer_name', e.target.value);
+                            }}
+                            className="max-w-[180px] px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none truncate"
+                          >
+                            {availablePrinters.map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={qzPrinterName}
+                            onChange={e => {
+                              setQzPrinterName(e.target.value);
+                              localStorage.setItem('qz_printer_name', e.target.value);
+                            }}
+                            placeholder="POS-80"
+                            className="w-32 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none"
+                          />
+                        )}
+                        <button
+                          type="button"
+                          onClick={fetchAvailablePrinters}
+                          disabled={isLoadingPrinters || !qzConnected}
+                          title="Scan connected printers"
+                          className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 shrink-0"
+                        >
+                          <RefreshCw size={12} className={isLoadingPrinters ? 'animate-spin' : ''} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10.5px]">
+                      <span className="text-slate-500">Status:</span>
                       {qzConnected ? (
-                        <span className="text-emerald-600 font-bold flex items-center gap-1">🟢 Connected ({availablePrinters.length} found)</span>
-                      ) : qzError?.toLowerCase().includes('blocked') ? (
-                        <span className="text-rose-600 font-bold" title={qzError}>🔴 Blocked in QZ Site Manager</span>
+                        <span className="text-emerald-600 font-bold">🟢 Connected ({availablePrinters.length} found)</span>
                       ) : qzError ? (
-                        <span className="text-rose-600 font-bold flex items-center gap-1" title={qzError}>🔴 Disconnected</span>
+                        <span className="text-rose-600 font-bold" title={qzError}>🔴 QZ Tray Not Running</span>
                       ) : (
                         <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
                       )}
                     </div>
-                    {qzError?.toLowerCase().includes('blocked') && (
-                      <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-900 space-y-2 mt-1">
-                        <p className="font-bold flex items-center gap-1 text-rose-700">⚠️ Blocked by QZ Tray on this PC</p>
-                        <p className="text-slate-600 text-[10px] leading-tight">
-                          To unblock: Right-click green QZ Tray icon in taskbar ➔ <strong>Advanced</strong> ➔ <strong>Site Manager</strong> ➔ Select <code>localhost:8080</code> and click <strong>Delete</strong>.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            setUseQzTray(false);
-                            localStorage.setItem('qz_enabled', 'false');
-                            await printReceiptViaBrowser();
-                          }}
-                          className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold transition-all text-center flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
-                        >
-                          <Printer size={13} /> Print Now with Browser Print (No Setup Needed)
-                        </button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
 
-            <div className="mt-6 flex gap-3 print:hidden">
-              <button
-                onClick={() => setReceiptData(null)}
-                className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold transition-colors"
-              >
-                Close
-              </button>
-              <button
-                onClick={handlePrintReceipt}
-                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-98 flex items-center justify-center gap-2"
-              >
-                <Printer size={16} /> Print Receipt
-              </button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReceiptData(null)}
+                  className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintReceipt}
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-all shadow-md active:scale-98 flex items-center justify-center gap-1.5"
+                >
+                  <Printer size={15} /> Print Receipt
+                </button>
+              </div>
             </div>
           </div>
         </div>

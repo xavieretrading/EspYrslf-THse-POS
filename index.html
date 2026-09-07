@@ -19,12 +19,11 @@
   <script>
     const API_BASE = 'https://lr-groupofcompanies-pos-system-794666981380.europe-west1.run.app';
 
-    // Intercept native app API fetches to redirect relative requests to Cloud Run
+    // Intercept native capacitor app API fetches to redirect relative requests to Cloud Run
     const originalFetch = window.fetch;
     window.fetch = function (input, init) {
       if (typeof input === 'string' && input.startsWith('/api/')) {
-        const isNativeApp = window.location.protocol === 'capacitor:' ||
-          (window.location.hostname === 'localhost' && window.location.port !== '5173' && window.location.port !== '3000');
+        const isNativeApp = window.location.protocol === 'capacitor:';
         if (isNativeApp) {
           input = API_BASE + input;
         }
@@ -32,11 +31,17 @@
       return originalFetch(input, init);
     };
 
-    if ('serviceWorker' in navigator && window.location.protocol !== 'capacitor:') {
+    // Only register service worker in production, never on localhost to avoid stale cache
+    if ('serviceWorker' in navigator && window.location.protocol !== 'capacitor:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((reg) => console.log('Service Worker registered:', reg.scope))
           .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    } else if ('serviceWorker' in navigator && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      // Unregister any old service workers on localhost to ensure fresh hot reload
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        for (let reg of regs) reg.unregister();
       });
     }
   </script>

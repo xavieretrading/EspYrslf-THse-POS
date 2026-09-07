@@ -153,9 +153,16 @@ async function runImport() {
     const temp = r[2] ? String(r[2]).trim() : '';
     const size = r[3] ? String(r[3]).trim() : '';
     const qty = Number(r[4] || 1);
-    const price = Number(r[5] || 0);
+    let price = Number(r[5] || 0);
     const total = Number(r[6] || (price * qty));
     const payment = r[7] ? String(r[7]).trim() : 'Cash';
+
+    // Auto-correct if cashier entered the bundle total as the unit price (e.g. 4x Sea Salt Biscoff @ ₱596 = ₱596)
+    if (qty > 1 && price === total) {
+      price = Number((total / qty).toFixed(2));
+    } else if (qty > 0 && price <= 0 && total > 0) {
+      price = Number((total / qty).toFixed(2));
+    }
 
     const prodId = resolveProduct(name, temp, size, price);
     if (!prodId) {

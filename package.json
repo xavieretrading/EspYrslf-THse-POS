@@ -10,7 +10,8 @@
     "start": "NODE_ENV=production tsx server.ts",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "gcp-build": "npm run build"
+    "gcp-build": "npm run build",
+    "audit:sales": "node audit_sales_records.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

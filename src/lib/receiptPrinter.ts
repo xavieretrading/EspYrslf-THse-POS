@@ -1,19 +1,22 @@
 export const RECEIPT_PRINT_STYLES = `
-  @page { 
-    size: 80mm auto; 
-    margin: 0; 
-  }
-  html, body { 
-    margin: 0 !important; 
-    padding: 0 !important;
-    background-color: #ffffff !important;
-    background: #ffffff !important;
-    color: #000000 !important;
-    width: 80mm !important;
-    max-width: 80mm !important;
-    font-family: Arial, Helvetica, sans-serif !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  @media print {
+    @page { 
+      size: 80mm auto; 
+      margin: 0; 
+    }
+    html, body { 
+      margin: 0 !important; 
+      padding: 0 !important;
+      background-color: #ffffff !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      width: 80mm !important;
+      max-width: 80mm !important;
+      font-family: Arial, Helvetica, sans-serif !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .print\\:hidden, .print-hidden { display: none !important; }
   }
   .receipt-ticket-content { 
     width: 80mm !important; 
@@ -110,7 +113,6 @@ export const RECEIPT_PRINT_STYLES = `
   .border-y { border-top: 1px dashed black !important; border-bottom: 1px dashed black !important; }
   .italic { font-style: italic !important; }
   .truncate { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
-  .print\\:hidden, .print-hidden { display: none !important; }
 `;
 
 /**

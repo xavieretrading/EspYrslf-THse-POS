@@ -1,0 +1,13 @@
+{
+  "port": 9100,
+  "httpsPort": 9101,
+  "defaultPrinter": "POSPrinter POS-80C",
+  "authToken": "pos-direct-print-token-2026",
+  "allowedOrigins": [
+    "https://lr-groupofcompanies-pos-system-794666981380.europe-west1.run.app",
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:5173"
+  ]
+}

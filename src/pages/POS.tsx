@@ -77,7 +77,7 @@ export const isCoffeeProduct = (item: { name: string; category_name?: string }):
   const name = (item.name || '').toLowerCase().trim();
   const category = (item.category_name || '').toLowerCase().trim();
 
-  // Exclude non-coffee canned sodas, waters, beers, liquors, merchandise, bakery, laundry
+  // Exclude non-coffee canned sodas, waters, beers, liquors, merchandise, bakery, laundry, retail spreads
   if (
     name.includes('coke') ||
     name.includes('coca-cola') ||
@@ -103,24 +103,28 @@ export const isCoffeeProduct = (item: { name: string; category_name?: string }):
     name.includes('cookie') ||
     name.includes('bread') ||
     name.includes('pastry') ||
-    name.includes('cake')
+    name.includes('cake') ||
+    name.includes('spread')
   ) {
     return false;
   }
 
-  // Coffee categories
+  // Coffee & Handcrafted Drink categories
   if (
     category.includes('coffee') ||
     category.includes('espresso') ||
     category.includes('latte') ||
     category.includes('frappe') ||
     category.includes('cappuccino') ||
-    category.includes('brew')
+    category.includes('brew') ||
+    category.includes('iced & blended') ||
+    category.includes('blended') ||
+    category.includes('matcha')
   ) {
     return true;
   }
 
-  // Coffee names
+  // Coffee & Specialty Drink names
   return (
     name.includes('espresso') ||
     name.includes('americano') ||
@@ -138,7 +142,12 @@ export const isCoffeeProduct = (item: { name: string; category_name?: string }):
     name.includes('hot choco') ||
     name.includes('chocolate') ||
     name.includes('matcha') ||
-    name.includes('durian')
+    name.includes('durian') ||
+    name.includes('biscoff') ||
+    name.includes('sea salt') ||
+    name.includes('seasalt') ||
+    name.includes('oreo') ||
+    name.includes('dirty')
   );
 };
 

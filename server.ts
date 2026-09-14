@@ -1806,11 +1806,16 @@ app.put('/api/orders/:id/notes', async (req, res) => {
 // Helper function to dynamically recalculate order subtotal and total from actual items in DB
 async function recalculateOrderTotals(orderId: string | number) {
   // Only count active (non-soft-deleted) items
-  const { data: items } = await supabase
+  const { data: items, error: fetchItemsError } = await supabase
     .from('order_items_espresso')
-    .select('price, quantity, is_complimentary, notes')
+    .select('price, quantity, notes')
     .eq('order_id', orderId)
     .neq('is_active', 0);
+
+  if (fetchItemsError) {
+    console.error('Error fetching order items in recalculateOrderTotals:', fetchItemsError.message);
+    return 0;
+  }
 
   if (!items || items.length === 0) {
     // If no active items remain, free up the table
@@ -1831,14 +1836,16 @@ async function recalculateOrderTotals(orderId: string | number) {
 
   let newSubtotal = 0;
   items.forEach((item: any) => {
-    const isComp = item.is_complimentary || item.notes?.includes('[COMPLIMENTARY');
+    const isComp = item.notes?.includes('[COMPLIMENTARY');
     if (!isComp) {
       newSubtotal += (item.price || 0) * (item.quantity || 1);
     }
   });
 
-  const { data: order } = await supabase.from('orders_espresso').select('status').eq('id', orderId).single();
-  const updatePayload: any = { subtotal: newSubtotal, total: newSubtotal };
+  const { data: order } = await supabase.from('orders_espresso').select('status, discount_amount').eq('id', orderId).single();
+  const discountAmt = order?.discount_amount || 0;
+  const newTotal = Math.max(0, newSubtotal - discountAmt);
+  const updatePayload: any = { subtotal: newSubtotal, total: newTotal };
   if (order && order.status === 'voided') {
     updatePayload.status = 'open';
   }

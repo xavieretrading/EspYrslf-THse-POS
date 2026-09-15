@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Users, Tag, LayoutGrid, Database, Plus, Edit, Trash2, X, CheckCircle, ClipboardList, Printer, Calendar, Filter, Archive, RefreshCw } from 'lucide-react';
-import qz from 'qz-tray';
+import { Settings as SettingsIcon, Users, Tag, LayoutGrid, Database, Plus, Edit, Trash2, X, CheckCircle, ClipboardList, Printer, Calendar, Filter, Archive, RefreshCw, ExternalLink, Zap, Check, AlertCircle } from 'lucide-react';
+import { connectQzTray, getQzPrinters, printHtmlViaQz } from '../lib/qzTrayClient';
+import { checkXpServiceHealth, discoverXpPrinters, printXpTestTicket, XpHealth } from '../lib/xpThermalClient';
 import { useBranch } from '../BranchContext';
 import { useSettings, BusinessSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
@@ -49,6 +50,15 @@ export default function Settings() {
   const [isArchiveLoading, setIsArchiveLoading] = useState(false);
 
   // Thermal Printer Configuration State
+  const [printEngine, setPrintEngine] = useState<'xp' | 'qz' | 'browser'>(() => {
+    const stored = localStorage.getItem('printer_engine');
+    if (stored === 'xp' || stored === 'qz' || stored === 'browser') return stored;
+    return 'xp'; // Default to XP Thermal Service
+  });
+  const [xpHealth, setXpHealth] = useState<XpHealth | null>(null);
+  const [xpChecking, setXpChecking] = useState(false);
+  const [isXpTestPrinting, setIsXpTestPrinting] = useState(false);
+
   const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || '');
   const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
   const [qzConnected, setQzConnected] = useState(false);
@@ -57,13 +67,42 @@ export default function Settings() {
   const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
   const [isTestPrinting, setIsTestPrinting] = useState(false);
 
+  const checkXpStatus = async () => {
+    setXpChecking(true);
+    try {
+      const h = await checkXpServiceHealth();
+      setXpHealth(h);
+    } catch (e) {
+      setXpHealth({ connected: false });
+    } finally {
+      setXpChecking(false);
+    }
+  };
+
+  const handleXpTestPrint = async () => {
+    setIsXpTestPrinting(true);
+    try {
+      const res = await printXpTestTicket('receipt');
+      if (res.success) {
+        swalAlert('Test Print Sent', 'A test receipt ticket was queued directly to POSPrinter POS-80C via XP Thermal Service!', 'success');
+      } else {
+        swalAlert('Test Print Failed', res.error || 'Failed to print test ticket.', 'error');
+      }
+    } catch (err: any) {
+      swalAlert('Test Print Error', err.message || 'Could not connect to service.', 'error');
+    } finally {
+      setIsXpTestPrinting(false);
+    }
+  };
+
+  const handleOpenXpDashboard = () => {
+    window.open('http://127.0.0.1:9100/dashboard', '_blank');
+  };
+
   const fetchAvailablePrinters = async () => {
     try {
-      if (!qz.websocket.isActive()) {
-        await qz.websocket.connect();
-      }
       setIsLoadingPrinters(true);
-      const list = await qz.printers.find();
+      const list = await getQzPrinters();
       if (Array.isArray(list) && list.length > 0) {
         setAvailablePrinters(list);
         const stored = localStorage.getItem('qz_printer_name');
@@ -90,12 +129,15 @@ export default function Settings() {
 
   const connectQz = async () => {
     try {
-      if (!qz.websocket.isActive()) {
-        await qz.websocket.connect();
+      const ok = await connectQzTray();
+      if (ok) {
+        setQzConnected(true);
+        setQzError(null);
+        await fetchAvailablePrinters();
+      } else {
+        setQzConnected(false);
+        setQzError("Could not connect to QZ Tray. Make sure it is running.");
       }
-      setQzConnected(true);
-      setQzError(null);
-      await fetchAvailablePrinters();
     } catch (err: any) {
       console.error("QZ connection failed:", err);
       setQzConnected(false);
@@ -110,29 +152,19 @@ export default function Settings() {
     }
     setIsTestPrinting(true);
     try {
-      if (!qz.websocket.isActive()) {
-        await qz.websocket.connect();
-      }
-      const config = qz.configs.create(qzPrinterName);
       const testHtml = `
-        <div style="width: 80mm; font-family: Arial, sans-serif; text-align: center; padding: 10px; box-sizing: border-box;">
-          <h2 style="margin: 0; font-size: 14pt;">TEST RECEIPT</h2>
-          <p style="margin: 4px 0; font-size: 9.5pt;">${activeBranch?.name || 'Espresso Yourself & Tea House'}</p>
+        <div style="width: 72mm; max-width: 72mm; font-family: Arial, sans-serif; text-align: center; padding: 6px; box-sizing: border-box; margin: 0 auto; color: #000;">
+          <h2 style="margin: 0; font-size: 13pt; font-weight: bold;">TEST RECEIPT</h2>
+          <p style="margin: 4px 0; font-size: 9pt;">${activeBranch?.name || 'Espresso Yourself & Tea House'}</p>
           <hr style="border: 1px dashed black; margin: 8px 0;" />
-          <p style="margin: 4px 0; font-size: 10pt; font-weight: bold;">Printer Test Successful!</p>
+          <p style="margin: 4px 0; font-size: 9.5pt; font-weight: bold;">Printer Test Successful!</p>
           <p style="margin: 4px 0; font-size: 8.5pt;">Selected: ${qzPrinterName}</p>
-          <p style="margin: 4px 0; font-size: 8.5pt;">Date: ${new Date().toLocaleString()}</p>
+          <p style="margin: 4px 0; font-size: 8.5pt;">Date: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })}</p>
           <hr style="border: 1px dashed black; margin: 8px 0;" />
-          <p style="margin: 0; font-size: 9pt;">Direct Thermal Printing Ready</p>
+          <p style="margin: 0; font-size: 8.5pt;">Direct Thermal Printing Ready (72mm Standard)</p>
         </div>
       `;
-      const data = [{
-        type: 'pixel',
-        format: 'html',
-        flavor: 'plain',
-        data: testHtml
-      }];
-      await qz.print(config, data);
+      await printHtmlViaQz(qzPrinterName, testHtml);
       swalAlert('Success', `Test receipt printed to "${qzPrinterName}"!`, 'success');
     } catch (e: any) {
       console.error('Test print failed:', e);
@@ -188,6 +220,12 @@ export default function Settings() {
     }
     if (activeTab === 'archive') {
       fetchArchivedItems();
+    }
+    if (activeTab === 'printers') {
+      checkXpStatus();
+      if (printEngine === 'qz') {
+        connectQz();
+      }
     }
   }, [activeTab, auditFilters, activeBranch]);
 
@@ -525,152 +563,278 @@ export default function Settings() {
           </div>
         </div>
       ) : activeTab === 'printers' ? (
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 flex-1 overflow-auto max-w-3xl mx-auto w-full">
-          <div className="mb-8">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 flex-1 overflow-auto max-w-3xl mx-auto w-full space-y-8">
+          <div>
             <h2 className="text-2xl font-bold text-slate-900">Thermal Printer Setup</h2>
-            <p className="text-slate-500 text-sm mt-1">Configure and test direct thermal receipt printing with QZ Tray.</p>
+            <p className="text-slate-500 text-sm mt-1">Configure and manage 80mm receipt printing for your POS checkout and orders.</p>
           </div>
 
           <div className="space-y-6">
-            {/* Status Card */}
+            {/* XP Thermal Service Card (Recommended) */}
             <div className={cn(
-              "p-6 rounded-2xl border transition-all",
-              qzConnected ? "bg-emerald-50/70 border-emerald-200" : "bg-rose-50/70 border-rose-200"
+              "p-6 rounded-2xl border transition-all shadow-xs",
+              xpHealth?.connected ? "bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-200" : "bg-amber-50/70 border-amber-300"
             )}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
                   <div className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl",
-                    qzConnected ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"
+                    "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl shrink-0 shadow-xs",
+                    xpHealth?.connected ? "bg-emerald-600 text-white" : "bg-amber-500 text-white"
                   )}>
-                    <Printer size={24} />
+                    <Zap size={24} />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-900">
-                      {qzConnected ? 'QZ Tray Connected' : 'QZ Tray Disconnected'}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-base text-slate-900">XP Thermal Print Service</h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-emerald-100 text-emerald-800 uppercase">
+                        Recommended
+                      </span>
+                    </div>
                     <p className="text-xs text-slate-600 mt-0.5">
-                      {qzConnected
-                        ? `${availablePrinters.length} installed Windows printer(s) detected.`
-                        : 'QZ Tray application is not running on your computer.'}
+                      {xpHealth?.connected ? (
+                        <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Online & Ready on Port 9100 • Bound to POSPrinter POS-80C
+                        </span>
+                      ) : (
+                        <span className="text-amber-800 font-medium">
+                          Service is offline or starting up on port 9100.
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={checkXpStatus}
+                    disabled={xpChecking}
+                    className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
+                  >
+                    <RefreshCw size={13} className={xpChecking ? 'animate-spin' : ''} />
+                    <span>{xpChecking ? 'Checking...' : 'Check Status'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenXpDashboard}
+                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all"
+                    title="Open Service Web Dashboard"
+                  >
+                    <ExternalLink size={13} />
+                    <span>Dashboard</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Status details & Quick test */}
+              <div className="mt-5 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600">
+                <div className="space-y-1">
+                  <p>• <strong>Driver:</strong> Direct Windows Print Spooler (ESC/POS Native)</p>
+                  <p>• <strong>Paper Size:</strong> 80mm thermal roll (72mm active printable width)</p>
+                  <p>• <strong>Features:</strong> 1-Click Silent Print, Automatic Paper Cut, Cash Drawer Kick</p>
+                </div>
+
                 <button
                   type="button"
-                  onClick={connectQz}
-                  disabled={isLoadingPrinters}
-                  className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs flex items-center gap-1.5 transition-all"
+                  onClick={handleXpTestPrint}
+                  disabled={isXpTestPrinting || !xpHealth?.connected}
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 shrink-0",
+                    xpHealth?.connected
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white active:scale-[0.98]"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  )}
                 >
-                  <RefreshCw size={14} className={isLoadingPrinters ? 'animate-spin' : ''} />
-                  <span>{isLoadingPrinters ? 'Scanning...' : 'Refresh / Scan'}</span>
+                  <Printer size={15} />
+                  <span>{isXpTestPrinting ? 'Printing Test...' : 'Test Print (XP ESC/POS)'}</span>
                 </button>
               </div>
 
-              {!qzConnected && (
-                <div className="mt-4 pt-4 border-t border-rose-200/80 text-xs text-rose-800 space-y-1">
-                  <p className="font-bold">⚠️ How to connect your printer:</p>
-                  <ol className="list-decimal pl-5 space-y-1 text-slate-700">
-                    <li>Open <strong>QZ Tray</strong> from your Windows Start menu or desktop.</li>
-                    <li>Look for the green printer icon near your Windows taskbar clock.</li>
-                    <li>Click the <strong>Refresh / Scan</strong> button above to connect and auto-discover your printer.</li>
+              {!xpHealth?.connected && (
+                <div className="mt-4 p-3.5 bg-amber-100/70 border border-amber-300/80 rounded-xl text-xs text-amber-900 space-y-1.5">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <AlertCircle size={14} className="text-amber-700" />
+                    How to start the XP Thermal Service:
+                  </p>
+                  <ol className="list-decimal pl-5 space-y-1 text-slate-800">
+                    <li>Look on your Windows Desktop for the shortcut: <strong>START_XP_THERMAL_SERVICE</strong>.</li>
+                    <li>Double-click it (it will automatically run as Administrator to start the Spooler and Node service).</li>
+                    <li>Click <strong>Check Status</strong> above once started!</li>
                   </ol>
                 </div>
               )}
             </div>
 
-            {/* Print Mode */}
+            {/* Print Mode Selector */}
             <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
               <div>
-                <label className="text-sm font-bold text-slate-700 block mb-1">Print Mode</label>
-                <p className="text-xs text-slate-500 mb-3">Choose whether you want silent 1-click thermal printing or the standard browser popup dialog.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className="text-sm font-bold text-slate-800 block mb-1">Active Print Mode</label>
+                <p className="text-xs text-slate-500 mb-3.5">Choose your preferred printer engine for daily checkout and orders.</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Mode 1: XP Thermal Service */}
                   <label className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
-                    useQzTray ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200" : "bg-white border-slate-200 hover:bg-slate-50"
+                    "flex flex-col p-4 rounded-xl border cursor-pointer transition-all relative",
+                    printEngine === 'xp'
+                      ? "bg-white border-emerald-500 ring-2 ring-emerald-300 shadow-sm"
+                      : "bg-white/70 border-slate-200 hover:bg-white"
                   )}>
-                    <input
-                      type="radio"
-                      name="printer_mode"
-                      checked={useQzTray}
-                      onChange={() => {
-                        setUseQzTray(true);
-                        localStorage.setItem('qz_enabled', 'true');
-                      }}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <span className="text-xs font-black text-slate-800 block">Direct Thermal Printing (QZ Tray)</span>
-                      <span className="text-[11px] text-slate-500">1-Click silent printing directly to paper (Recommended)</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <Zap size={14} className="text-emerald-600" />
+                        XP Thermal Service
+                      </span>
+                      <input
+                        type="radio"
+                        name="printer_engine"
+                        checked={printEngine === 'xp'}
+                        onChange={() => {
+                          setPrintEngine('xp');
+                          localStorage.setItem('printer_engine', 'xp');
+                          localStorage.setItem('qz_enabled', 'false');
+                        }}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
                     </div>
+                    <span className="text-[11px] text-slate-500 leading-relaxed">
+                      Instant silent print directly to POSPrinter POS-80C without Java or dialogs. (Fastest)
+                    </span>
                   </label>
+
+                  {/* Mode 2: QZ Tray */}
                   <label className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition-all",
-                    !useQzTray ? "bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200" : "bg-white border-slate-200 hover:bg-slate-50"
+                    "flex flex-col p-4 rounded-xl border cursor-pointer transition-all relative",
+                    printEngine === 'qz'
+                      ? "bg-white border-emerald-500 ring-2 ring-emerald-300 shadow-sm"
+                      : "bg-white/70 border-slate-200 hover:bg-white"
                   )}>
-                    <input
-                      type="radio"
-                      name="printer_mode"
-                      checked={!useQzTray}
-                      onChange={() => {
-                        setUseQzTray(false);
-                        localStorage.setItem('qz_enabled', 'false');
-                      }}
-                      className="text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <span className="text-xs font-black text-slate-800 block">Standard Browser Print</span>
-                      <span className="text-[11px] text-slate-500">Uses regular browser print preview dialog</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <Printer size={14} className="text-slate-600" />
+                        QZ Tray
+                      </span>
+                      <input
+                        type="radio"
+                        name="printer_engine"
+                        checked={printEngine === 'qz'}
+                        onChange={() => {
+                          setPrintEngine('qz');
+                          setUseQzTray(true);
+                          localStorage.setItem('printer_engine', 'qz');
+                          localStorage.setItem('qz_enabled', 'true');
+                          connectQz();
+                        }}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
                     </div>
+                    <span className="text-[11px] text-slate-500 leading-relaxed">
+                      Prints via Java QZ Tray desktop app WebSocket connection.
+                    </span>
+                  </label>
+
+                  {/* Mode 3: Browser Print */}
+                  <label className={cn(
+                    "flex flex-col p-4 rounded-xl border cursor-pointer transition-all relative",
+                    printEngine === 'browser'
+                      ? "bg-white border-emerald-500 ring-2 ring-emerald-300 shadow-sm"
+                      : "bg-white/70 border-slate-200 hover:bg-white"
+                  )}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                        <Printer size={14} className="text-slate-600" />
+                        Standard Browser
+                      </span>
+                      <input
+                        type="radio"
+                        name="printer_engine"
+                        checked={printEngine === 'browser'}
+                        onChange={() => {
+                          setPrintEngine('browser');
+                          setUseQzTray(false);
+                          localStorage.setItem('printer_engine', 'browser');
+                          localStorage.setItem('qz_enabled', 'false');
+                        }}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <span className="text-[11px] text-slate-500 leading-relaxed">
+                      Opens browser print preview dialog before printing.
+                    </span>
                   </label>
                 </div>
               </div>
 
-              {/* Printer Selection */}
-              <div className="pt-4 border-t border-slate-200">
-                <label className="text-sm font-bold text-slate-700 block mb-1">Select Installed Windows Printer</label>
-                <p className="text-xs text-slate-500 mb-3">Choose the printer name matching your thermal receipt machine in Windows.</p>
-
-                <div className="flex gap-2 items-center">
-                  {availablePrinters.length > 0 ? (
-                    <select
-                      value={qzPrinterName}
-                      onChange={e => {
-                        setQzPrinterName(e.target.value);
-                        localStorage.setItem('qz_printer_name', e.target.value);
-                      }}
-                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
+              {/* QZ Tray Configuration Sub-panel (Shown when QZ is selected) */}
+              {printEngine === 'qz' && (
+                <div className="pt-4 border-t border-slate-200 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800">QZ Tray Printer Name</h4>
+                      <p className="text-[11px] text-slate-500">Select the target Windows printer for QZ Tray.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={connectQz}
+                      disabled={isLoadingPrinters}
+                      className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 flex items-center gap-1"
                     >
-                      {availablePrinters.map(p => (
-                        <option key={p} value={p}>{p}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={qzPrinterName}
-                      onChange={e => {
-                        setQzPrinterName(e.target.value);
-                        localStorage.setItem('qz_printer_name', e.target.value);
-                      }}
-                      placeholder="e.g. POS-80 or Generic / Text Only"
-                      className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleTestPrint}
-                    disabled={isTestPrinting || !qzConnected || !qzPrinterName}
-                    className={cn(
-                      "px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md transition-all active:scale-[0.98] shrink-0 flex items-center gap-2",
-                      (!qzConnected || isTestPrinting || !qzPrinterName) && "opacity-50 cursor-not-allowed"
+                      <RefreshCw size={12} className={isLoadingPrinters ? 'animate-spin' : ''} />
+                      <span>{isLoadingPrinters ? 'Scanning...' : 'Scan QZ Printers'}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    {availablePrinters.length > 0 ? (
+                      <select
+                        value={qzPrinterName}
+                        onChange={e => {
+                          setQzPrinterName(e.target.value);
+                          localStorage.setItem('qz_printer_name', e.target.value);
+                        }}
+                        className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
+                      >
+                        {availablePrinters.map(p => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={qzPrinterName}
+                        onChange={e => {
+                          setQzPrinterName(e.target.value);
+                          localStorage.setItem('qz_printer_name', e.target.value);
+                        }}
+                        placeholder="POSPrinter POS-80C"
+                        className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 font-bold text-sm text-slate-800 outline-none"
+                      />
                     )}
-                  >
-                    <Printer size={16} />
-                    <span>{isTestPrinting ? 'Printing...' : 'Test Print'}</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={handleTestPrint}
+                      disabled={isTestPrinting || !qzConnected || !qzPrinterName}
+                      className={cn(
+                        "px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center gap-1.5 shrink-0",
+                        (!qzConnected || isTestPrinting || !qzPrinterName) && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <Printer size={14} />
+                      <span>{isTestPrinting ? 'Printing...' : 'QZ Test Print'}</span>
+                    </button>
+                  </div>
+
+                  <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                    <span>QZ Status:</span>
+                    {qzConnected ? (
+                      <span className="text-emerald-600 font-bold">🟢 Connected ({availablePrinters.length} detected)</span>
+                    ) : (
+                      <span className="text-rose-600 font-bold">🔴 Disconnected</span>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

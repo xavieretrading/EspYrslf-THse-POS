@@ -2,7 +2,10 @@ export const RECEIPT_PRINT_STYLES = `
   @media print {
     @page { 
       size: 80mm auto; 
-      margin: 0; 
+      margin: 0mm !important; 
+    }
+    *, *::before, *::after {
+      box-sizing: border-box !important;
     }
     html, body { 
       margin: 0 !important; 
@@ -10,7 +13,7 @@ export const RECEIPT_PRINT_STYLES = `
       background-color: #ffffff !important;
       background: #ffffff !important;
       color: #000000 !important;
-      width: 80mm !important;
+      width: 100% !important;
       max-width: 80mm !important;
       font-family: Arial, Helvetica, sans-serif !important;
       -webkit-print-color-adjust: exact !important;
@@ -18,17 +21,42 @@ export const RECEIPT_PRINT_STYLES = `
     }
     .print\\:hidden, .print-hidden { display: none !important; }
   }
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+  }
+  html, body { 
+    margin: 0 !important; 
+    padding: 0 !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+  .receipt-print-wrapper {
+    width: 72mm !important;
+    max-width: 72mm !important;
+    margin: 0 auto !important;
+    padding: 1mm 2mm !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: hidden !important;
+  }
   .receipt-ticket-content { 
-    width: 80mm !important; 
-    max-width: 80mm !important; 
+    width: 72mm !important; 
+    max-width: 72mm !important; 
     margin: 0 auto !important; 
-    padding: 6px !important; 
+    padding: 1mm 2mm !important; 
     background: #ffffff !important;
     box-sizing: border-box !important;
     color: #000000 !important;
+    overflow: hidden !important;
+    word-wrap: break-word !important;
   }
   .receipt-ticket-content * {
-    font-size: 9.5pt !important; 
+    font-size: 9pt !important; 
     line-height: 1.25 !important; 
     color: #000000 !important;
     font-family: Arial, Helvetica, sans-serif !important;
@@ -40,40 +68,49 @@ export const RECEIPT_PRINT_STYLES = `
     padding: 0 !important;
   }
   .receipt-ticket-content .row-item {
-    margin-top: 2.5px !important;
-    margin-bottom: 2.5px !important;
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: flex-start !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .receipt-ticket-content .row-item > *:last-child {
+    flex-shrink: 0 !important;
+    text-align: right !important;
+    margin-left: 4px !important;
   }
   .receipt-ticket-content .section-block {
-    margin-top: 5px !important;
-    margin-bottom: 5px !important;
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .receipt-ticket-content .section-header {
-    font-size: 10.5pt !important;
+    font-size: 10pt !important;
     font-weight: 700 !important;
     border-top: 1px dashed black !important;
     border-bottom: 1px dashed black !important;
-    padding-top: 3px !important;
-    padding-bottom: 3px !important;
-    margin-top: 6px !important;
-    margin-bottom: 6px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
     text-align: center !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
   }
   .receipt-ticket-content .receipt-logo {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 68mm !important;
+    max-width: 68mm !important;
     height: auto !important;
     max-height: none !important;
     display: block !important;
-    margin: 0 auto 6px auto !important;
+    margin: 0 auto 4px auto !important;
     object-fit: contain !important;
   }
   .receipt-ticket-content .company-name {
-    font-size: 11.5pt !important;
+    font-size: 11pt !important;
     font-weight: 700 !important;
     display: block !important;
     text-align: center !important;
@@ -81,7 +118,7 @@ export const RECEIPT_PRINT_STYLES = `
     margin-bottom: 2px !important;
   }
   .receipt-ticket-content .receipt-title {
-    font-size: 10.5pt !important;
+    font-size: 10pt !important;
     font-weight: 700 !important;
     display: block !important;
     text-align: center !important;
@@ -90,15 +127,15 @@ export const RECEIPT_PRINT_STYLES = `
   }
   .receipt-ticket-content .print-total,
   .receipt-ticket-content .print-total * {
-    font-size: 13pt !important;
+    font-size: 12pt !important;
     font-weight: 700 !important;
-    line-height: 1.4 !important;
+    line-height: 1.3 !important;
   }
   .receipt-ticket-content .print-change,
   .receipt-ticket-content .print-change * {
-    font-size: 11.5pt !important;
+    font-size: 10.5pt !important;
     font-weight: 700 !important;
-    line-height: 1.3 !important;
+    line-height: 1.25 !important;
   }
   .receipt-ticket-content .font-bold,
   .receipt-ticket-content .font-black,
@@ -132,7 +169,7 @@ export function printReceiptViaBrowser(targetElementOrHtml?: HTMLElement | strin
         // Find all receipt-ticket-content elements in the DOM
         const elements = document.querySelectorAll('.receipt-ticket-content');
         if (elements.length > 0) {
-          contentHtml = Array.from(elements).map(el => el.outerHTML).join('<div style="border-top:1px dashed black; margin:16px 0;"></div>');
+          contentHtml = Array.from(elements).map(el => el.innerHTML).join('<div style="border-top:1px dashed black; margin:12px 0;"></div>');
         } else {
           const printArea = document.querySelector('.printable-area');
           if (printArea) {

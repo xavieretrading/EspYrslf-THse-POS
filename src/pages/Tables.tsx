@@ -313,8 +313,10 @@ export default function Tables() {
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 80mm !important;
-                        max-width: 80mm !important;
+                        width: 72mm !important;
+                        max-width: 72mm !important;
+                        padding: 1mm 2mm !important;
+                        box-sizing: border-box !important;
                         background: white !important;
                       }
                     }

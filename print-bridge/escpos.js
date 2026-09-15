@@ -166,7 +166,10 @@ export function buildReceiptEscPos(orderData, branchInfo = {}) {
   b.line(branchInfo.name || orderData.branch_name || 'Espresso Yourself & Tea House');
   b.size('normal').bold(false);
 
-  const address = branchInfo.address || orderData.branch_address || 'Room 1 Crown Bldg North road 6, Cebu City';
+  const isLaundry = (branchInfo.name || orderData.branch_name || '').toLowerCase().includes('spin') ||
+                    (branchInfo.name || orderData.branch_name || '').toLowerCase().includes('laundry') ||
+                    (typeof orderData.notes === 'string' && orderData.notes.includes('"is_laundry":true'));
+  const address = branchInfo.address || orderData.branch_address || (isLaundry ? 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City' : 'Room 1 Crown Bldg North Road 6, Cebu City');
   b.line(address);
   b.feed(1);
 
@@ -186,29 +189,29 @@ export function buildReceiptEscPos(orderData, branchInfo = {}) {
 
   b.divider('-');
 
-  // Metadata
+  // Metadata (2 columns, 2 rows)
   b.align('left');
-  const invoiceNum = orderData.receipt_number !== undefined && orderData.receipt_number !== null
-    ? `INV-${String(orderData.receipt_number).padStart(6, '0')}`
-    : 'PENDING';
-  b.row('Invoice:', invoiceNum);
-
   const dateStr = orderData.created_at
-    ? new Date(orderData.created_at).toLocaleString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-        timeZone: 'Asia/Manila'
-      }).replace(',', '')
-    : new Date().toLocaleString();
-  b.row('Date:', dateStr);
+    ? new Date(orderData.created_at).toLocaleDateString('en-US', {
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+      timeZone: 'Asia/Manila'
+    })
+    : new Date().toLocaleDateString();
+
+  const timeStr = orderData.created_at
+    ? new Date(orderData.created_at).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Manila'
+    })
+    : new Date().toLocaleTimeString();
 
   const orderNum = `#${String(orderData.order_number || orderData.id || '').padStart(6, '0')}`;
-  b.row('Order:', orderNum);
-  b.row('Cashier:', orderData.cashier_name || 'Staff');
+  b.row(`Order: ${orderNum}`, `Date: ${dateStr}`);
+  b.row(`Time: ${timeStr}`, `Cashier: ${orderData.cashier_name || 'Staff'}`);
 
   b.divider('-');
 
@@ -233,8 +236,10 @@ export function buildReceiptEscPos(orderData, branchInfo = {}) {
           .replace('(Voucher) ', '')
           .replace(/\[COMPLIMENTARY:.*?\]/g, '')
           .replace(/\[COMPLIMENTARY\]/g, '')
+          .replace(/Service:\s*[^|]+(?:\s*\|\s*Weight[\s/]*Qty:[^|,]+)?(?:\s*,?\s*Rate:[^|•]+)?\.?/gi, '')
+          .replace(/Weight[\s/]*Qty:[^|,]+(?:\s*,?\s*Rate:[^|•]+)?\.?/gi, '')
           .trim();
-        if (cleanNotes && !cleanNotes.startsWith('{')) {
+        if (cleanNotes && !cleanNotes.startsWith('{') && !cleanNotes.toLowerCase().startsWith('service:') && !(cleanNotes.toLowerCase().includes('weight') && cleanNotes.toLowerCase().includes('rate'))) {
           b.line(`    * ${cleanNotes}`);
         }
       }

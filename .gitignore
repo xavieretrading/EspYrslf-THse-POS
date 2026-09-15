@@ -6,3 +6,11 @@ coverage/
 *.log
 .env*
 !.env.example
+__pycache__/
+*.pyc
+~$*
+xp-thermal-service/node_modules/
+xp-thermal-service/logs/
+xp-thermal-service/data/
+xp-thermal-service/*.db*
+

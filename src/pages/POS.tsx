@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import qz from 'qz-tray';
+import { connectQzTray, getQzPrinters, printHtmlViaQz } from '../lib/qzTrayClient';
+import { checkXpServiceHealth, printReceiptViaXpThermal } from '../lib/xpThermalClient';
 import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown, Lock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../App';
@@ -15,7 +16,7 @@ import { printReceiptViaBrowser, RECEIPT_PRINT_STYLES } from '../lib/receiptPrin
 
 export const getProductImage = (name: string): string => {
   const lowercase = name.toLowerCase().trim();
-  
+
   // Collectible Mugs & Merch
   if (lowercase.includes('stitch')) return '/mugs/stitch_mug.jpg';
   if (lowercase.includes('lotso')) return '/mugs/lotso_mug.jpg';
@@ -60,7 +61,7 @@ export const getProductImage = (name: string): string => {
   if (lowercase.includes('royal')) return '/royal-orange.jpg';
   if (lowercase.includes('towel') || lowercase.includes('bedsheet')) return '/towels-bedsheets-.jpg';
   if (lowercase.includes('sip') || lowercase.includes('spin') || lowercase.includes('wash') || lowercase.includes('dry')) return '/s1p and sp1n.jpg';
-  
+
   // Clean fallback slug name ending check
   const slug = lowercase.replace(/[^a-z0-9]+/g, '-');
   return '/' + (slug.endsWith('-') ? slug.slice(0, -1) : slug) + '.jpg';
@@ -247,7 +248,7 @@ export default function POS() {
         if (Array.isArray(parsed)) {
           return Array.from(new Set([...defaults, ...parsed]));
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     return defaults;
   });
@@ -299,6 +300,12 @@ export default function POS() {
   });
 
   // Printer settings
+  const [printEngine, setPrintEngine] = useState<'xp' | 'qz' | 'browser'>(() => {
+    const stored = localStorage.getItem('printer_engine');
+    if (stored === 'xp' || stored === 'qz' || stored === 'browser') return stored;
+    return 'xp'; // Default to XP Thermal Service
+  });
+  const [xpOnline, setXpOnline] = useState(false);
   const [qzPrinterName, setQzPrinterName] = useState(() => localStorage.getItem('qz_printer_name') || '');
   const [useQzTray, setUseQzTray] = useState(() => localStorage.getItem('qz_enabled') === 'true');
   const [qzConnected, setQzConnected] = useState(false);
@@ -306,13 +313,14 @@ export default function POS() {
   const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
   const [isLoadingPrinters, setIsLoadingPrinters] = useState(false);
 
+  useEffect(() => {
+    checkXpServiceHealth().then(h => setXpOnline(h.connected)).catch(() => setXpOnline(false));
+  }, []);
+
   const fetchAvailablePrinters = async () => {
     try {
-      if (!qz.websocket.isActive()) {
-        await qz.websocket.connect();
-      }
       setIsLoadingPrinters(true);
-      const list = await qz.printers.find();
+      const list = await getQzPrinters();
       if (Array.isArray(list) && list.length > 0) {
         setAvailablePrinters(list);
         const stored = localStorage.getItem('qz_printer_name');
@@ -339,22 +347,25 @@ export default function POS() {
 
   useEffect(() => {
     if (!useQzTray) {
-      if (qz.websocket.isActive()) {
-        qz.websocket.disconnect().catch(err => console.error("QZ Disconnect error:", err));
-      }
       setQzConnected(false);
       return;
     }
 
+    let isMounted = true;
     const connectQz = async () => {
       try {
-        if (!qz.websocket.isActive()) {
-          await qz.websocket.connect();
+        const ok = await connectQzTray();
+        if (!isMounted) return;
+        if (ok) {
+          setQzConnected(true);
+          setQzError(null);
+          await fetchAvailablePrinters();
+        } else {
+          setQzConnected(false);
+          setQzError("Could not connect to QZ Tray. Make sure it is running.");
         }
-        setQzConnected(true);
-        setQzError(null);
-        await fetchAvailablePrinters();
       } catch (err: any) {
+        if (!isMounted) return;
         console.error("QZ connection failed:", err);
         setQzConnected(false);
         setQzError(err.message || "Could not connect to QZ Tray. Make sure it is running.");
@@ -362,6 +373,7 @@ export default function POS() {
     };
 
     connectQz();
+    return () => { isMounted = false; };
   }, [useQzTray]);
 
   // Payment
@@ -2160,41 +2172,77 @@ export default function POS() {
       } catch (err) { }
     }
 
-    if (useQzTray) {
+    if (printEngine === 'xp') {
       try {
-        if (!qz.websocket.isActive()) {
-          await qz.websocket.connect();
+        const isL = isLaundryBranch || (typeof receiptData?.notes === 'string' && receiptData.notes.includes('"is_laundry":true'));
+        const branchAddr = isL
+          ? (activeBranch?.name?.toLowerCase().includes('spin') ? activeBranch.address : 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City')
+          : (activeBranch?.address || settings?.address);
+
+        const res = await printReceiptViaXpThermal(receiptData, {
+          branchName: isL ? (activeBranch?.name || 'S1p and Sp1n Laundry Shop') : activeBranch?.name,
+          address: branchAddr,
+          tin: settings?.tin,
+          openDrawer: receiptData?.payment_method?.toLowerCase() === 'cash'
+        });
+        if (res.success) {
+          swalAlert('Success', 'Receipt printed successfully via XP Thermal Service.', 'success');
+          return;
         }
-        const config = qz.configs.create(qzPrinterName);
-        const element = document.querySelector('.receipt-ticket-content');
-        if (!element) {
+        throw new Error(res.error || 'Print service could not complete job');
+      } catch (err: any) {
+        console.error("XP Thermal print failed:", err);
+        const fallback = await swalConfirm(
+          'XP Thermal Print Issue',
+          `Direct print could not complete (${err.message || 'Service offline'}). Would you like to print using the standard Browser Print Dialog instead?`
+        );
+        if (fallback) {
+          await printReceiptViaBrowser();
+        }
+      }
+    } else if (printEngine === 'qz' || useQzTray) {
+      try {
+        let targetPrinter = qzPrinterName;
+        if (!targetPrinter) {
+          const printers = await getQzPrinters();
+          if (!printers || printers.length === 0) {
+            throw new Error('No printers detected. Please run the FIX_POS_PRINTER shortcut on your desktop to start Windows Print Spooler.');
+          }
+          targetPrinter = printers.find((p: string) =>
+            p.toLowerCase().includes('pos') ||
+            p.toLowerCase().includes('receipt') ||
+            p.toLowerCase().includes('80') ||
+            p.toLowerCase().includes('thermal')
+          ) || printers[0];
+          setQzPrinterName(targetPrinter);
+          localStorage.setItem('qz_printer_name', targetPrinter);
+        }
+
+        const elements = document.querySelectorAll('.receipt-ticket-content');
+        if (!elements || elements.length === 0) {
           swalAlert('Print Error', 'Could not locate the receipt layout on screen.', 'error');
           return;
         }
 
-        const printData = [
-          {
-            type: 'html',
-            format: 'plain',
-            data: `
-              <!DOCTYPE html>
-              <html>
-                <head>
-                  <meta charset="utf-8">
-                  <title>Receipt Print</title>
-                  <style>${RECEIPT_PRINT_STYLES}</style>
-                </head>
-                <body>
-                  <div class="receipt-ticket-content">
-                    ${element.innerHTML}
-                  </div>
-                </body>
-              </html>
-            `
-          }
-        ];
+        const receiptBodies = Array.from(elements)
+          .map(el => `<div class="receipt-ticket-content">${el.innerHTML}</div>`)
+          .join('<div style="border-top: 1px dashed black; margin: 12px 0;"></div>');
 
-        await qz.print(config, printData);
+        const printHtml = `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Receipt Print</title>
+              <style>${RECEIPT_PRINT_STYLES}</style>
+            </head>
+            <body>
+              ${receiptBodies}
+            </body>
+          </html>
+        `;
+
+        await printHtmlViaQz(targetPrinter, printHtml);
         swalAlert('Success', 'Receipt printed successfully via QZ Tray.', 'success');
       } catch (err: any) {
         console.error("QZ print failed:", err);
@@ -2213,6 +2261,74 @@ export default function POS() {
 
   const popOut = () => {
     window.open(`/standalone-pos${activeTerminal ? `?terminal_id=${activeTerminal.id}` : ''}`, '_blank', 'width=1200,height=800');
+  };
+
+  const flattenReceiptItemsWithAddons = (items: any[]) => {
+    const result: any[] = [];
+    (items || []).forEach((item: any, idx: number) => {
+      let notes = (item.notes || '')
+        .replace(/\[DINE-IN\]\s*/gi, '')
+        .replace(/\[TAKEOUT\]\s*/gi, '')
+        .replace(/\[TAKE-OUT\]\s*/gi, '')
+        .replace(/\[COMPLIMENTARY:.*?\]/gi, '')
+        .replace(/\[COMPLIMENTARY\]/gi, '')
+        .replace(/\(Complimentary Voucher\)\s*/gi, '')
+        .replace(/\(Voucher\)\s*/gi, '')
+        .trim();
+
+      const addonRegex = /(?:(\d+)x\s*)?([^(,•]+?)\s*\(\+?[₱P]?(?:HP)?\s*(\d+(?:\.\d+)?)\)/gi;
+      const extractedAddons: any[] = [];
+      let match;
+      let totalAddonUnitExtra = 0;
+
+      while ((match = addonRegex.exec(notes)) !== null) {
+        const addonQty = match[1] ? parseInt(match[1], 10) : 1;
+        const rawName = match[2].replace(/^\+\s*/, '').trim();
+        const addonPrice = parseFloat(match[3]) || 0;
+        extractedAddons.push({
+          id: `addon-${item.id || idx}-${extractedAddons.length}`,
+          name: `+ ${rawName}`,
+          quantity: addonQty * (item.quantity || 1),
+          price: addonPrice,
+          total: addonPrice * (addonQty * (item.quantity || 1)),
+          isAddon: true
+        });
+        totalAddonUnitExtra += (addonPrice * addonQty);
+      }
+
+      let cleanNotes = notes.replace(addonRegex, '')
+        .replace(/Service:\s*[^|]+(?:\s*\|\s*Weight[\s/]*Qty:[^|,]+)?(?:\s*,?\s*Rate:[^|•]+)?\.?/gi, '')
+        .replace(/Weight[\s/]*Qty:[^|,]+(?:\s*,?\s*Rate:[^|•]+)?\.?/gi, '')
+        .replace(/^\+\s*/, '')
+        .replace(/[•,]\s*$/, '')
+        .replace(/^[•,]\s*/, '')
+        .replace(/\s*•\s*/g, ' • ')
+        .trim();
+
+      if (cleanNotes.toLowerCase().startsWith('service:') || (cleanNotes.toLowerCase().includes('weight') && cleanNotes.toLowerCase().includes('rate'))) {
+        cleanNotes = '';
+      }
+
+      const itemQty = Number(item.quantity) || 1;
+      const origPrice = Number(item.price) || 0;
+      const basePrice = Math.max(0, origPrice - totalAddonUnitExtra);
+
+      result.push({
+        ...item,
+        id: item.id || `item-${idx}`,
+        name: item.name || item.product_name,
+        quantity: itemQty,
+        price: basePrice,
+        total: basePrice * itemQty,
+        notes: cleanNotes || null,
+        isAddon: false
+      });
+
+      extractedAddons.forEach(addon => {
+        result.push(addon);
+      });
+    });
+    return result;
   };
 
   const receiptCalculations = getReceiptCalculations(receiptData, settings);
@@ -3127,9 +3243,9 @@ export default function POS() {
                 {categories.filter(c => {
                   const matchesDiv = !isLaundryBranch || (c.division || 'coffee') === selectedDivision;
                   if (!matchesDiv) return false;
-                  return products.some(p => 
-                    p.category_name === c.name && 
-                    (p as any).is_sellable !== 0 && 
+                  return products.some(p =>
+                    p.category_name === c.name &&
+                    (p as any).is_sellable !== 0 &&
                     (!isLaundryBranch || p.division === selectedDivision)
                   );
                 }).map(c => (
@@ -3192,7 +3308,7 @@ export default function POS() {
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 absolute inset-0 z-10"
                         />
-                        
+
                         {/* Placeholder No Picture (rendered underneath) */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-2 bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
                           <Package size={20} strokeWidth={1.5} className="text-slate-400 mb-1 opacity-70" />
@@ -3228,7 +3344,7 @@ export default function POS() {
 
                       {/* Hover Quick-Add 1-Click Indicator (Top Right) */}
                       {!isLocked && !isPisoPromo && (
-                        <div 
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
                             addToCart(product);
@@ -3247,7 +3363,7 @@ export default function POS() {
                         <span className="text-[6.5px] font-black text-emerald-400 uppercase tracking-wider opacity-90 leading-none mb-0.5">
                           {product.category_name}
                         </span>
-                        
+
                         <h3 className={cn(
                           "font-bold text-white leading-tight text-[9px] md:text-[10px] line-clamp-2 drop-shadow-sm mb-1",
                           isLocked && "text-slate-300 opacity-80"
@@ -3976,8 +4092,10 @@ export default function POS() {
                         position: absolute !important;
                         left: 0 !important;
                         top: 0 !important;
-                        width: 80mm !important;
-                        max-width: 80mm !important;
+                        width: 72mm !important;
+                        max-width: 72mm !important;
+                        padding: 1mm 2mm !important;
+                        box-sizing: border-box !important;
                         background: white !important;
                       }
                     }
@@ -4027,7 +4145,11 @@ export default function POS() {
                         {/* Company Details */}
                         <div className="text-center section-block">
                           <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
-                          <p className="text-[9.5pt]">{settings?.address || 'Laundry Shop Address'}</p>
+                          <p className="text-[9.5pt]">
+                            {activeBranch?.name?.toLowerCase().includes('spin')
+                              ? activeBranch.address
+                              : 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City'}
+                          </p>
                           {/* <p className="text-[9.5pt] hidden">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                         </div>
 
@@ -4039,11 +4161,12 @@ export default function POS() {
 
                         <div className="section-block pt-1 font-mono text-[9.5pt]">
                           <div className="flex justify-between row-item">
-                            <span>Receipt No: #{(receiptData.receipt_number || receiptData.id)}</span>
-                            <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                            <span>Order: #{(receiptData.order_number || receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
+                            <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                           </div>
                           <div className="flex justify-between row-item">
-                            <span className="truncate max-w-[100%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
+                            <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
+                            <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                           </div>
                         </div>
 
@@ -4201,11 +4324,11 @@ export default function POS() {
 
                       <div className="section-block pt-1 text-[9.5pt]">
                         <div className="flex justify-between row-item">
-                          <span>Invoice: {receiptData.receipt_number !== undefined && receiptData.receipt_number !== null ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}` : 'PENDING'}</span>
-                          <span className="text-right">{new Date(receiptData.created_at || receiptData.updated_at).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' }).replace(',', '')}</span>
+                          <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
+                          <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                         </div>
                         <div className="flex justify-between row-item">
-                          <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
+                          <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
                           <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                         </div>
                       </div>
@@ -4216,7 +4339,7 @@ export default function POS() {
                           <span>Qty &nbsp;&nbsp; Item</span>
                           <span>Amount</span>
                         </div>
-                        {receiptData.items
+                        {flattenReceiptItemsWithAddons(receiptData.items)
                           ?.filter((item: any) => {
                             if (receiptData.printType === 'voucher') {
                               return item.notes?.includes('Voucher') || item.notes?.includes('(Voucher)');
@@ -4229,15 +4352,17 @@ export default function POS() {
                           ?.map((item: any) => (
                             <div key={item.id} className="flex justify-between row-item">
                               <span className="flex flex-col max-w-[75%]">
-                                <span>{item.quantity} &nbsp;&nbsp; {item.name || item.product_name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}</span>
-                                {item.notes && item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '').trim() !== '' && (
-                                  <span className="text-[8pt] text-slate-600 italic">
-                                    {item.notes.replace(/\[DINE-IN\]\s*/g, '').replace(/\(Complimentary Voucher\)\s*/g, '').replace('(Voucher) ', '').replace(/\[COMPLIMENTARY:.*?\]/g, '').replace(/\[COMPLIMENTARY\]/g, '')}
+                                <span className={item.isAddon ? "pl-2 text-slate-700 font-medium" : ""}>
+                                  {item.quantity} &nbsp;&nbsp; {item.name} {item.is_complimentary && <span className="print-bold-text">(COMP)</span>}
+                                </span>
+                                {item.notes && (
+                                  <span className="text-[8pt] text-slate-600 italic pl-6">
+                                    {item.notes}
                                   </span>
                                 )}
                               </span>
                               <span className="text-right">
-                                ₱{((item.price * item.quantity)).toFixed(2)}
+                                ₱{(item.total !== undefined ? item.total : (item.price * item.quantity)).toFixed(2)}
                               </span>
                             </div>
                           ))}
@@ -4309,83 +4434,8 @@ export default function POS() {
               </div>
             </div>
 
-            {/* Modal Sticky Bottom Controls & Action Bar */}
-            <div className="p-3 bg-white border-t border-slate-200 shrink-0 space-y-2.5 print:hidden">
-              {/* Printer Mode & Settings */}
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-slate-700">Printer Mode:</span>
-                  <select
-                    value={useQzTray ? 'qz' : 'browser'}
-                    onChange={e => {
-                      const checked = e.target.value === 'qz';
-                      setUseQzTray(checked);
-                      localStorage.setItem('qz_enabled', String(checked));
-                    }}
-                    className="px-2 py-1 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-700 outline-none focus:border-emerald-500 text-xs"
-                  >
-                    <option value="browser">Browser Print dialog (No setup needed)</option>
-                    <option value="qz">Direct print (QZ Tray)</option>
-                  </select>
-                </div>
-
-                {useQzTray && (
-                  <div className="p-2 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-slate-600 text-[11px]">Thermal Printer:</span>
-                      <div className="flex items-center gap-1">
-                        {availablePrinters.length > 0 ? (
-                          <select
-                            value={qzPrinterName}
-                            onChange={e => {
-                              setQzPrinterName(e.target.value);
-                              localStorage.setItem('qz_printer_name', e.target.value);
-                            }}
-                            className="max-w-[180px] px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 outline-none truncate"
-                          >
-                            {availablePrinters.map(p => (
-                              <option key={p} value={p}>{p}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            type="text"
-                            value={qzPrinterName}
-                            onChange={e => {
-                              setQzPrinterName(e.target.value);
-                              localStorage.setItem('qz_printer_name', e.target.value);
-                            }}
-                            placeholder="POS-80"
-                            className="w-32 px-2 py-0.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 outline-none"
-                          />
-                        )}
-                        <button
-                          type="button"
-                          onClick={fetchAvailablePrinters}
-                          disabled={isLoadingPrinters || !qzConnected}
-                          title="Scan connected printers"
-                          className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 shrink-0"
-                        >
-                          <RefreshCw size={12} className={isLoadingPrinters ? 'animate-spin' : ''} />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[10.5px]">
-                      <span className="text-slate-500">Status:</span>
-                      {qzConnected ? (
-                        <span className="text-emerald-600 font-bold">🟢 Connected ({availablePrinters.length} found)</span>
-                      ) : qzError ? (
-                        <span className="text-rose-600 font-bold" title={qzError}>🔴 QZ Tray Not Running</span>
-                      ) : (
-                        <span className="text-amber-500 font-bold animate-pulse">🟡 Connecting...</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons */}
+            {/* Modal Sticky Bottom Action Bar */}
+            <div className="p-3 bg-white border-t border-slate-200 shrink-0 print:hidden">
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -4481,14 +4531,16 @@ export default function POS() {
                   background-color: white !important;
                   background: white !important;
                   color: black !important;
-                  width: 80mm !important;
+                  width: 100% !important;
+                  max-width: 80mm !important;
                 } 
                 .print\\:hidden { display: none !important; }
                 .printable-area { 
-                  width: 80mm !important; 
-                  max-width: 80mm !important; 
-                  margin: 0 !important; 
-                  padding: 4mm !important; 
+                  width: 72mm !important; 
+                  max-width: 72mm !important; 
+                  margin: 0 auto !important; 
+                  padding: 1mm 2mm !important; 
+                  box-sizing: border-box !important;
                   border: none !important;
                   box-shadow: none !important;
                 }
@@ -4559,7 +4611,7 @@ export default function POS() {
               <p className="font-black company-name text-base">
                 {zReadingFilter === 'laundry' ? 'SIP & SPIN LAUNDRY SHOP' : (settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE')}
               </p>
-              <p className="text-xs">{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
+              <p className="text-xs">{settings?.address || 'Room 1 Crown Bldg North Road 6, North Reclamation Area Mabolo Cebu City'}</p>
               <p className="mt-2 font-black text-xs">***** END OF DAY SHIFT *****</p>
             </div>
 
@@ -5356,7 +5408,7 @@ export default function POS() {
         return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 font-sans overflow-y-auto animate-in fade-in duration-200">
             <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 max-w-lg w-full border border-slate-150 flex flex-col max-h-[92vh] relative animate-in zoom-in-95 duration-200">
-              
+
               {/* Modal Header */}
               <div className="flex items-start justify-between pb-3.5 mb-3.5 border-b border-slate-150 gap-3">
                 <div className="flex items-center gap-3 min-w-0">
@@ -5400,7 +5452,7 @@ export default function POS() {
 
               {/* Modal Body - Scrollable Content */}
               <div className="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar text-xs">
-                
+
                 {/* Available Add-ons Header */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -5417,7 +5469,7 @@ export default function POS() {
 
                   {/* 3 Add-ons Grid */}
                   <div className="grid grid-cols-1 gap-2.5">
-                    
+
                     {/* Addon 1: Espresso 60ml (50 pesos) */}
                     <div
                       onClick={() => setAddonEspressoCount(prev => prev > 0 ? 0 : 1)}

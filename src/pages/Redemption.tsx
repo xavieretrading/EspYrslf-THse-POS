@@ -357,14 +357,16 @@ export default function Redemption() {
                   background-color: white !important;
                   background: white !important;
                   color: black !important;
-                  width: 80mm !important;
+                  width: 100% !important;
+                  max-width: 80mm !important;
                 } 
                 .print\\:hidden { display: none !important; }
                 .printable-area { 
-                  width: 80mm !important; 
-                  max-width: 80mm !important; 
+                  width: 72mm !important; 
+                  max-width: 72mm !important; 
                   margin: 0 auto !important; 
-                  padding: 6px !important; 
+                  padding: 1mm 2mm !important; 
+                  box-sizing: border-box !important;
                   border: none !important;
                   box-shadow: none !important;
                   background: white !important;
@@ -521,7 +523,7 @@ export default function Redemption() {
                   <img src={ESPRESSO_RECEIPT_LOGO} alt="Espresso Yourself & Tea House" className="receipt-logo" />
                 </div>
                 <p className="company-name">{settings?.company_name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
-                <p>{settings?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
+                <p>{settings?.address || 'Room 1 Crown Bldg North Road 6, North Reclamation Area Mabolo Cebu City'}</p>
                 {/* <p>TIN: {settings?.tin || '899-352-898-00000'}</p> */}
               </div>
 

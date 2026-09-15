@@ -1,0 +1,3814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espresso Yourself - Physical Inventory Count Sheet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2B1704;
+      --primary-light: #4A2E18;
+      --accent: #C68B59;
+      --accent-hover: #B57948;
+      --bg-cream: #FAF7F2;
+      --card-bg: #FFFFFF;
+      --border-color: #E6DFD5;
+      --text-main: #231F20;
+      --text-muted: #6E6259;
+      --highlight-input: #FFFDE7;
+      --success-bg: #E6F4EA;
+      --success-text: #137333;
+      --danger-bg: #FCE8E6;
+      --danger-text: #C5221F;
+      --info-bg: #E8F0FE;
+      --info-text: #1967D2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-cream);
+      color: var(--text-main);
+      line-height: 1.4;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #FFFFFF;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(43, 23, 4, 0.08);
+      padding: 32px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Header Banner */
+    .header-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      font-size: 36px;
+      background: #F4ECE1;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid var(--accent);
+    }
+
+    .brand-title h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-title p {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-accent {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: #F8F5F0;
+    }
+
+    /* Meta Info Grid */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      background: #FAF7F2;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 24px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .meta-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .meta-input {
+      border: 1px solid #D5CCC0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #FFFFFF;
+      width: 100%;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .kpi-card.blue { border-left: 4px solid #1967D2; background: #F8FAFD; }
+    .kpi-card.green { border-left: 4px solid #137333; background: #F8FCF9; }
+    .kpi-card.amber { border-left: 4px solid #D48806; background: #FEFAF2; }
+    .kpi-card.purple { border-left: 4px solid #684E3A; background: #FAF7F5; }
+
+    .kpi-icon {
+      font-size: 24px;
+    }
+
+    .kpi-content h4 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .kpi-content .kpi-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 2px;
+    }
+
+    /* Category Navigation Pills */
+    .cat-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .cat-pill {
+      background: #F4EFEA;
+      color: var(--text-main);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+    }
+
+    .cat-pill:hover {
+      background: var(--primary);
+      color: #FFFFFF;
+      border-color: var(--primary);
+    }
+
+    /* Table Styles */
+    .table-section {
+      margin-bottom: 36px;
+    }
+
+    .section-header {
+      background: var(--primary);
+      color: #FFFFFF;
+      padding: 12px 18px;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.3px;
+    }
+
+    .section-count {
+      font-size: 12px;
+      background: rgba(255,255,255,0.2);
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+
+    .inventory-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid var(--border-color);
+      border-top: none;
+      background: #FFFFFF;
+    }
+
+    .inventory-table th {
+      background: #2E1C11;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid #432E22;
+    }
+
+    .inventory-table th.center, .inventory-table td.center {
+      text-align: center;
+    }
+
+    .inventory-table th.right, .inventory-table td.right {
+      text-align: right;
+    }
+
+    .inventory-table th.input-th {
+      background: #D48806;
+      color: #FFFFFF;
+      text-align: center;
+      border-color: #B57404;
+    }
+
+    .inventory-table td {
+      padding: 9px 12px;
+      border: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    .inventory-table tr:nth-child(even) {
+      background-color: #FCFBF9;
+    }
+
+    .inventory-table tr:hover {
+      background-color: #F8F4EE;
+    }
+
+    .sku-code {
+      font-family: monospace;
+      font-size: 11px;
+      color: #777;
+      font-weight: 600;
+    }
+
+    .item-name {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .item-notes {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .uom-badge {
+      background: #F0EAE1;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #554433;
+    }
+
+    .input-cell {
+      background-color: var(--highlight-input) !important;
+      text-align: center;
+      padding: 4px 6px;
+      border: 2px solid #E0B070 !important;
+    }
+
+    .count-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #D4A373;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #7A3E00;
+      background: #FFFFFF;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .count-input:focus {
+      border-color: #D48806;
+      box-shadow: 0 0 0 3px rgba(212, 136, 6, 0.2);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-pending {
+      background: #F0EDE8;
+      color: #776C63;
+    }
+
+    .status-match {
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status-shortage {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    .status-surplus {
+      background: var(--info-bg);
+      color: var(--info-text);
+    }
+
+    .variance-val {
+      font-weight: 700;
+    }
+
+    .variance-neg {
+      color: var(--danger-text);
+    }
+
+    .variance-pos {
+      color: var(--info-text);
+    }
+
+    .variance-zero {
+      color: var(--success-text);
+    }
+
+    /* Subtotal Row */
+    .subtotal-row td {
+      background: #F5EFE9 !important;
+      font-weight: 700;
+      color: var(--primary);
+      border-top: 2px solid #C68B59;
+      border-bottom: 2px solid #C68B59;
+    }
+
+    /* Sign-off section */
+    .signoff-section {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 2px solid var(--border-color);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .sign-box {
+      border: 1px dashed #C68B59;
+      border-radius: 10px;
+      padding: 16px;
+      background: #FAF7F2;
+    }
+
+    .sign-box h5 {
+      font-size: 12px;
+      color: var(--primary);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .sign-line {
+      border-bottom: 1px solid #B0A294;
+      margin-top: 36px;
+      margin-bottom: 6px;
+    }
+
+    .sign-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* PRINT RULES */
+    @media print {
+      body {
+        background: #FFFFFF;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .action-bar, .cat-nav, .no-print {
+        display: none !important;
+      }
+      .table-section {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+      }
+      .inventory-table th {
+        background: #333 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+      }
+      .section-header {
+        background: #444 !important;
+        color: #fff !important;
+        -webkit-print-color-adjust: exact;
+      }
+      .count-input {
+        border: 1px solid #999;
+        height: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header Banner -->
+  <div class="header-banner">
+    <div class="brand-title">
+      <div class="brand-icon">☕</div>
+      <div>
+        <h1>ESPRESSO YOURSELF & TEA HOUSE</h1>
+        <p>Physical Inventory Audit Sheet & Count Template &bull; Branch #30 (Cebu City)</p>
+      </div>
+    </div>
+    <div class="action-bar no-print">
+      <button class="btn btn-outline" onclick="window.location.reload()">🔄 Reset</button>
+      <button class="btn btn-accent" onclick="exportData()">💾 Export to CSV</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Count Sheet</button>
+    </div>
+  </div>
+
+  <!-- Metadata Grid -->
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span class="meta-label">Audit Date</span>
+      <input type="text" class="meta-input" id="auditDate" value="September 15, 2026">
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Audit Shift</span>
+      <select class="meta-input" id="auditShift">
+        <option value="Morning Shift (Opening)">Morning Shift (Opening)</option>
+        <option value="Mid-Day Shift">Mid-Day Shift</option>
+        <option value="Closing Shift (Full Day)" selected>Closing Shift (Full Day)</option>
+      </select>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Counted By (Barista)</span>
+      <input type="text" class="meta-input" id="countedBy" placeholder="Enter Barista Name">
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Verified By (Manager)</span>
+      <input type="text" class="meta-input" id="verifiedBy" placeholder="Supervisor / Manager Name">
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card blue">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-content">
+        <h4>Total SKUs to Count</h4>
+        <div class="kpi-num" id="totalSkuCount">119</div>
+      </div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">✍️</div>
+      <div class="kpi-content">
+        <h4>Items Counted</h4>
+        <div class="kpi-num" id="itemsCounted">0 / 119</div>
+      </div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-content">
+        <h4>Discrepancies Flagged</h4>
+        <div class="kpi-num" id="discrepancyCount">0</div>
+      </div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-content">
+        <h4>Audited Stock Value</h4>
+        <div class="kpi-num" id="totalAuditedValue">₱0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Nav Pills -->
+  <div class="cat-nav no-print">
+    <a href="#cat-1" class="cat-pill">☕ Coffee Beans & Drink Bases</a>
+    <a href="#cat-2" class="cat-pill">🥛 Milks & Dairy Supplies</a>
+    <a href="#cat-3" class="cat-pill">🍯 Flavor Syrups, Purées & Sauces</a>
+    <a href="#cat-4" class="cat-pill">🍵 Matcha & Specialty Teas</a>
+    <a href="#cat-5" class="cat-pill">🍬 Sweeteners, Toppings & Mixers</a>
+    <a href="#cat-6" class="cat-pill">🥤 Retail Bottled Beverages & Beers</a>
+    <a href="#cat-7" class="cat-pill">🥨 Pastries, Bakery & Grab-and-Go Snacks</a>
+    <a href="#cat-8" class="cat-pill">🎁 Merchandise & Collector Mugs</a>
+    <a href="#cat-9" class="cat-pill">📦 Cups, Lids & Packaging Disposables</a>
+    <a href="#cat-10" class="cat-pill">🥄 Bar Tools, Utensils & Smallwares</a>
+    <a href="#cat-11" class="cat-pill">⚙️ Equipment & Store Fixtures</a>
+    <a href="#cat-12" class="cat-pill">🧼 Cleaning, Hygiene & Maintenance</a>
+  </div>
+
+  <!-- INVENTORY TABLES BY CATEGORY -->
+  <div id="inventoryContainer">
+
+    <!-- Category 1 -->
+    <div class="table-section" id="cat-1">
+      <div class="section-header" style="background: #3D2314;">
+        <span>☕ 1. COFFEE BEANS & DRINK BASES</span>
+        <span class="section-count">6 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-1" data-cost="980.0" data-stock="6.27" data-sku="ING-001" data-name="Concept Blend 1 (Espresso Beans)">
+            <td><span class="sku-code">ING-001</span></td>
+            <td>
+              <div class="item-name">Concept Blend 1 (Espresso Beans)</div>
+              <div class="item-notes">Main house espresso blend</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱980.00</td>
+            <td class="right" id="stock-1">6.27</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-1" 
+                     placeholder="Enter Qty" oninput="calculateRow(1)">
+            </td>
+            <td class="right variance-val" id="variance-1">—</td>
+            <td class="right variance-val" id="varval-1">—</td>
+            <td class="center" id="status-1">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-1" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-2" data-cost="204.0" data-stock="1.0" data-sku="ING-002" data-name="Australia's Own Coffee Blend">
+            <td><span class="sku-code">ING-002</span></td>
+            <td>
+              <div class="item-name">Australia's Own Coffee Blend</div>
+              <div class="item-notes">Specialty roast</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack</span></td>
+            <td class="right">₱204.00</td>
+            <td class="right" id="stock-2">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-2" 
+                     placeholder="Enter Qty" oninput="calculateRow(2)">
+            </td>
+            <td class="right variance-val" id="variance-2">—</td>
+            <td class="right variance-val" id="varval-2">—</td>
+            <td class="center" id="status-2">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-2" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-3" data-cost="396.0" data-stock="1.0" data-sku="ING-003" data-name="Easy Dark Chocolate Base 1kg">
+            <td><span class="sku-code">ING-003</span></td>
+            <td>
+              <div class="item-name">Easy Dark Chocolate Base 1kg</div>
+              <div class="item-notes">Mocha & Hot Choco base powder</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱396.00</td>
+            <td class="right" id="stock-3">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-3" 
+                     placeholder="Enter Qty" oninput="calculateRow(3)">
+            </td>
+            <td class="right variance-val" id="variance-3">—</td>
+            <td class="right variance-val" id="varval-3">—</td>
+            <td class="center" id="status-3">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-3" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-4" data-cost="305.0" data-stock="1.0" data-sku="ING-004" data-name="Easy Cookies & Cream Powder 1kg">
+            <td><span class="sku-code">ING-004</span></td>
+            <td>
+              <div class="item-name">Easy Cookies & Cream Powder 1kg</div>
+              <div class="item-notes">Blended frappe & Oreo base</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱305.00</td>
+            <td class="right" id="stock-4">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-4" 
+                     placeholder="Enter Qty" oninput="calculateRow(4)">
+            </td>
+            <td class="right variance-val" id="variance-4">—</td>
+            <td class="right variance-val" id="varval-4">—</td>
+            <td class="center" id="status-4">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-4" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-5" data-cost="415.0" data-stock="1.0" data-sku="ING-005" data-name="Bakersfield Caramel Fudge 1kg">
+            <td><span class="sku-code">ING-005</span></td>
+            <td>
+              <div class="item-name">Bakersfield Caramel Fudge 1kg</div>
+              <div class="item-notes">Caramel drizzle & drink base</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱415.00</td>
+            <td class="right" id="stock-5">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-5" 
+                     placeholder="Enter Qty" oninput="calculateRow(5)">
+            </td>
+            <td class="right variance-val" id="variance-5">—</td>
+            <td class="right variance-val" id="varval-5">—</td>
+            <td class="center" id="status-5">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-5" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-6" data-cost="380.0" data-stock="1.0" data-sku="ING-006" data-name="Whoop Classic Ube Taro Powder 1kg">
+            <td><span class="sku-code">ING-006</span></td>
+            <td>
+              <div class="item-name">Whoop Classic Ube Taro Powder 1kg</div>
+              <div class="item-notes">Specialty blended drink base</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱380.00</td>
+            <td class="right" id="stock-6">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-6" 
+                     placeholder="Enter Qty" oninput="calculateRow(6)">
+            </td>
+            <td class="right variance-val" id="variance-6">—</td>
+            <td class="right variance-val" id="varval-6">—</td>
+            <td class="center" id="status-6">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-6" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 2 -->
+    <div class="table-section" id="cat-2">
+      <div class="section-header" style="background: #5C3A21;">
+        <span>🥛 2. MILKS & DAIRY SUPPLIES</span>
+        <span class="section-count">6 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-7" data-cost="99.0" data-stock="10.0" data-sku="ING-007" data-name="Arla Full Cream Milk 1L">
+            <td><span class="sku-code">ING-007</span></td>
+            <td>
+              <div class="item-name">Arla Full Cream Milk 1L</div>
+              <div class="item-notes">Primary steaming milk for lattes</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1L)</span></td>
+            <td class="right">₱99.00</td>
+            <td class="right" id="stock-7">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-7" 
+                     placeholder="Enter Qty" oninput="calculateRow(7)">
+            </td>
+            <td class="right variance-val" id="variance-7">—</td>
+            <td class="right variance-val" id="varval-7">—</td>
+            <td class="center" id="status-7">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-7" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-8" data-cost="110.0" data-stock="12.0" data-sku="ING-008" data-name="Master Barista Cow's Milk 1L">
+            <td><span class="sku-code">ING-008</span></td>
+            <td>
+              <div class="item-name">Master Barista Cow's Milk 1L</div>
+              <div class="item-notes">Barista specialty milk</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1L)</span></td>
+            <td class="right">₱110.00</td>
+            <td class="right" id="stock-8">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-8" 
+                     placeholder="Enter Qty" oninput="calculateRow(8)">
+            </td>
+            <td class="right variance-val" id="variance-8">—</td>
+            <td class="right variance-val" id="varval-8">—</td>
+            <td class="center" id="status-8">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-8" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-9" data-cost="44.0" data-stock="19.23" data-sku="ING-009" data-name="Doreen Condensed Milk 390g">
+            <td><span class="sku-code">ING-009</span></td>
+            <td>
+              <div class="item-name">Doreen Condensed Milk 390g</div>
+              <div class="item-notes">Spanish latte sweet base</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (390g)</span></td>
+            <td class="right">₱44.00</td>
+            <td class="right" id="stock-9">19.23</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-9" 
+                     placeholder="Enter Qty" oninput="calculateRow(9)">
+            </td>
+            <td class="right variance-val" id="variance-9">—</td>
+            <td class="right variance-val" id="varval-9">—</td>
+            <td class="center" id="status-9">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-9" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-10" data-cost="87.5" data-stock="2.0" data-sku="ING-010" data-name="Soymilk 1L (Plant-based)">
+            <td><span class="sku-code">ING-010</span></td>
+            <td>
+              <div class="item-name">Soymilk 1L (Plant-based)</div>
+              <div class="item-notes">Non-dairy milk substitute</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1L)</span></td>
+            <td class="right">₱87.50</td>
+            <td class="right" id="stock-10">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-10" 
+                     placeholder="Enter Qty" oninput="calculateRow(10)">
+            </td>
+            <td class="right variance-val" id="variance-10">—</td>
+            <td class="right variance-val" id="varval-10">—</td>
+            <td class="center" id="status-10">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-10" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-11" data-cost="250.0" data-stock="1.0" data-sku="ING-011" data-name="Whipping Cream 1L">
+            <td><span class="sku-code">ING-011</span></td>
+            <td>
+              <div class="item-name">Whipping Cream 1L</div>
+              <div class="item-notes">Cold foam & sea salt cream topper</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱250.00</td>
+            <td class="right" id="stock-11">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-11" 
+                     placeholder="Enter Qty" oninput="calculateRow(11)">
+            </td>
+            <td class="right variance-val" id="variance-11">—</td>
+            <td class="right variance-val" id="varval-11">—</td>
+            <td class="center" id="status-11">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-11" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-12" data-cost="200.0" data-stock="2.0" data-sku="ING-012" data-name="Artisanal Salted Cream Cheese">
+            <td><span class="sku-code">ING-012</span></td>
+            <td>
+              <div class="item-name">Artisanal Salted Cream Cheese</div>
+              <div class="item-notes">Sea salt cheese foam cap</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack</span></td>
+            <td class="right">₱200.00</td>
+            <td class="right" id="stock-12">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-12" 
+                     placeholder="Enter Qty" oninput="calculateRow(12)">
+            </td>
+            <td class="right variance-val" id="variance-12">—</td>
+            <td class="right variance-val" id="varval-12">—</td>
+            <td class="center" id="status-12">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-12" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 3 -->
+    <div class="table-section" id="cat-3">
+      <div class="section-header" style="background: #7B4B28;">
+        <span>🍯 3. FLAVOR SYRUPS, PURÉES & SAUCES</span>
+        <span class="section-count">19 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-13" data-cost="690.0" data-stock="0.75" data-sku="SYR-001" data-name="SHOTT Vanilla Syrup 1L">
+            <td><span class="sku-code">SYR-001</span></td>
+            <td>
+              <div class="item-name">SHOTT Vanilla Syrup 1L</div>
+              <div class="item-notes">Vanilla Latte & Frappe</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-13">0.75</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-13" 
+                     placeholder="Enter Qty" oninput="calculateRow(13)">
+            </td>
+            <td class="right variance-val" id="variance-13">—</td>
+            <td class="right variance-val" id="varval-13">—</td>
+            <td class="center" id="status-13">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-13" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-14" data-cost="690.0" data-stock="0.2" data-sku="SYR-002" data-name="SHOTT Caramel Syrup 1L">
+            <td><span class="sku-code">SYR-002</span></td>
+            <td>
+              <div class="item-name">SHOTT Caramel Syrup 1L</div>
+              <div class="item-notes">Caramel Macchiato</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-14">0.20</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-14" 
+                     placeholder="Enter Qty" oninput="calculateRow(14)">
+            </td>
+            <td class="right variance-val" id="variance-14">—</td>
+            <td class="right variance-val" id="varval-14">—</td>
+            <td class="center" id="status-14">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-14" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-15" data-cost="690.0" data-stock="1.0" data-sku="SYR-003" data-name="SHOTT Macadamia Syrup 1L">
+            <td><span class="sku-code">SYR-003</span></td>
+            <td>
+              <div class="item-name">SHOTT Macadamia Syrup 1L</div>
+              <div class="item-notes">Macadamia Latte</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-15">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-15" 
+                     placeholder="Enter Qty" oninput="calculateRow(15)">
+            </td>
+            <td class="right variance-val" id="variance-15">—</td>
+            <td class="right variance-val" id="varval-15">—</td>
+            <td class="center" id="status-15">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-15" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-16" data-cost="690.0" data-stock="1.0" data-sku="SYR-004" data-name="SHOTT Irish Cream Syrup 1L">
+            <td><span class="sku-code">SYR-004</span></td>
+            <td>
+              <div class="item-name">SHOTT Irish Cream Syrup 1L</div>
+              <div class="item-notes">Irish Cream Latte</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-16">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-16" 
+                     placeholder="Enter Qty" oninput="calculateRow(16)">
+            </td>
+            <td class="right variance-val" id="variance-16">—</td>
+            <td class="right variance-val" id="varval-16">—</td>
+            <td class="center" id="status-16">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-16" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-17" data-cost="690.0" data-stock="1.0" data-sku="SYR-005" data-name="SHOTT Butterscotch Syrup 1L">
+            <td><span class="sku-code">SYR-005</span></td>
+            <td>
+              <div class="item-name">SHOTT Butterscotch Syrup 1L</div>
+              <div class="item-notes">Butterscotch Latte</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-17">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-17" 
+                     placeholder="Enter Qty" oninput="calculateRow(17)">
+            </td>
+            <td class="right variance-val" id="variance-17">—</td>
+            <td class="right variance-val" id="varval-17">—</td>
+            <td class="center" id="status-17">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-17" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-18" data-cost="690.0" data-stock="9.84" data-sku="SYR-006" data-name="SHOTT White Chocolate Syrup 1L">
+            <td><span class="sku-code">SYR-006</span></td>
+            <td>
+              <div class="item-name">SHOTT White Chocolate Syrup 1L</div>
+              <div class="item-notes">White Choco Latte & Matcha</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-18">9.84</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-18" 
+                     placeholder="Enter Qty" oninput="calculateRow(18)">
+            </td>
+            <td class="right variance-val" id="variance-18">—</td>
+            <td class="right variance-val" id="varval-18">—</td>
+            <td class="center" id="status-18">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-18" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-19" data-cost="890.0" data-stock="1.0" data-sku="SYR-007" data-name="SHOTT Pink Guava Syrup 1L">
+            <td><span class="sku-code">SYR-007</span></td>
+            <td>
+              <div class="item-name">SHOTT Pink Guava Syrup 1L</div>
+              <div class="item-notes">Guava Fruit Tea & Soda</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱890.00</td>
+            <td class="right" id="stock-19">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-19" 
+                     placeholder="Enter Qty" oninput="calculateRow(19)">
+            </td>
+            <td class="right variance-val" id="variance-19">—</td>
+            <td class="right variance-val" id="varval-19">—</td>
+            <td class="center" id="status-19">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-19" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-20" data-cost="890.0" data-stock="0.25" data-sku="SYR-008" data-name="SHOTT Mango Syrup 1L">
+            <td><span class="sku-code">SYR-008</span></td>
+            <td>
+              <div class="item-name">SHOTT Mango Syrup 1L</div>
+              <div class="item-notes">Mango Tea & Soda</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱890.00</td>
+            <td class="right" id="stock-20">0.25</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-20" 
+                     placeholder="Enter Qty" oninput="calculateRow(20)">
+            </td>
+            <td class="right variance-val" id="variance-20">—</td>
+            <td class="right variance-val" id="varval-20">—</td>
+            <td class="center" id="status-20">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-20" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-21" data-cost="890.0" data-stock="0.37" data-sku="SYR-009" data-name="SHOTT Pomegranate Syrup 1L">
+            <td><span class="sku-code">SYR-009</span></td>
+            <td>
+              <div class="item-name">SHOTT Pomegranate Syrup 1L</div>
+              <div class="item-notes">Pomegranate Tea & Soda</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱890.00</td>
+            <td class="right" id="stock-21">0.37</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-21" 
+                     placeholder="Enter Qty" oninput="calculateRow(21)">
+            </td>
+            <td class="right variance-val" id="variance-21">—</td>
+            <td class="right variance-val" id="varval-21">—</td>
+            <td class="center" id="status-21">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-21" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-22" data-cost="690.0" data-stock="0.83" data-sku="SYR-010" data-name="SHOTT Lychee Syrup 1L">
+            <td><span class="sku-code">SYR-010</span></td>
+            <td>
+              <div class="item-name">SHOTT Lychee Syrup 1L</div>
+              <div class="item-notes">Lychee Tea & Soda</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱690.00</td>
+            <td class="right" id="stock-22">0.83</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-22" 
+                     placeholder="Enter Qty" oninput="calculateRow(22)">
+            </td>
+            <td class="right variance-val" id="variance-22">—</td>
+            <td class="right variance-val" id="varval-22">—</td>
+            <td class="center" id="status-22">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-22" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-23" data-cost="550.0" data-stock="1.0" data-sku="SYR-011" data-name="Torani Salted Caramel Syrup 750ml">
+            <td><span class="sku-code">SYR-011</span></td>
+            <td>
+              <div class="item-name">Torani Salted Caramel Syrup 750ml</div>
+              <div class="item-notes">Secondary caramel syrup</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-23">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-23" 
+                     placeholder="Enter Qty" oninput="calculateRow(23)">
+            </td>
+            <td class="right variance-val" id="variance-23">—</td>
+            <td class="right variance-val" id="varval-23">—</td>
+            <td class="center" id="status-23">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-23" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-24" data-cost="550.0" data-stock="1.0" data-sku="SYR-012" data-name="Torani Macadamia Nut Syrup 750ml">
+            <td><span class="sku-code">SYR-012</span></td>
+            <td>
+              <div class="item-name">Torani Macadamia Nut Syrup 750ml</div>
+              <div class="item-notes">Nutty espresso drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-24">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-24" 
+                     placeholder="Enter Qty" oninput="calculateRow(24)">
+            </td>
+            <td class="right variance-val" id="variance-24">—</td>
+            <td class="right variance-val" id="varval-24">—</td>
+            <td class="center" id="status-24">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-24" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-25" data-cost="550.0" data-stock="1.0" data-sku="SYR-013" data-name="Torani Lychee Syrup 750ml">
+            <td><span class="sku-code">SYR-013</span></td>
+            <td>
+              <div class="item-name">Torani Lychee Syrup 750ml</div>
+              <div class="item-notes">Fruit soda / iced tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-25">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-25" 
+                     placeholder="Enter Qty" oninput="calculateRow(25)">
+            </td>
+            <td class="right variance-val" id="variance-25">—</td>
+            <td class="right variance-val" id="varval-25">—</td>
+            <td class="center" id="status-25">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-25" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-26" data-cost="550.0" data-stock="1.0" data-sku="SYR-014" data-name="Torani Pomegranate Syrup 750ml">
+            <td><span class="sku-code">SYR-014</span></td>
+            <td>
+              <div class="item-name">Torani Pomegranate Syrup 750ml</div>
+              <div class="item-notes">Fruit soda / iced tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-26">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-26" 
+                     placeholder="Enter Qty" oninput="calculateRow(26)">
+            </td>
+            <td class="right variance-val" id="variance-26">—</td>
+            <td class="right variance-val" id="varval-26">—</td>
+            <td class="center" id="status-26">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-26" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-27" data-cost="950.0" data-stock="1.0" data-sku="SYR-015" data-name="Torani Mango Puree Blend 1.89L">
+            <td><span class="sku-code">SYR-015</span></td>
+            <td>
+              <div class="item-name">Torani Mango Puree Blend 1.89L</div>
+              <div class="item-notes">Specialty puree & smoothies</div>
+            </td>
+            <td class="center"><span class="uom-badge">Gal (1.89L)</span></td>
+            <td class="right">₱950.00</td>
+            <td class="right" id="stock-27">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-27" 
+                     placeholder="Enter Qty" oninput="calculateRow(27)">
+            </td>
+            <td class="right variance-val" id="variance-27">—</td>
+            <td class="right variance-val" id="varval-27">—</td>
+            <td class="center" id="status-27">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-27" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-28" data-cost="950.0" data-stock="1.0" data-sku="SYR-016" data-name="Torani Strawberry Puree Blend 1.89L">
+            <td><span class="sku-code">SYR-016</span></td>
+            <td>
+              <div class="item-name">Torani Strawberry Puree Blend 1.89L</div>
+              <div class="item-notes">Specialty puree & smoothies</div>
+            </td>
+            <td class="center"><span class="uom-badge">Gal (1.89L)</span></td>
+            <td class="right">₱950.00</td>
+            <td class="right" id="stock-28">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-28" 
+                     placeholder="Enter Qty" oninput="calculateRow(28)">
+            </td>
+            <td class="right variance-val" id="variance-28">—</td>
+            <td class="right variance-val" id="varval-28">—</td>
+            <td class="center" id="status-28">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-28" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-29" data-cost="550.0" data-stock="1.0" data-sku="SYR-017" data-name="French Vanilla Syrup 750ml">
+            <td><span class="sku-code">SYR-017</span></td>
+            <td>
+              <div class="item-name">French Vanilla Syrup 750ml</div>
+              <div class="item-notes">French Vanilla Coffee</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-29">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-29" 
+                     placeholder="Enter Qty" oninput="calculateRow(29)">
+            </td>
+            <td class="right variance-val" id="variance-29">—</td>
+            <td class="right variance-val" id="varval-29">—</td>
+            <td class="center" id="status-29">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-29" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-30" data-cost="550.0" data-stock="1.0" data-sku="SYR-018" data-name="Hazelnut Syrup 750ml">
+            <td><span class="sku-code">SYR-018</span></td>
+            <td>
+              <div class="item-name">Hazelnut Syrup 750ml</div>
+              <div class="item-notes">Hazelnut Latte</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-30">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-30" 
+                     placeholder="Enter Qty" oninput="calculateRow(30)">
+            </td>
+            <td class="right variance-val" id="variance-30">—</td>
+            <td class="right variance-val" id="varval-30">—</td>
+            <td class="center" id="status-30">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-30" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-31" data-cost="550.0" data-stock="1.0" data-sku="SYR-019" data-name="Irish Cream Syrup 750ml">
+            <td><span class="sku-code">SYR-019</span></td>
+            <td>
+              <div class="item-name">Irish Cream Syrup 750ml</div>
+              <div class="item-notes">Specialty flavor</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (750ml)</span></td>
+            <td class="right">₱550.00</td>
+            <td class="right" id="stock-31">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-31" 
+                     placeholder="Enter Qty" oninput="calculateRow(31)">
+            </td>
+            <td class="right variance-val" id="variance-31">—</td>
+            <td class="right variance-val" id="varval-31">—</td>
+            <td class="center" id="status-31">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-31" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 4 -->
+    <div class="table-section" id="cat-4">
+      <div class="section-header" style="background: #2D5A27;">
+        <span>🍵 4. MATCHA & SPECIALTY TEAS</span>
+        <span class="section-count">12 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-32" data-cost="1200.0" data-stock="0.87" data-sku="TEA-001" data-name="Matcha Powder 1kg (Culinary Grade)">
+            <td><span class="sku-code">TEA-001</span></td>
+            <td>
+              <div class="item-name">Matcha Powder 1kg (Culinary Grade)</div>
+              <div class="item-notes">Matcha Latte & Seasalt</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱1,200.00</td>
+            <td class="right" id="stock-32">0.87</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-32" 
+                     placeholder="Enter Qty" oninput="calculateRow(32)">
+            </td>
+            <td class="right variance-val" id="variance-32">—</td>
+            <td class="right variance-val" id="varval-32">—</td>
+            <td class="center" id="status-32">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-32" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-33" data-cost="210.0" data-stock="3.0" data-sku="TEA-002" data-name="Easy Matcha Pure Powder 100g">
+            <td><span class="sku-code">TEA-002</span></td>
+            <td>
+              <div class="item-name">Easy Matcha Pure Powder 100g</div>
+              <div class="item-notes">Ceremonial / pure grade</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (100g)</span></td>
+            <td class="right">₱210.00</td>
+            <td class="right" id="stock-33">3.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-33" 
+                     placeholder="Enter Qty" oninput="calculateRow(33)">
+            </td>
+            <td class="right variance-val" id="variance-33">—</td>
+            <td class="right variance-val" id="varval-33">—</td>
+            <td class="center" id="status-33">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-33" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-34" data-cost="768.0" data-stock="1.0" data-sku="TEA-003" data-name="Possmei Jasmine Green Tea Leaves 600g">
+            <td><span class="sku-code">TEA-003</span></td>
+            <td>
+              <div class="item-name">Possmei Jasmine Green Tea Leaves 600g</div>
+              <div class="item-notes">Premium tea brewing</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (600g)</span></td>
+            <td class="right">₱768.00</td>
+            <td class="right" id="stock-34">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-34" 
+                     placeholder="Enter Qty" oninput="calculateRow(34)">
+            </td>
+            <td class="right variance-val" id="variance-34">—</td>
+            <td class="right variance-val" id="varval-34">—</td>
+            <td class="center" id="status-34">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-34" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-35" data-cost="440.0" data-stock="1.0" data-sku="TEA-004" data-name="Possmei Assam Black Tea Leaves 600g">
+            <td><span class="sku-code">TEA-004</span></td>
+            <td>
+              <div class="item-name">Possmei Assam Black Tea Leaves 600g</div>
+              <div class="item-notes">Premium black tea brewing</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (600g)</span></td>
+            <td class="right">₱440.00</td>
+            <td class="right" id="stock-35">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-35" 
+                     placeholder="Enter Qty" oninput="calculateRow(35)">
+            </td>
+            <td class="right variance-val" id="variance-35">—</td>
+            <td class="right variance-val" id="varval-35">—</td>
+            <td class="center" id="status-35">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-35" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-36" data-cost="400.0" data-stock="0.92" data-sku="TEA-005" data-name="Jasmine Tea Leaves 1kg">
+            <td><span class="sku-code">TEA-005</span></td>
+            <td>
+              <div class="item-name">Jasmine Tea Leaves 1kg</div>
+              <div class="item-notes">Bulk brewed jasmine tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱400.00</td>
+            <td class="right" id="stock-36">0.92</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-36" 
+                     placeholder="Enter Qty" oninput="calculateRow(36)">
+            </td>
+            <td class="right variance-val" id="variance-36">—</td>
+            <td class="right variance-val" id="varval-36">—</td>
+            <td class="center" id="status-36">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-36" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-37" data-cost="400.0" data-stock="0.98" data-sku="TEA-006" data-name="Black Tea Leaves 1kg">
+            <td><span class="sku-code">TEA-006</span></td>
+            <td>
+              <div class="item-name">Black Tea Leaves 1kg</div>
+              <div class="item-notes">Bulk brewed black tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱400.00</td>
+            <td class="right" id="stock-37">0.98</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-37" 
+                     placeholder="Enter Qty" oninput="calculateRow(37)">
+            </td>
+            <td class="right variance-val" id="variance-37">—</td>
+            <td class="right variance-val" id="varval-37">—</td>
+            <td class="center" id="status-37">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-37" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-38" data-cost="45.0" data-stock="91.0" data-sku="TEA-007" data-name="Dilmah Earl Grey Tea Bags">
+            <td><span class="sku-code">TEA-007</span></td>
+            <td>
+              <div class="item-name">Dilmah Earl Grey Tea Bags</div>
+              <div class="item-notes">Hot brewed specialty tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-38">91.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-38" 
+                     placeholder="Enter Qty" oninput="calculateRow(38)">
+            </td>
+            <td class="right variance-val" id="variance-38">—</td>
+            <td class="right variance-val" id="varval-38">—</td>
+            <td class="center" id="status-38">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-38" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-39" data-cost="45.0" data-stock="100.0" data-sku="TEA-008" data-name="Dilmah Gourmet Green Tea Bags">
+            <td><span class="sku-code">TEA-008</span></td>
+            <td>
+              <div class="item-name">Dilmah Gourmet Green Tea Bags</div>
+              <div class="item-notes">Hot brewed specialty tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-39">100.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-39" 
+                     placeholder="Enter Qty" oninput="calculateRow(39)">
+            </td>
+            <td class="right variance-val" id="variance-39">—</td>
+            <td class="right variance-val" id="varval-39">—</td>
+            <td class="center" id="status-39">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-39" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-40" data-cost="45.0" data-stock="100.0" data-sku="TEA-009" data-name="Dilmah Green Tea with Jasmine Bags">
+            <td><span class="sku-code">TEA-009</span></td>
+            <td>
+              <div class="item-name">Dilmah Green Tea with Jasmine Bags</div>
+              <div class="item-notes">Hot brewed specialty tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-40">100.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-40" 
+                     placeholder="Enter Qty" oninput="calculateRow(40)">
+            </td>
+            <td class="right variance-val" id="variance-40">—</td>
+            <td class="right variance-val" id="varval-40">—</td>
+            <td class="center" id="status-40">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-40" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-41" data-cost="45.0" data-stock="100.0" data-sku="TEA-010" data-name="Dilmah Pure Camomile Flowers Bags">
+            <td><span class="sku-code">TEA-010</span></td>
+            <td>
+              <div class="item-name">Dilmah Pure Camomile Flowers Bags</div>
+              <div class="item-notes">Hot brewed herbal tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-41">100.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-41" 
+                     placeholder="Enter Qty" oninput="calculateRow(41)">
+            </td>
+            <td class="right variance-val" id="variance-41">—</td>
+            <td class="right variance-val" id="varval-41">—</td>
+            <td class="center" id="status-41">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-41" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-42" data-cost="45.0" data-stock="98.0" data-sku="TEA-011" data-name="Dilmah Pure Peppermint Leaves Bags">
+            <td><span class="sku-code">TEA-011</span></td>
+            <td>
+              <div class="item-name">Dilmah Pure Peppermint Leaves Bags</div>
+              <div class="item-notes">Hot brewed herbal tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-42">98.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-42" 
+                     placeholder="Enter Qty" oninput="calculateRow(42)">
+            </td>
+            <td class="right variance-val" id="variance-42">—</td>
+            <td class="right variance-val" id="varval-42">—</td>
+            <td class="center" id="status-42">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-42" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-43" data-cost="45.0" data-stock="100.0" data-sku="TEA-012" data-name="Dilmah Traditional Oolong Tea Bags">
+            <td><span class="sku-code">TEA-012</span></td>
+            <td>
+              <div class="item-name">Dilmah Traditional Oolong Tea Bags</div>
+              <div class="item-notes">Hot brewed specialty tea</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag / Sachet</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-43">100.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-43" 
+                     placeholder="Enter Qty" oninput="calculateRow(43)">
+            </td>
+            <td class="right variance-val" id="variance-43">—</td>
+            <td class="right variance-val" id="varval-43">—</td>
+            <td class="center" id="status-43">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-43" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 5 -->
+    <div class="table-section" id="cat-5">
+      <div class="section-header" style="background: #996515;">
+        <span>🍬 5. SWEETENERS, TOPPINGS & MIXERS</span>
+        <span class="section-count">8 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-44" data-cost="94.0" data-stock="10.0" data-sku="SWT-001" data-name="Hi-Fructose Corn Syrup 500ml">
+            <td><span class="sku-code">SWT-001</span></td>
+            <td>
+              <div class="item-name">Hi-Fructose Corn Syrup 500ml</div>
+              <div class="item-notes">Primary liquid sweetener</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (500ml)</span></td>
+            <td class="right">₱94.00</td>
+            <td class="right" id="stock-44">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-44" 
+                     placeholder="Enter Qty" oninput="calculateRow(44)">
+            </td>
+            <td class="right variance-val" id="variance-44">—</td>
+            <td class="right variance-val" id="varval-44">—</td>
+            <td class="center" id="status-44">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-44" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-45" data-cost="80.0" data-stock="1.0" data-sku="SWT-002" data-name="Refined White Sugar 1kg">
+            <td><span class="sku-code">SWT-002</span></td>
+            <td>
+              <div class="item-name">Refined White Sugar 1kg</div>
+              <div class="item-notes">Syrup prep & table sugar</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1kg)</span></td>
+            <td class="right">₱80.00</td>
+            <td class="right" id="stock-45">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-45" 
+                     placeholder="Enter Qty" oninput="calculateRow(45)">
+            </td>
+            <td class="right variance-val" id="variance-45">—</td>
+            <td class="right variance-val" id="varval-45">—</td>
+            <td class="center" id="status-45">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-45" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-46" data-cost="167.5" data-stock="1.0" data-sku="SWT-003" data-name="Equal Sweetener Sachets (Box of 50s)">
+            <td><span class="sku-code">SWT-003</span></td>
+            <td>
+              <div class="item-name">Equal Sweetener Sachets (Box of 50s)</div>
+              <div class="item-notes">Low calorie option</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (50s)</span></td>
+            <td class="right">₱167.50</td>
+            <td class="right" id="stock-46">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-46" 
+                     placeholder="Enter Qty" oninput="calculateRow(46)">
+            </td>
+            <td class="right variance-val" id="variance-46">—</td>
+            <td class="right variance-val" id="varval-46">—</td>
+            <td class="center" id="status-46">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-46" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-47" data-cost="345.0" data-stock="1.0" data-sku="SWT-004" data-name="Lotus Biscoff Spread Smooth 400g">
+            <td><span class="sku-code">SWT-004</span></td>
+            <td>
+              <div class="item-name">Lotus Biscoff Spread Smooth 400g</div>
+              <div class="item-notes">Biscoff series drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Jar (400g)</span></td>
+            <td class="right">₱345.00</td>
+            <td class="right" id="stock-47">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-47" 
+                     placeholder="Enter Qty" oninput="calculateRow(47)">
+            </td>
+            <td class="right variance-val" id="variance-47">—</td>
+            <td class="right variance-val" id="varval-47">—</td>
+            <td class="center" id="status-47">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-47" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-48" data-cost="192.0" data-stock="1.0" data-sku="SWT-005" data-name="Lotus Biscoff Biscuits (Pack 250g)">
+            <td><span class="sku-code">SWT-005</span></td>
+            <td>
+              <div class="item-name">Lotus Biscoff Biscuits (Pack 250g)</div>
+              <div class="item-notes">Garnish & drink topping</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (250g)</span></td>
+            <td class="right">₱192.00</td>
+            <td class="right" id="stock-48">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-48" 
+                     placeholder="Enter Qty" oninput="calculateRow(48)">
+            </td>
+            <td class="right variance-val" id="variance-48">—</td>
+            <td class="right variance-val" id="varval-48">—</td>
+            <td class="center" id="status-48">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-48" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-49" data-cost="175.0" data-stock="1.0" data-sku="SWT-006" data-name="Oreo Biscuit Crumbs 454g">
+            <td><span class="sku-code">SWT-006</span></td>
+            <td>
+              <div class="item-name">Oreo Biscuit Crumbs 454g</div>
+              <div class="item-notes">Dirty Oreo & blended drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (454g)</span></td>
+            <td class="right">₱175.00</td>
+            <td class="right" id="stock-49">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-49" 
+                     placeholder="Enter Qty" oninput="calculateRow(49)">
+            </td>
+            <td class="right variance-val" id="variance-49">—</td>
+            <td class="right variance-val" id="varval-49">—</td>
+            <td class="center" id="status-49">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-49" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-50" data-cost="69.5" data-stock="4.0" data-sku="SWT-007" data-name="Sprite 1.5L (Beverage Mixer)">
+            <td><span class="sku-code">SWT-007</span></td>
+            <td>
+              <div class="item-name">Sprite 1.5L (Beverage Mixer)</div>
+              <div class="item-notes">Base for Fruit Soda series</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1.5L)</span></td>
+            <td class="right">₱69.50</td>
+            <td class="right" id="stock-50">4.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-50" 
+                     placeholder="Enter Qty" oninput="calculateRow(50)">
+            </td>
+            <td class="right variance-val" id="variance-50">—</td>
+            <td class="right variance-val" id="varval-50">—</td>
+            <td class="center" id="status-50">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-50" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-51" data-cost="15.0" data-stock="42.0" data-sku="SWT-008" data-name="Fresh Lemon Fruit">
+            <td><span class="sku-code">SWT-008</span></td>
+            <td>
+              <div class="item-name">Fresh Lemon Fruit</div>
+              <div class="item-notes">Garnish & fresh lemon drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pieces</span></td>
+            <td class="right">₱15.00</td>
+            <td class="right" id="stock-51">42.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-51" 
+                     placeholder="Enter Qty" oninput="calculateRow(51)">
+            </td>
+            <td class="right variance-val" id="variance-51">—</td>
+            <td class="right variance-val" id="varval-51">—</td>
+            <td class="center" id="status-51">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-51" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 6 -->
+    <div class="table-section" id="cat-6">
+      <div class="section-header" style="background: #1A4870;">
+        <span>🥤 6. RETAIL BOTTLED BEVERAGES & BEERS</span>
+        <span class="section-count">10 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-52" data-cost="12.0" data-stock="50.0" data-sku="RET-001" data-name="Nature Spring Mineral Water 500ml">
+            <td><span class="sku-code">RET-001</span></td>
+            <td>
+              <div class="item-name">Nature Spring Mineral Water 500ml</div>
+              <div class="item-notes">Chiller front | SRP: ₱20.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (500ml)</span></td>
+            <td class="right">₱12.00</td>
+            <td class="right" id="stock-52">50.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-52" 
+                     placeholder="Enter Qty" oninput="calculateRow(52)">
+            </td>
+            <td class="right variance-val" id="variance-52">—</td>
+            <td class="right variance-val" id="varval-52">—</td>
+            <td class="center" id="status-52">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-52" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-53" data-cost="18.0" data-stock="20.0" data-sku="RET-002" data-name="Nature Spring Mineral Water 1L">
+            <td><span class="sku-code">RET-002</span></td>
+            <td>
+              <div class="item-name">Nature Spring Mineral Water 1L</div>
+              <div class="item-notes">Chiller front | SRP: ₱30.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (1L)</span></td>
+            <td class="right">₱18.00</td>
+            <td class="right" id="stock-53">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-53" 
+                     placeholder="Enter Qty" oninput="calculateRow(53)">
+            </td>
+            <td class="right variance-val" id="variance-53">—</td>
+            <td class="right variance-val" id="varval-53">—</td>
+            <td class="center" id="status-53">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-53" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-54" data-cost="110.0" data-stock="12.0" data-sku="RET-003" data-name="Perrier Sparkling Mineral Water 330ml">
+            <td><span class="sku-code">RET-003</span></td>
+            <td>
+              <div class="item-name">Perrier Sparkling Mineral Water 330ml</div>
+              <div class="item-notes">Chiller front | SRP: ₱199.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (330ml)</span></td>
+            <td class="right">₱110.00</td>
+            <td class="right" id="stock-54">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-54" 
+                     placeholder="Enter Qty" oninput="calculateRow(54)">
+            </td>
+            <td class="right variance-val" id="variance-54">—</td>
+            <td class="right variance-val" id="varval-54">—</td>
+            <td class="center" id="status-54">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-54" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-55" data-cost="95.0" data-stock="12.0" data-sku="RET-004" data-name="Evian Natural Spring Water 500ml">
+            <td><span class="sku-code">RET-004</span></td>
+            <td>
+              <div class="item-name">Evian Natural Spring Water 500ml</div>
+              <div class="item-notes">Chiller front | SRP: ₱169.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (500ml)</span></td>
+            <td class="right">₱95.00</td>
+            <td class="right" id="stock-55">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-55" 
+                     placeholder="Enter Qty" oninput="calculateRow(55)">
+            </td>
+            <td class="right variance-val" id="variance-55">—</td>
+            <td class="right variance-val" id="varval-55">—</td>
+            <td class="center" id="status-55">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-55" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-56" data-cost="35.0" data-stock="24.0" data-sku="RET-005" data-name="Coca-Cola Regular 320ml Can">
+            <td><span class="sku-code">RET-005</span></td>
+            <td>
+              <div class="item-name">Coca-Cola Regular 320ml Can</div>
+              <div class="item-notes">Chiller front | SRP: ₱69.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (320ml)</span></td>
+            <td class="right">₱35.00</td>
+            <td class="right" id="stock-56">24.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-56" 
+                     placeholder="Enter Qty" oninput="calculateRow(56)">
+            </td>
+            <td class="right variance-val" id="variance-56">—</td>
+            <td class="right variance-val" id="varval-56">—</td>
+            <td class="center" id="status-56">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-56" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-57" data-cost="35.0" data-stock="24.0" data-sku="RET-006" data-name="Coca-Cola Zero Sugar 320ml Can">
+            <td><span class="sku-code">RET-006</span></td>
+            <td>
+              <div class="item-name">Coca-Cola Zero Sugar 320ml Can</div>
+              <div class="item-notes">Chiller front | SRP: ₱69.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (320ml)</span></td>
+            <td class="right">₱35.00</td>
+            <td class="right" id="stock-57">24.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-57" 
+                     placeholder="Enter Qty" oninput="calculateRow(57)">
+            </td>
+            <td class="right variance-val" id="variance-57">—</td>
+            <td class="right variance-val" id="varval-57">—</td>
+            <td class="center" id="status-57">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-57" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-58" data-cost="35.0" data-stock="24.0" data-sku="RET-007" data-name="Sprite Soda 320ml Can">
+            <td><span class="sku-code">RET-007</span></td>
+            <td>
+              <div class="item-name">Sprite Soda 320ml Can</div>
+              <div class="item-notes">Chiller front | SRP: ₱69.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (320ml)</span></td>
+            <td class="right">₱35.00</td>
+            <td class="right" id="stock-58">24.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-58" 
+                     placeholder="Enter Qty" oninput="calculateRow(58)">
+            </td>
+            <td class="right variance-val" id="variance-58">—</td>
+            <td class="right variance-val" id="varval-58">—</td>
+            <td class="center" id="status-58">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-58" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-59" data-cost="48.0" data-stock="12.0" data-sku="RET-008" data-name="San Mig Light - Apple Bottle">
+            <td><span class="sku-code">RET-008</span></td>
+            <td>
+              <div class="item-name">San Mig Light - Apple Bottle</div>
+              <div class="item-notes">Chiller front | SRP: ₱70.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (330ml)</span></td>
+            <td class="right">₱48.00</td>
+            <td class="right" id="stock-59">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-59" 
+                     placeholder="Enter Qty" oninput="calculateRow(59)">
+            </td>
+            <td class="right variance-val" id="variance-59">—</td>
+            <td class="right variance-val" id="varval-59">—</td>
+            <td class="center" id="status-59">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-59" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-60" data-cost="52.0" data-stock="12.0" data-sku="RET-009" data-name="San Miguel Pale Pilsen 320ml Bottle">
+            <td><span class="sku-code">RET-009</span></td>
+            <td>
+              <div class="item-name">San Miguel Pale Pilsen 320ml Bottle</div>
+              <div class="item-notes">Chiller front | SRP: ₱80.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (320ml)</span></td>
+            <td class="right">₱52.00</td>
+            <td class="right" id="stock-60">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-60" 
+                     placeholder="Enter Qty" oninput="calculateRow(60)">
+            </td>
+            <td class="right variance-val" id="variance-60">—</td>
+            <td class="right variance-val" id="varval-60">—</td>
+            <td class="center" id="status-60">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-60" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-61" data-cost="55.0" data-stock="15.0" data-sku="RET-010" data-name="Red Horse Stallion 330ml Bottle">
+            <td><span class="sku-code">RET-010</span></td>
+            <td>
+              <div class="item-name">Red Horse Stallion 330ml Bottle</div>
+              <div class="item-notes">Chiller front | SRP: ₱85.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot (330ml)</span></td>
+            <td class="right">₱55.00</td>
+            <td class="right" id="stock-61">15.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-61" 
+                     placeholder="Enter Qty" oninput="calculateRow(61)">
+            </td>
+            <td class="right variance-val" id="variance-61">—</td>
+            <td class="right variance-val" id="varval-61">—</td>
+            <td class="center" id="status-61">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-61" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 7 -->
+    <div class="table-section" id="cat-7">
+      <div class="section-header" style="background: #7A3E26;">
+        <span>🥨 7. PASTRIES, BAKERY & GRAB-AND-GO SNACKS</span>
+        <span class="section-count">9 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-62" data-cost="45.0" data-stock="6.0" data-sku="PAS-001" data-name="Special Ensaymada (Pack of 6pcs)">
+            <td><span class="sku-code">PAS-001</span></td>
+            <td>
+              <div class="item-name">Special Ensaymada (Pack of 6pcs)</div>
+              <div class="item-notes">Pastry display | SRP: ₱69.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (6s)</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-62">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-62" 
+                     placeholder="Enter Qty" oninput="calculateRow(62)">
+            </td>
+            <td class="right variance-val" id="variance-62">—</td>
+            <td class="right variance-val" id="varval-62">—</td>
+            <td class="center" id="status-62">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-62" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-63" data-cost="25.0" data-stock="8.0" data-sku="PAS-002" data-name="Chocolate Crinkles Pack">
+            <td><span class="sku-code">PAS-002</span></td>
+            <td>
+              <div class="item-name">Chocolate Crinkles Pack</div>
+              <div class="item-notes">Pastry display | SRP: ₱39.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack</span></td>
+            <td class="right">₱25.00</td>
+            <td class="right" id="stock-63">8.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-63" 
+                     placeholder="Enter Qty" oninput="calculateRow(63)">
+            </td>
+            <td class="right variance-val" id="variance-63">—</td>
+            <td class="right variance-val" id="varval-63">—</td>
+            <td class="center" id="status-63">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-63" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-64" data-cost="75.0" data-stock="5.0" data-sku="PAS-003" data-name="Assorted Gourmet Muffins">
+            <td><span class="sku-code">PAS-003</span></td>
+            <td>
+              <div class="item-name">Assorted Gourmet Muffins</div>
+              <div class="item-notes">Pastry display | SRP: ₱129.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pieces</span></td>
+            <td class="right">₱75.00</td>
+            <td class="right" id="stock-64">5.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-64" 
+                     placeholder="Enter Qty" oninput="calculateRow(64)">
+            </td>
+            <td class="right variance-val" id="variance-64">—</td>
+            <td class="right variance-val" id="varval-64">—</td>
+            <td class="center" id="status-64">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-64" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-65" data-cost="30.0" data-stock="20.0" data-sku="PAS-004" data-name="Sliced Pastry Cake">
+            <td><span class="sku-code">PAS-004</span></td>
+            <td>
+              <div class="item-name">Sliced Pastry Cake</div>
+              <div class="item-notes">Pastry display | SRP: ₱49.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pieces</span></td>
+            <td class="right">₱30.00</td>
+            <td class="right" id="stock-65">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-65" 
+                     placeholder="Enter Qty" oninput="calculateRow(65)">
+            </td>
+            <td class="right variance-val" id="variance-65">—</td>
+            <td class="right variance-val" id="varval-65">—</td>
+            <td class="center" id="status-65">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-65" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-66" data-cost="98.0" data-stock="10.0" data-sku="SNK-001" data-name="Pringles Potato Crisps Original 158g">
+            <td><span class="sku-code">SNK-001</span></td>
+            <td>
+              <div class="item-name">Pringles Potato Crisps Original 158g</div>
+              <div class="item-notes">Retail shelf | SRP: ₱149.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (158g)</span></td>
+            <td class="right">₱98.00</td>
+            <td class="right" id="stock-66">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-66" 
+                     placeholder="Enter Qty" oninput="calculateRow(66)">
+            </td>
+            <td class="right variance-val" id="variance-66">—</td>
+            <td class="right variance-val" id="varval-66">—</td>
+            <td class="center" id="status-66">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-66" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-67" data-cost="98.0" data-stock="10.0" data-sku="SNK-002" data-name="Pringles Sour Cream & Onion 158g">
+            <td><span class="sku-code">SNK-002</span></td>
+            <td>
+              <div class="item-name">Pringles Sour Cream & Onion 158g</div>
+              <div class="item-notes">Retail shelf | SRP: ₱149.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (158g)</span></td>
+            <td class="right">₱98.00</td>
+            <td class="right" id="stock-67">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-67" 
+                     placeholder="Enter Qty" oninput="calculateRow(67)">
+            </td>
+            <td class="right variance-val" id="variance-67">—</td>
+            <td class="right variance-val" id="varval-67">—</td>
+            <td class="center" id="status-67">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-67" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-68" data-cost="98.0" data-stock="10.0" data-sku="SNK-003" data-name="Pringles Cheddar Cheese 158g">
+            <td><span class="sku-code">SNK-003</span></td>
+            <td>
+              <div class="item-name">Pringles Cheddar Cheese 158g</div>
+              <div class="item-notes">Retail shelf | SRP: ₱149.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Can (158g)</span></td>
+            <td class="right">₱98.00</td>
+            <td class="right" id="stock-68">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-68" 
+                     placeholder="Enter Qty" oninput="calculateRow(68)">
+            </td>
+            <td class="right variance-val" id="variance-68">—</td>
+            <td class="right variance-val" id="varval-68">—</td>
+            <td class="center" id="status-68">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-68" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-69" data-cost="98.0" data-stock="8.0" data-sku="SNK-004" data-name="Cheetos Cheddar Jalapeño 226.8g">
+            <td><span class="sku-code">SNK-004</span></td>
+            <td>
+              <div class="item-name">Cheetos Cheddar Jalapeño 226.8g</div>
+              <div class="item-notes">Retail shelf | SRP: ₱149.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack</span></td>
+            <td class="right">₱98.00</td>
+            <td class="right" id="stock-69">8.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-69" 
+                     placeholder="Enter Qty" oninput="calculateRow(69)">
+            </td>
+            <td class="right variance-val" id="variance-69">—</td>
+            <td class="right variance-val" id="varval-69">—</td>
+            <td class="center" id="status-69">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-69" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-70" data-cost="85.0" data-stock="12.0" data-sku="SNK-005" data-name="Butter Lover Popcorn Bag">
+            <td><span class="sku-code">SNK-005</span></td>
+            <td>
+              <div class="item-name">Butter Lover Popcorn Bag</div>
+              <div class="item-notes">Retail shelf | SRP: ₱149.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bag</span></td>
+            <td class="right">₱85.00</td>
+            <td class="right" id="stock-70">12.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-70" 
+                     placeholder="Enter Qty" oninput="calculateRow(70)">
+            </td>
+            <td class="right variance-val" id="variance-70">—</td>
+            <td class="right variance-val" id="varval-70">—</td>
+            <td class="center" id="status-70">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-70" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 8 -->
+    <div class="table-section" id="cat-8">
+      <div class="section-header" style="background: #334A60;">
+        <span>🎁 8. MERCHANDISE & COLLECTOR MUGS</span>
+        <span class="section-count">4 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-71" data-cost="350.0" data-stock="20.0" data-sku="MRC-001" data-name="Mickey Mouse Ceramic Mug (with Box)">
+            <td><span class="sku-code">MRC-001</span></td>
+            <td>
+              <div class="item-name">Mickey Mouse Ceramic Mug (with Box)</div>
+              <div class="item-notes">Display cabinet | SRP: ₱599.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱350.00</td>
+            <td class="right" id="stock-71">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-71" 
+                     placeholder="Enter Qty" oninput="calculateRow(71)">
+            </td>
+            <td class="right variance-val" id="variance-71">—</td>
+            <td class="right variance-val" id="varval-71">—</td>
+            <td class="center" id="status-71">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-71" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-72" data-cost="350.0" data-stock="20.0" data-sku="MRC-002" data-name="Stitch Ceramic Mug (with Box)">
+            <td><span class="sku-code">MRC-002</span></td>
+            <td>
+              <div class="item-name">Stitch Ceramic Mug (with Box)</div>
+              <div class="item-notes">Display cabinet | SRP: ₱599.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱350.00</td>
+            <td class="right" id="stock-72">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-72" 
+                     placeholder="Enter Qty" oninput="calculateRow(72)">
+            </td>
+            <td class="right variance-val" id="variance-72">—</td>
+            <td class="right variance-val" id="varval-72">—</td>
+            <td class="center" id="status-72">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-72" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-73" data-cost="350.0" data-stock="20.0" data-sku="MRC-003" data-name="Lotso Bear Ceramic Mug (with Box)">
+            <td><span class="sku-code">MRC-003</span></td>
+            <td>
+              <div class="item-name">Lotso Bear Ceramic Mug (with Box)</div>
+              <div class="item-notes">Display cabinet | SRP: ₱599.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱350.00</td>
+            <td class="right" id="stock-73">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-73" 
+                     placeholder="Enter Qty" oninput="calculateRow(73)">
+            </td>
+            <td class="right variance-val" id="variance-73">—</td>
+            <td class="right variance-val" id="varval-73">—</td>
+            <td class="center" id="status-73">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-73" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-74" data-cost="350.0" data-stock="20.0" data-sku="MRC-004" data-name="Nick Wilde Fox Ceramic Mug (with Box)">
+            <td><span class="sku-code">MRC-004</span></td>
+            <td>
+              <div class="item-name">Nick Wilde Fox Ceramic Mug (with Box)</div>
+              <div class="item-notes">Display cabinet | SRP: ₱599.00</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱350.00</td>
+            <td class="right" id="stock-74">20.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-74" 
+                     placeholder="Enter Qty" oninput="calculateRow(74)">
+            </td>
+            <td class="right variance-val" id="variance-74">—</td>
+            <td class="right variance-val" id="varval-74">—</td>
+            <td class="center" id="status-74">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-74" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 9 -->
+    <div class="table-section" id="cat-9">
+      <div class="section-header" style="background: #635334;">
+        <span>📦 9. CUPS, LIDS & PACKAGING DISPOSABLES</span>
+        <span class="section-count">11 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-75" data-cost="120.0" data-stock="5.0" data-sku="PKG-001" data-name="Hot Paper Cups 8oz / 12oz">
+            <td><span class="sku-code">PKG-001</span></td>
+            <td>
+              <div class="item-name">Hot Paper Cups 8oz / 12oz</div>
+              <div class="item-notes">For hot coffee drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱120.00</td>
+            <td class="right" id="stock-75">5.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-75" 
+                     placeholder="Enter Qty" oninput="calculateRow(75)">
+            </td>
+            <td class="right variance-val" id="variance-75">—</td>
+            <td class="right variance-val" id="varval-75">—</td>
+            <td class="center" id="status-75">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-75" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-76" data-cost="85.0" data-stock="5.0" data-sku="PKG-002" data-name="Hot Cup Sipper Lids 80mm / 90mm">
+            <td><span class="sku-code">PKG-002</span></td>
+            <td>
+              <div class="item-name">Hot Cup Sipper Lids 80mm / 90mm</div>
+              <div class="item-notes">For hot coffee cups</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱85.00</td>
+            <td class="right" id="stock-76">5.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-76" 
+                     placeholder="Enter Qty" oninput="calculateRow(76)">
+            </td>
+            <td class="right variance-val" id="variance-76">—</td>
+            <td class="right variance-val" id="varval-76">—</td>
+            <td class="center" id="status-76">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-76" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-77" data-cost="140.0" data-stock="6.0" data-sku="PKG-003" data-name="Cold PET Cups 16oz (Medium)">
+            <td><span class="sku-code">PKG-003</span></td>
+            <td>
+              <div class="item-name">Cold PET Cups 16oz (Medium)</div>
+              <div class="item-notes">For iced coffee & tea 16oz</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱140.00</td>
+            <td class="right" id="stock-77">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-77" 
+                     placeholder="Enter Qty" oninput="calculateRow(77)">
+            </td>
+            <td class="right variance-val" id="variance-77">—</td>
+            <td class="right variance-val" id="varval-77">—</td>
+            <td class="center" id="status-77">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-77" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-78" data-cost="165.0" data-stock="6.0" data-sku="PKG-004" data-name="Cold PET Cups 22oz (Large)">
+            <td><span class="sku-code">PKG-004</span></td>
+            <td>
+              <div class="item-name">Cold PET Cups 22oz (Large)</div>
+              <div class="item-notes">For iced coffee & tea 22oz</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱165.00</td>
+            <td class="right" id="stock-78">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-78" 
+                     placeholder="Enter Qty" oninput="calculateRow(78)">
+            </td>
+            <td class="right variance-val" id="variance-78">—</td>
+            <td class="right variance-val" id="varval-78">—</td>
+            <td class="center" id="status-78">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-78" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-79" data-cost="75.0" data-stock="6.0" data-sku="PKG-005" data-name="Flat Lids 90mm / 95mm">
+            <td><span class="sku-code">PKG-005</span></td>
+            <td>
+              <div class="item-name">Flat Lids 90mm / 95mm</div>
+              <div class="item-notes">Cold beverage flat lid</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱75.00</td>
+            <td class="right" id="stock-79">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-79" 
+                     placeholder="Enter Qty" oninput="calculateRow(79)">
+            </td>
+            <td class="right variance-val" id="variance-79">—</td>
+            <td class="right variance-val" id="varval-79">—</td>
+            <td class="center" id="status-79">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-79" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-80" data-cost="85.0" data-stock="6.0" data-sku="PKG-006" data-name="Dome Lids 90mm / 95mm">
+            <td><span class="sku-code">PKG-006</span></td>
+            <td>
+              <div class="item-name">Dome Lids 90mm / 95mm</div>
+              <div class="item-notes">Whipping cream / foam dome</div>
+            </td>
+            <td class="center"><span class="uom-badge">Sleeve (50s)</span></td>
+            <td class="right">₱85.00</td>
+            <td class="right" id="stock-80">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-80" 
+                     placeholder="Enter Qty" oninput="calculateRow(80)">
+            </td>
+            <td class="right variance-val" id="variance-80">—</td>
+            <td class="right variance-val" id="varval-80">—</td>
+            <td class="center" id="status-80">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-80" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-81" data-cost="25.0" data-stock="2.0" data-sku="PKG-007" data-name="Wooden Coffee Stirrers (100s)">
+            <td><span class="sku-code">PKG-007</span></td>
+            <td>
+              <div class="item-name">Wooden Coffee Stirrers (100s)</div>
+              <div class="item-notes">Eco-friendly stirrers</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (100s)</span></td>
+            <td class="right">₱25.00</td>
+            <td class="right" id="stock-81">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-81" 
+                     placeholder="Enter Qty" oninput="calculateRow(81)">
+            </td>
+            <td class="right variance-val" id="variance-81">—</td>
+            <td class="right variance-val" id="varval-81">—</td>
+            <td class="center" id="status-81">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-81" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-82" data-cost="45.0" data-stock="4.0" data-sku="PKG-008" data-name="Individually Wrapped Drinking Straws">
+            <td><span class="sku-code">PKG-008</span></td>
+            <td>
+              <div class="item-name">Individually Wrapped Drinking Straws</div>
+              <div class="item-notes">Hygienic cold drink straws</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (100s)</span></td>
+            <td class="right">₱45.00</td>
+            <td class="right" id="stock-82">4.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-82" 
+                     placeholder="Enter Qty" oninput="calculateRow(82)">
+            </td>
+            <td class="right variance-val" id="variance-82">—</td>
+            <td class="right variance-val" id="varval-82">—</td>
+            <td class="center" id="status-82">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-82" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-83" data-cost="80.0" data-stock="1.0" data-sku="PKG-009" data-name="Jade Pre-Cut Table Napkins / Tissues 1000s">
+            <td><span class="sku-code">PKG-009</span></td>
+            <td>
+              <div class="item-name">Jade Pre-Cut Table Napkins / Tissues 1000s</div>
+              <div class="item-notes">Bar & dining napkins</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (1000s)</span></td>
+            <td class="right">₱80.00</td>
+            <td class="right" id="stock-83">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-83" 
+                     placeholder="Enter Qty" oninput="calculateRow(83)">
+            </td>
+            <td class="right variance-val" id="variance-83">—</td>
+            <td class="right variance-val" id="varval-83">—</td>
+            <td class="center" id="status-83">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-83" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-84" data-cost="110.0" data-stock="3.0" data-sku="PKG-010" data-name="Takeout Cup Carriers (2-Cup / 4-Cup)">
+            <td><span class="sku-code">PKG-010</span></td>
+            <td>
+              <div class="item-name">Takeout Cup Carriers (2-Cup / 4-Cup)</div>
+              <div class="item-notes">Kraft takeout holders</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (50s)</span></td>
+            <td class="right">₱110.00</td>
+            <td class="right" id="stock-84">3.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-84" 
+                     placeholder="Enter Qty" oninput="calculateRow(84)">
+            </td>
+            <td class="right variance-val" id="variance-84">—</td>
+            <td class="right variance-val" id="varval-84">—</td>
+            <td class="center" id="status-84">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-84" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-85" data-cost="30.0" data-stock="10.0" data-sku="PKG-011" data-name="Thermal POS Receipt Paper Rolls 58mm/80mm">
+            <td><span class="sku-code">PKG-011</span></td>
+            <td>
+              <div class="item-name">Thermal POS Receipt Paper Rolls 58mm/80mm</div>
+              <div class="item-notes">Cashier receipt printer</div>
+            </td>
+            <td class="center"><span class="uom-badge">Rolls</span></td>
+            <td class="right">₱30.00</td>
+            <td class="right" id="stock-85">10.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-85" 
+                     placeholder="Enter Qty" oninput="calculateRow(85)">
+            </td>
+            <td class="right variance-val" id="variance-85">—</td>
+            <td class="right variance-val" id="varval-85">—</td>
+            <td class="center" id="status-85">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-85" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 10 -->
+    <div class="table-section" id="cat-10">
+      <div class="section-header" style="background: #4A3F50;">
+        <span>🥄 10. BAR TOOLS, UTENSILS & SMALLWARES</span>
+        <span class="section-count">19 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-86" data-cost="2180.0" data-stock="1.0" data-sku="TOO-001" data-name="Steaming Pitcher Matte Black 600ml">
+            <td><span class="sku-code">TOO-001</span></td>
+            <td>
+              <div class="item-name">Steaming Pitcher Matte Black 600ml</div>
+              <div class="item-notes">Espresso milk frothing</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱2,180.00</td>
+            <td class="right" id="stock-86">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-86" 
+                     placeholder="Enter Qty" oninput="calculateRow(86)">
+            </td>
+            <td class="right variance-val" id="variance-86">—</td>
+            <td class="right variance-val" id="varval-86">—</td>
+            <td class="center" id="status-86">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-86" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-87" data-cost="60.0" data-stock="2.0" data-sku="TOO-002" data-name="Acrylic Measuring Jigger 10ml / 20ml">
+            <td><span class="sku-code">TOO-002</span></td>
+            <td>
+              <div class="item-name">Acrylic Measuring Jigger 10ml / 20ml</div>
+              <div class="item-notes">Syrup & flavor measurement</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱60.00</td>
+            <td class="right" id="stock-87">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-87" 
+                     placeholder="Enter Qty" oninput="calculateRow(87)">
+            </td>
+            <td class="right variance-val" id="variance-87">—</td>
+            <td class="right variance-val" id="varval-87">—</td>
+            <td class="center" id="status-87">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-87" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-88" data-cost="110.0" data-stock="1.0" data-sku="TOO-003" data-name="Bar Spoon Glossy Stainless">
+            <td><span class="sku-code">TOO-003</span></td>
+            <td>
+              <div class="item-name">Bar Spoon Glossy Stainless</div>
+              <div class="item-notes">Long spiral bar stirring spoon</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱110.00</td>
+            <td class="right" id="stock-88">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-88" 
+                     placeholder="Enter Qty" oninput="calculateRow(88)">
+            </td>
+            <td class="right variance-val" id="variance-88">—</td>
+            <td class="right variance-val" id="varval-88">—</td>
+            <td class="center" id="status-88">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-88" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-89" data-cost="320.0" data-stock="1.0" data-sku="TOO-004" data-name="Heavy Duty Silicone Bar Mat">
+            <td><span class="sku-code">TOO-004</span></td>
+            <td>
+              <div class="item-name">Heavy Duty Silicone Bar Mat</div>
+              <div class="item-notes">Counter drip station</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱320.00</td>
+            <td class="right" id="stock-89">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-89" 
+                     placeholder="Enter Qty" oninput="calculateRow(89)">
+            </td>
+            <td class="right variance-val" id="variance-89">—</td>
+            <td class="right variance-val" id="varval-89">—</td>
+            <td class="center" id="status-89">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-89" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-90" data-cost="250.0" data-stock="1.0" data-sku="TOO-005" data-name="Stainless Cocktail Shaker 1L">
+            <td><span class="sku-code">TOO-005</span></td>
+            <td>
+              <div class="item-name">Stainless Cocktail Shaker 1L</div>
+              <div class="item-notes">Large iced shaken drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱250.00</td>
+            <td class="right" id="stock-90">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-90" 
+                     placeholder="Enter Qty" oninput="calculateRow(90)">
+            </td>
+            <td class="right variance-val" id="variance-90">—</td>
+            <td class="right variance-val" id="varval-90">—</td>
+            <td class="center" id="status-90">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-90" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-91" data-cost="210.0" data-stock="1.0" data-sku="TOO-006" data-name="Stainless Cocktail Shaker 700ml">
+            <td><span class="sku-code">TOO-006</span></td>
+            <td>
+              <div class="item-name">Stainless Cocktail Shaker 700ml</div>
+              <div class="item-notes">Medium iced shaken drinks</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱210.00</td>
+            <td class="right" id="stock-91">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-91" 
+                     placeholder="Enter Qty" oninput="calculateRow(91)">
+            </td>
+            <td class="right variance-val" id="variance-91">—</td>
+            <td class="right variance-val" id="varval-91">—</td>
+            <td class="center" id="status-91">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-91" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-92" data-cost="40.0" data-stock="4.0" data-sku="TOO-007" data-name="White Sauce Squeeze Bottles">
+            <td><span class="sku-code">TOO-007</span></td>
+            <td>
+              <div class="item-name">White Sauce Squeeze Bottles</div>
+              <div class="item-notes">Fudge & sauce squeeze dispensers</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱40.00</td>
+            <td class="right" id="stock-92">4.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-92" 
+                     placeholder="Enter Qty" oninput="calculateRow(92)">
+            </td>
+            <td class="right variance-val" id="variance-92">—</td>
+            <td class="right variance-val" id="varval-92">—</td>
+            <td class="center" id="status-92">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-92" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-93" data-cost="84.0" data-stock="6.0" data-sku="TOO-008" data-name="Fliptop Wide Storage Containers 1.8L">
+            <td><span class="sku-code">TOO-008</span></td>
+            <td>
+              <div class="item-name">Fliptop Wide Storage Containers 1.8L</div>
+              <div class="item-notes">Powders & topping canisters</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱84.00</td>
+            <td class="right" id="stock-93">6.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-93" 
+                     placeholder="Enter Qty" oninput="calculateRow(93)">
+            </td>
+            <td class="right variance-val" id="variance-93">—</td>
+            <td class="right variance-val" id="varval-93">—</td>
+            <td class="center" id="status-93">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-93" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-94" data-cost="50.0" data-stock="1.0" data-sku="TOO-009" data-name="Stackable Food Keeper Square Small">
+            <td><span class="sku-code">TOO-009</span></td>
+            <td>
+              <div class="item-name">Stackable Food Keeper Square Small</div>
+              <div class="item-notes">Small ingredient storage</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱50.00</td>
+            <td class="right" id="stock-94">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-94" 
+                     placeholder="Enter Qty" oninput="calculateRow(94)">
+            </td>
+            <td class="right variance-val" id="variance-94">—</td>
+            <td class="right variance-val" id="varval-94">—</td>
+            <td class="center" id="status-94">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-94" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-95" data-cost="260.0" data-stock="1.0" data-sku="TOO-010" data-name="Stainless Mixing Bowl">
+            <td><span class="sku-code">TOO-010</span></td>
+            <td>
+              <div class="item-name">Stainless Mixing Bowl</div>
+              <div class="item-notes">Whipping & cream mixing</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱260.00</td>
+            <td class="right" id="stock-95">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-95" 
+                     placeholder="Enter Qty" oninput="calculateRow(95)">
+            </td>
+            <td class="right variance-val" id="variance-95">—</td>
+            <td class="right variance-val" id="varval-95">—</td>
+            <td class="center" id="status-95">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-95" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-96" data-cost="90.0" data-stock="1.0" data-sku="TOO-011" data-name="Ceramic Matcha Bowl / Chawan">
+            <td><span class="sku-code">TOO-011</span></td>
+            <td>
+              <div class="item-name">Ceramic Matcha Bowl / Chawan</div>
+              <div class="item-notes">Matcha whisking bowl</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱90.00</td>
+            <td class="right" id="stock-96">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-96" 
+                     placeholder="Enter Qty" oninput="calculateRow(96)">
+            </td>
+            <td class="right variance-val" id="variance-96">—</td>
+            <td class="right variance-val" id="varval-96">—</td>
+            <td class="center" id="status-96">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-96" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-97" data-cost="22.0" data-stock="1.0" data-sku="TOO-012" data-name="Espresso Shot Glass (Double Spout)">
+            <td><span class="sku-code">TOO-012</span></td>
+            <td>
+              <div class="item-name">Espresso Shot Glass (Double Spout)</div>
+              <div class="item-notes">Espresso calibration shot glass</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱22.00</td>
+            <td class="right" id="stock-97">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-97" 
+                     placeholder="Enter Qty" oninput="calculateRow(97)">
+            </td>
+            <td class="right variance-val" id="variance-97">—</td>
+            <td class="right variance-val" id="varval-97">—</td>
+            <td class="center" id="status-97">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-97" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-98" data-cost="192.0" data-stock="1.0" data-sku="TOO-013" data-name="Chef Kitchen Knife Stainless">
+            <td><span class="sku-code">TOO-013</span></td>
+            <td>
+              <div class="item-name">Chef Kitchen Knife Stainless</div>
+              <div class="item-notes">Fruit slicing & pastry cutting</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱192.00</td>
+            <td class="right" id="stock-98">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-98" 
+                     placeholder="Enter Qty" oninput="calculateRow(98)">
+            </td>
+            <td class="right variance-val" id="variance-98">—</td>
+            <td class="right variance-val" id="varval-98">—</td>
+            <td class="center" id="status-98">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-98" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-99" data-cost="130.0" data-stock="1.0" data-sku="TOO-014" data-name="Heavy Duty Cutting Board">
+            <td><span class="sku-code">TOO-014</span></td>
+            <td>
+              <div class="item-name">Heavy Duty Cutting Board</div>
+              <div class="item-notes">Food safe chopping board</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱130.00</td>
+            <td class="right" id="stock-99">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-99" 
+                     placeholder="Enter Qty" oninput="calculateRow(99)">
+            </td>
+            <td class="right variance-val" id="variance-99">—</td>
+            <td class="right variance-val" id="varval-99">—</td>
+            <td class="center" id="status-99">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-99" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-100" data-cost="129.0" data-stock="1.0" data-sku="TOO-015" data-name="Can Opener Heavy Duty">
+            <td><span class="sku-code">TOO-015</span></td>
+            <td>
+              <div class="item-name">Can Opener Heavy Duty</div>
+              <div class="item-notes">Milk & can opener</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱129.00</td>
+            <td class="right" id="stock-100">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-100" 
+                     placeholder="Enter Qty" oninput="calculateRow(100)">
+            </td>
+            <td class="right variance-val" id="variance-100">—</td>
+            <td class="right variance-val" id="varval-100">—</td>
+            <td class="center" id="status-100">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-100" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-101" data-cost="119.0" data-stock="1.0" data-sku="TOO-016" data-name="Utility Kitchen Scissors">
+            <td><span class="sku-code">TOO-016</span></td>
+            <td>
+              <div class="item-name">Utility Kitchen Scissors</div>
+              <div class="item-notes">Pack opening & prep</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱119.00</td>
+            <td class="right" id="stock-101">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-101" 
+                     placeholder="Enter Qty" oninput="calculateRow(101)">
+            </td>
+            <td class="right variance-val" id="variance-101">—</td>
+            <td class="right variance-val" id="varval-101">—</td>
+            <td class="center" id="status-101">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-101" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-102" data-cost="156.0" data-stock="2.0" data-sku="TOO-017" data-name="Non-Slip Serving Trays">
+            <td><span class="sku-code">TOO-017</span></td>
+            <td>
+              <div class="item-name">Non-Slip Serving Trays</div>
+              <div class="item-notes">Dine-in tray service</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (2s)</span></td>
+            <td class="right">₱156.00</td>
+            <td class="right" id="stock-102">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-102" 
+                     placeholder="Enter Qty" oninput="calculateRow(102)">
+            </td>
+            <td class="right variance-val" id="variance-102">—</td>
+            <td class="right variance-val" id="varval-102">—</td>
+            <td class="center" id="status-102">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-102" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-103" data-cost="420.0" data-stock="1.0" data-sku="TOO-018" data-name="Condiment Organizer 4-Compartment">
+            <td><span class="sku-code">TOO-018</span></td>
+            <td>
+              <div class="item-name">Condiment Organizer 4-Compartment</div>
+              <div class="item-notes">Straw & napkin counter caddy</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱420.00</td>
+            <td class="right" id="stock-103">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-103" 
+                     placeholder="Enter Qty" oninput="calculateRow(103)">
+            </td>
+            <td class="right variance-val" id="variance-103">—</td>
+            <td class="right variance-val" id="varval-103">—</td>
+            <td class="center" id="status-103">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-103" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-104" data-cost="498.0" data-stock="1.0" data-sku="TOO-019" data-name="Cup & Lid Dispenser Holder">
+            <td><span class="sku-code">TOO-019</span></td>
+            <td>
+              <div class="item-name">Cup & Lid Dispenser Holder</div>
+              <div class="item-notes">Countertop cup carousel</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱498.00</td>
+            <td class="right" id="stock-104">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-104" 
+                     placeholder="Enter Qty" oninput="calculateRow(104)">
+            </td>
+            <td class="right variance-val" id="variance-104">—</td>
+            <td class="right variance-val" id="varval-104">—</td>
+            <td class="center" id="status-104">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-104" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 11 -->
+    <div class="table-section" id="cat-11">
+      <div class="section-header" style="background: #26384A;">
+        <span>⚙️ 11. EQUIPMENT & STORE FIXTURES</span>
+        <span class="section-count">8 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-105" data-cost="1510.0" data-stock="1.0" data-sku="EQP-001" data-name="Electric Hand Mixer (High Power)">
+            <td><span class="sku-code">EQP-001</span></td>
+            <td>
+              <div class="item-name">Electric Hand Mixer (High Power)</div>
+              <div class="item-notes">Cheese foam / whipping</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱1,510.00</td>
+            <td class="right" id="stock-105">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-105" 
+                     placeholder="Enter Qty" oninput="calculateRow(105)">
+            </td>
+            <td class="right variance-val" id="variance-105">—</td>
+            <td class="right variance-val" id="varval-105">—</td>
+            <td class="center" id="status-105">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-105" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-106" data-cost="310.0" data-stock="1.0" data-sku="EQP-002" data-name="AWD DO3 Handheld Drink Frother">
+            <td><span class="sku-code">EQP-002</span></td>
+            <td>
+              <div class="item-name">AWD DO3 Handheld Drink Frother</div>
+              <div class="item-notes">Single cup frothing</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱310.00</td>
+            <td class="right" id="stock-106">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-106" 
+                     placeholder="Enter Qty" oninput="calculateRow(106)">
+            </td>
+            <td class="right variance-val" id="variance-106">—</td>
+            <td class="right variance-val" id="varval-106">—</td>
+            <td class="center" id="status-106">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-106" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-107" data-cost="784.0" data-stock="1.0" data-sku="EQP-003" data-name="Commercial Insulated Ice Box Chest">
+            <td><span class="sku-code">EQP-003</span></td>
+            <td>
+              <div class="item-name">Commercial Insulated Ice Box Chest</div>
+              <div class="item-notes">Bar ice storage container</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱784.00</td>
+            <td class="right" id="stock-107">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-107" 
+                     placeholder="Enter Qty" oninput="calculateRow(107)">
+            </td>
+            <td class="right variance-val" id="variance-107">—</td>
+            <td class="right variance-val" id="varval-107">—</td>
+            <td class="center" id="status-107">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-107" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-108" data-cost="530.0" data-stock="1.0" data-sku="EQP-004" data-name="Heavy Duty Steel Cash Box with Lock">
+            <td><span class="sku-code">EQP-004</span></td>
+            <td>
+              <div class="item-name">Heavy Duty Steel Cash Box with Lock</div>
+              <div class="item-notes">POS register petty cash box</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱530.00</td>
+            <td class="right" id="stock-108">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-108" 
+                     placeholder="Enter Qty" oninput="calculateRow(108)">
+            </td>
+            <td class="right variance-val" id="variance-108">—</td>
+            <td class="right variance-val" id="varval-108">—</td>
+            <td class="center" id="status-108">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-108" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-109" data-cost="69.0" data-stock="1.0" data-sku="EQP-005" data-name="Akari Heavy Duty Power Adaptor">
+            <td><span class="sku-code">EQP-005</span></td>
+            <td>
+              <div class="item-name">Akari Heavy Duty Power Adaptor</div>
+              <div class="item-notes">Appliance surge plug</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱69.00</td>
+            <td class="right" id="stock-109">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-109" 
+                     placeholder="Enter Qty" oninput="calculateRow(109)">
+            </td>
+            <td class="right variance-val" id="variance-109">—</td>
+            <td class="right variance-val" id="varval-109">—</td>
+            <td class="center" id="status-109">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-109" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-110" data-cost="298.0" data-stock="1.0" data-sku="EQP-006" data-name="Universal Surge Protected Power Strip">
+            <td><span class="sku-code">EQP-006</span></td>
+            <td>
+              <div class="item-name">Universal Surge Protected Power Strip</div>
+              <div class="item-notes">POS & equipment power strip</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱298.00</td>
+            <td class="right" id="stock-110">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-110" 
+                     placeholder="Enter Qty" oninput="calculateRow(110)">
+            </td>
+            <td class="right variance-val" id="variance-110">—</td>
+            <td class="right variance-val" id="varval-110">—</td>
+            <td class="center" id="status-110">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-110" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-111" data-cost="72.0" data-stock="1.0" data-sku="EQP-007" data-name="Barista Recipe Manual & Store Record Book">
+            <td><span class="sku-code">EQP-007</span></td>
+            <td>
+              <div class="item-name">Barista Recipe Manual & Store Record Book</div>
+              <div class="item-notes">Official store logbook</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱72.00</td>
+            <td class="right" id="stock-111">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-111" 
+                     placeholder="Enter Qty" oninput="calculateRow(111)">
+            </td>
+            <td class="right variance-val" id="variance-111">—</td>
+            <td class="right variance-val" id="varval-111">—</td>
+            <td class="center" id="status-111">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-111" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-112" data-cost="850.0" data-stock="1.0" data-sku="EQP-008" data-name="Commercial Foot-Pedal Trash Can 30L">
+            <td><span class="sku-code">EQP-008</span></td>
+            <td>
+              <div class="item-name">Commercial Foot-Pedal Trash Can 30L</div>
+              <div class="item-notes">Sanitary waste disposal</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱850.00</td>
+            <td class="right" id="stock-112">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-112" 
+                     placeholder="Enter Qty" oninput="calculateRow(112)">
+            </td>
+            <td class="right variance-val" id="variance-112">—</td>
+            <td class="right variance-val" id="varval-112">—</td>
+            <td class="center" id="status-112">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-112" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Category 12 -->
+    <div class="table-section" id="cat-12">
+      <div class="section-header" style="background: #125252;">
+        <span>🧼 12. CLEANING, HYGIENE & MAINTENANCE</span>
+        <span class="section-count">7 Items</span>
+      </div>
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">SKU</th>
+            <th>Item Description & Specifications</th>
+            <th class="center" style="width: 110px;">UOM</th>
+            <th class="right" style="width: 110px;">Unit Cost</th>
+            <th class="right" style="width: 110px;">Sys Stock</th>
+            <th class="input-th" style="width: 140px;">★ PHYSICAL COUNT ★</th>
+            <th class="right" style="width: 110px;">Variance</th>
+            <th class="right" style="width: 120px;">Var. Value (₱)</th>
+            <th class="center" style="width: 120px;">Status</th>
+            <th style="width: 200px;">Remarks / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr id="row-113" data-cost="1000.0" data-stock="1.0" data-sku="CLN-001" data-name="Dr. Coffee Espresso Descaling Powder">
+            <td><span class="sku-code">CLN-001</span></td>
+            <td>
+              <div class="item-name">Dr. Coffee Espresso Descaling Powder</div>
+              <div class="item-notes">Espresso boiler descaling</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot</span></td>
+            <td class="right">₱1,000.00</td>
+            <td class="right" id="stock-113">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-113" 
+                     placeholder="Enter Qty" oninput="calculateRow(113)">
+            </td>
+            <td class="right variance-val" id="variance-113">—</td>
+            <td class="right variance-val" id="varval-113">—</td>
+            <td class="center" id="status-113">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-113" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-114" data-cost="2800.0" data-stock="1.0" data-sku="CLN-002" data-name="Dr. Coffee Milk Line Deep Clean Solution">
+            <td><span class="sku-code">CLN-002</span></td>
+            <td>
+              <div class="item-name">Dr. Coffee Milk Line Deep Clean Solution</div>
+              <div class="item-notes">Steam wand & pipe sanitizer</div>
+            </td>
+            <td class="center"><span class="uom-badge">Bot</span></td>
+            <td class="right">₱2,800.00</td>
+            <td class="right" id="stock-114">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-114" 
+                     placeholder="Enter Qty" oninput="calculateRow(114)">
+            </td>
+            <td class="right variance-val" id="variance-114">—</td>
+            <td class="right variance-val" id="varval-114">—</td>
+            <td class="center" id="status-114">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-114" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-115" data-cost="115.0" data-stock="2.0" data-sku="CLN-003" data-name="Microfiber Bar Towels / Cleaning Cloths">
+            <td><span class="sku-code">CLN-003</span></td>
+            <td>
+              <div class="item-name">Microfiber Bar Towels / Cleaning Cloths</div>
+              <div class="item-notes">Bar wipe & steam wand towel</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱115.00</td>
+            <td class="right" id="stock-115">2.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-115" 
+                     placeholder="Enter Qty" oninput="calculateRow(115)">
+            </td>
+            <td class="right variance-val" id="variance-115">—</td>
+            <td class="right variance-val" id="varval-115">—</td>
+            <td class="center" id="status-115">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-115" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-116" data-cost="300.0" data-stock="1.0" data-sku="CLN-004" data-name="Heavy Duty Black Garbage Bags 26x32 (50s)">
+            <td><span class="sku-code">CLN-004</span></td>
+            <td>
+              <div class="item-name">Heavy Duty Black Garbage Bags 26x32 (50s)</div>
+              <div class="item-notes">Waste bin liners</div>
+            </td>
+            <td class="center"><span class="uom-badge">Pack (50s)</span></td>
+            <td class="right">₱300.00</td>
+            <td class="right" id="stock-116">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-116" 
+                     placeholder="Enter Qty" oninput="calculateRow(116)">
+            </td>
+            <td class="right variance-val" id="variance-116">—</td>
+            <td class="right variance-val" id="varval-116">—</td>
+            <td class="center" id="status-116">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-116" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-117" data-cost="159.0" data-stock="1.0" data-sku="CLN-005" data-name="Heavy Duty Packaging & Masking Tape">
+            <td><span class="sku-code">CLN-005</span></td>
+            <td>
+              <div class="item-name">Heavy Duty Packaging & Masking Tape</div>
+              <div class="item-notes">Box sealing & date labels</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱159.00</td>
+            <td class="right" id="stock-117">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-117" 
+                     placeholder="Enter Qty" oninput="calculateRow(117)">
+            </td>
+            <td class="right variance-val" id="variance-117">—</td>
+            <td class="right variance-val" id="varval-117">—</td>
+            <td class="center" id="status-117">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-117" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-118" data-cost="64.0" data-stock="1.0" data-sku="CLN-006" data-name="Whiteboard Marker & Shelf Label Pens">
+            <td><span class="sku-code">CLN-006</span></td>
+            <td>
+              <div class="item-name">Whiteboard Marker & Shelf Label Pens</div>
+              <div class="item-notes">Store menu board & dating</div>
+            </td>
+            <td class="center"><span class="uom-badge">Piece</span></td>
+            <td class="right">₱64.00</td>
+            <td class="right" id="stock-118">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-118" 
+                     placeholder="Enter Qty" oninput="calculateRow(118)">
+            </td>
+            <td class="right variance-val" id="variance-118">—</td>
+            <td class="right variance-val" id="varval-118">—</td>
+            <td class="center" id="status-118">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-118" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+          <tr id="row-119" data-cost="104.0" data-stock="1.0" data-sku="CLN-007" data-name="Store Promotional Balloons & Hand Pump">
+            <td><span class="sku-code">CLN-007</span></td>
+            <td>
+              <div class="item-name">Store Promotional Balloons & Hand Pump</div>
+              <div class="item-notes">Marketing & events kit</div>
+            </td>
+            <td class="center"><span class="uom-badge">Set</span></td>
+            <td class="right">₱104.00</td>
+            <td class="right" id="stock-119">1.00</td>
+            <td class="input-cell">
+              <input type="number" step="any" min="0" class="count-input" id="input-119" 
+                     placeholder="Enter Qty" oninput="calculateRow(119)">
+            </td>
+            <td class="right variance-val" id="variance-119">—</td>
+            <td class="right variance-val" id="varval-119">—</td>
+            <td class="center" id="status-119">
+              <span class="status-badge status-pending">⏳ Pending</span>
+            </td>
+            <td>
+              <input type="text" class="meta-input" id="remark-119" placeholder="Notes/Expiry...">
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Sign-off Section -->
+  <div class="signoff-section">
+    <div class="sign-box">
+      <h5>1. Performed By (Barista)</h5>
+      <p style="font-size: 12px; color: #555;">I certify that all physical inventory counts listed above were accurately counted on the store floor.</p>
+      <div class="sign-line"></div>
+      <div class="sign-desc">
+        <span>Barista Signature</span>
+        <span>Date & Time</span>
+      </div>
+    </div>
+    <div class="sign-box">
+      <h5>2. Audited & Verified By (Store Supervisor)</h5>
+      <p style="font-size: 12px; color: #555;">I have reviewed any variance shortages/surpluses and verified the high-value ingredients.</p>
+      <div class="sign-line"></div>
+      <div class="sign-desc">
+        <span>Supervisor Signature</span>
+        <span>Date & Time</span>
+      </div>
+    </div>
+    <div class="sign-box">
+      <h5>3. Final Management Acceptance</h5>
+      <p style="font-size: 12px; color: #555;">Inventory count accepted for reconciliation in POS & stock ledger.</p>
+      <div class="sign-line"></div>
+      <div class="sign-desc">
+        <span>Manager / Owner Signature</span>
+        <span>Approval Date</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Interactive JavaScript -->
+<script>
+  const totalRows = 119;
+
+  function calculateRow(rowId) {
+    const tr = document.getElementById('row-' + rowId);
+    const cost = parseFloat(tr.getAttribute('data-cost')) || 0;
+    const stock = parseFloat(tr.getAttribute('data-stock')) || 0;
+    const inputEl = document.getElementById('input-' + rowId);
+    const varEl = document.getElementById('variance-' + rowId);
+    const varValEl = document.getElementById('varval-' + rowId);
+    const statusEl = document.getElementById('status-' + rowId);
+
+    const valStr = inputEl.value.trim();
+
+    if (valStr === '') {
+      varEl.innerText = '—';
+      varEl.className = 'right variance-val';
+      varValEl.innerText = '—';
+      varValEl.className = 'right variance-val';
+      statusEl.innerHTML = '<span class="status-badge status-pending">⏳ Pending</span>';
+    } else {
+      const actual = parseFloat(valStr);
+      const diff = actual - stock;
+      const diffVal = diff * cost;
+
+      if (Math.abs(diff) < 0.001) {
+        varEl.innerText = '0.00';
+        varEl.className = 'right variance-val variance-zero';
+        varValEl.innerText = '₱0.00';
+        varValEl.className = 'right variance-val variance-zero';
+        statusEl.innerHTML = '<span class="status-badge status-match">✅ Match</span>';
+      } else if (diff < 0) {
+        varEl.innerText = diff.toFixed(2);
+        varEl.className = 'right variance-val variance-neg';
+        varValEl.innerText = '-₱' + Math.abs(diffVal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        varValEl.className = 'right variance-val variance-neg';
+        statusEl.innerHTML = '<span class="status-badge status-shortage">⚠️ Shortage</span>';
+      } else {
+        varEl.innerText = '+' + diff.toFixed(2);
+        varEl.className = 'right variance-val variance-pos';
+        varValEl.innerText = '+₱' + diffVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        varValEl.className = 'right variance-val variance-pos';
+        statusEl.innerHTML = '<span class="status-badge status-surplus">🔺 Surplus</span>';
+      }
+    }
+
+    updateSummaryKPIs();
+  }
+
+  function updateSummaryKPIs() {
+    let counted = 0;
+    let discrepancies = 0;
+    let totalAuditedVal = 0;
+
+    for (let i = 1; i <= totalRows; i++) {
+      const tr = document.getElementById('row-' + i);
+      const cost = parseFloat(tr.getAttribute('data-cost')) || 0;
+      const stock = parseFloat(tr.getAttribute('data-stock')) || 0;
+      const inputEl = document.getElementById('input-' + i);
+      const valStr = inputEl.value.trim();
+
+      if (valStr !== '') {
+        counted++;
+        const actual = parseFloat(valStr);
+        totalAuditedVal += (actual * cost);
+        if (Math.abs(actual - stock) >= 0.001) {
+          discrepancies++;
+        }
+      }
+    }
+
+    document.getElementById('itemsCounted').innerText = `${counted} / ${totalRows}`;
+    document.getElementById('discrepancyCount').innerText = discrepancies;
+    document.getElementById('totalAuditedValue').innerText = '₱' + totalAuditedVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function exportData() {
+    let csv = "SKU,Item Description,Unit Cost,System Stock,Physical Count,Variance Qty,Variance Value,Status,Remarks\n";
+    for (let i = 1; i <= totalRows; i++) {
+      const tr = document.getElementById('row-' + i);
+      const sku = tr.getAttribute('data-sku');
+      const name = '"' + tr.getAttribute('data-name') + '"';
+      const cost = tr.getAttribute('data-cost');
+      const stock = tr.getAttribute('data-stock');
+      const count = document.getElementById('input-' + i).value;
+      const diffText = document.getElementById('variance-' + i).innerText;
+      const diffValText = document.getElementById('varval-' + i).innerText;
+      const statusText = document.getElementById('status-' + i).innerText.trim();
+      const remark = '"' + (document.getElementById('remark-' + i).value || '') + '"';
+
+      csv += `${sku},${name},${cost},${stock},${count},${diffText},${diffValText},${statusText},${remark}\n`;
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Espresso_Inventory_Count_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+</script>
+
+</body>
+</html>

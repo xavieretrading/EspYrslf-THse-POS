@@ -1447,7 +1447,7 @@ export default function Reports() {
         <div className="grid grid-cols-2 items-start">
           <div className="space-y-0.5">
             <p><span className="font-semibold">Name of Taxpayer:</span> {settings?.company_name || activeBranch?.name || 'ESPRESSO YOURSELF & TEA HOUSE'}</p>
-            <p><span className="font-semibold">Address of Taxpayer:</span> {settings?.address || activeBranch?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
+            <p><span className="font-semibold">Address of Taxpayer:</span> {settings?.address || activeBranch?.address || 'Room 1 Crown Bldg North Road 6, North Reclamation Area Mabolo Cebu City'}</p>
             <p><span className="font-semibold">TIN:</span> {settings?.tin || '899-352-898-00000'}</p>
             <p className="mt-2"><span className="font-semibold">Software Name and Version No.:</span> POS v1.0.0</p>
             <p><span className="font-semibold">Date and Time Generated:</span> {format(getManilaDate(), 'MM/dd/yyyy HH:mm:ss')}</p>
@@ -3172,14 +3172,15 @@ export default function Reports() {
               .printable-area { 
                 width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
                 ? (printSize === 'legal' ? '336mm' : '277mm')
-                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '72mm')
               } !important; 
                 max-width: ${['BIR_SALES_SUMMARY', 'SENIOR_CITIZEN', 'PWD', 'NATIONAL_ATHLETES', 'SOLO_PARENT', 'MEDAL_OF_VALOR', 'INVENTORY_STOCKS'].includes(reportType)
                 ? (printSize === 'legal' ? '336mm' : '277mm')
-                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '80mm')
+                : (printSize === 'A4' ? '190mm' : printSize === 'legal' ? '186mm' : '72mm')
               } !important; 
-                margin: 0 !important; 
-                padding: ${printSize === '80mm' ? '4mm' : '6mm'} !important; 
+                margin: 0 auto !important; 
+                padding: ${printSize === '80mm' ? '1mm 2mm' : '6mm'} !important; 
+                box-sizing: border-box !important; 
                 border: none !important;
                 box-shadow: none !important;
                 background-color: white !important;
@@ -3231,7 +3232,7 @@ export default function Reports() {
               <div className="text-center mb-6 pb-6 border-b-2 border-dashed border-slate-300 print:mb-2 print:pb-2 print:border-black">
                 <h2 className="text-2xl font-black text-slate-900 uppercase tracking-widest leading-tight print:text-[16px] print:tracking-normal">{settings?.company_name || activeBranch?.name || 'ESPRESSO YOURSELF & TEA HOUSE'}</h2>
                 <p className="font-black text-slate-800 print:text-black">{settings?.company_name || activeBranch?.name || 'Main Branch'}</p>
-                <p className="text-slate-600 print:text-black print:text-[8px]">{settings?.address || activeBranch?.address || 'Room 1 Crown Bldg North road 6, North Reclamation Area Mabolo Cebu City'}</p>
+                <p className="text-slate-600 print:text-black print:text-[8px]">{settings?.address || activeBranch?.address || 'Room 1 Crown Bldg North Road 6, North Reclamation Area Mabolo Cebu City'}</p>
                 <p className="text-slate-600 print:text-black print:text-[8px]">VAT REG TIN: 000-123-456-000</p>
                 <p className="text-slate-600 mt-2 print:text-black print:text-[8px] print:mt-1">Machine ID: POS-01</p>
               </div>

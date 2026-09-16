@@ -497,8 +497,8 @@ export default function Orders() {
       } catch (err: any) {
         console.error("XP Thermal reprint failed:", err);
         const fallback = await swalConfirm(
-          'XP Thermal Print Issue',
-          `Direct reprint could not complete (${err.message || 'Service offline'}). Would you like to print using the standard Browser Print Dialog instead?`
+          'XP Thermal Service Not Running on This PC',
+          `Direct thermal print could not reach port 9100 on this computer.\n\n• If this computer has a thermal printer attached, please run START_XP_THERMAL_SERVICE.bat on this computer.\n• Otherwise, would you like to print using the standard Browser Print Dialog instead?`
         );
         if (fallback) {
           await printReceiptViaBrowser();

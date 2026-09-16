@@ -1,4 +1,4 @@
-const CACHE_NAME = 'allset-pos-cache-v3';
+const CACHE_NAME = 'allset-pos-cache-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png'
@@ -34,13 +34,18 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Bypass cache completely for API calls, hot module reloading (HMR), and Supabase queries
+  // Bypass cache completely for local print services, external APIs, and dev tools
   if (
+    url.origin !== self.location.origin ||
+    url.hostname === '127.0.0.1' ||
+    url.hostname === 'localhost' ||
+    url.port === '9100' ||
+    url.port === '8181' ||
     url.pathname.startsWith('/api') || 
+    url.pathname.startsWith('/health') ||
     url.pathname.includes('@vite') || 
     url.pathname.includes('node_modules') || 
-    url.host.includes('supabase.co') ||
-    url.host.includes('localhost') && url.port === '5173'
+    url.host.includes('supabase.co')
   ) {
     return;
   }

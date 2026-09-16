@@ -162,10 +162,10 @@ export class ApiServer {
     }));
 
     // Private Network Access (PNA) support for Chrome
-    // This allows public websites (like Vercel) to access localhost services
+    // This allows public websites (like Cloud Run / Vercel) to access localhost services
     this.app.use((req: Request, res: Response, next: NextFunction) => {
-      // Handle preflight requests with Private Network Access
-      if (req.headers['access-control-request-private-network']) {
+      // Handle requests with Private Network Access
+      if (this.config.security.allowPrivateNetwork || req.headers['access-control-request-private-network']) {
         res.setHeader('Access-Control-Allow-Private-Network', 'true');
       }
       next();
@@ -199,7 +199,9 @@ export class ApiServer {
         'Authorization',
         'X-Idempotency-Key',
         'X-API-Key',
-        'X-Requested-With'
+        'X-Requested-With',
+        'Accept',
+        'Access-Control-Request-Private-Network'
       ],
       exposedHeaders: ['X-Service-Port', 'Retry-After'],
       credentials: true,

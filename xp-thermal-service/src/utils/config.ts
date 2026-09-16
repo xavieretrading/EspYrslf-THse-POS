@@ -164,6 +164,9 @@ const ServerConfigSchema = z.object({
  * the POS is published on.
  */
 export const POS_DEFAULT_ORIGINS = [
+  '*',
+  'https://*.run.app',
+  'https://lr-groupofcompanies-pos-system-794666981380.europe-west1.run.app',
   'http://pos.xenithpulse.local:8090',
   'http://pos.xenithpulse.local:8080',
   'http://127.0.0.1:8080',

@@ -14,7 +14,7 @@ try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   Service = require('node-windows').Service;
 } catch {
-  // node-windows not available
+
 }
 
 const SERVICE_NAME = 'XP Thermal Print Service';

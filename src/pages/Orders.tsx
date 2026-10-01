@@ -4,12 +4,35 @@ import { connectQzTray, getQzPrinters, printHtmlViaQz } from '../lib/qzTrayClien
 import { checkXpServiceHealth, printReceiptViaXpThermal } from '../lib/xpThermalClient';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
-import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Printer, StopCircle, HandCoins, CreditCard, ArrowRightLeft, X, Trash2, Plus, RefreshCw, AlertCircle, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { format } from 'date-fns';
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
 import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 import { printReceiptViaBrowser, RECEIPT_PRINT_STYLES } from '../lib/receiptPrinter';
+
+const manilaOffset = 8 * 60 * 60 * 1000;
+
+export const getPhtDateStr = (dateVal: string | Date | null | undefined): string => {
+  if (!dateVal) return '';
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  return new Date(d.getTime() + manilaOffset).toISOString().split('T')[0];
+};
+
+export const isDateToday = (dateVal: string | Date | null | undefined): boolean => {
+  if (!dateVal) return false;
+  const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+  return getPhtDateStr(dateVal) === todayStr;
+};
+
+export const isPastDate = (dateVal: string | Date | null | undefined): boolean => {
+  if (!dateVal) return false;
+  const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+  const dateStr = getPhtDateStr(dateVal);
+  return dateStr !== '' && dateStr < todayStr;
+};
 
 type OrderItem = {
   id: number;
@@ -34,12 +57,18 @@ type Order = {
   discount_name?: string;
   service_charge?: number;
   created_at: string;
+  updated_at?: string;
+  receipt_number?: number;
   table_name?: string;
   order_type?: string;
   payment_method?: string;
   reference_number?: string;
   notes?: string;
   order_number?: number;
+  is_past_open?: boolean;
+  is_past_paid_today?: boolean;
+  original_order_date?: string;
+  paid_at?: string | null;
   items: OrderItem[];
 };
 
@@ -112,7 +141,7 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<'today' | 'week' | 'month' | 'custom'>('today');
   const [divisionFilter, setDivisionFilter] = useState<'all' | 'coffee' | 'laundry'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'paid'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'paid'>('paid');
   const [claimFilter, setClaimFilter] = useState<'all' | 'unclaimed' | 'claimed'>('all');
 
   // Printer settings
@@ -213,11 +242,14 @@ export default function Orders() {
     }
   }, [activeBranch]);
 
+  const isCashier = currentUser?.role === 'cashier';
+
   const fetchOrders = async () => {
     if (!activeBranch) return;
 
-    let url = `/api/orders/history?branch_id=${activeBranch.id}&filter=${filter}`;
-    if (filter === 'custom' && startDate && endDate) {
+    const activeFilter = isCashier ? 'today' : filter;
+    let url = `/api/orders/history?branch_id=${activeBranch.id}&filter=${activeFilter}&role=${currentUser?.role || ''}`;
+    if (!isCashier && filter === 'custom' && startDate && endDate) {
       url += `&start_date=${startDate}&end_date=${endDate}`;
     }
 
@@ -225,8 +257,25 @@ export default function Orders() {
     if (res.ok) {
       let data = await res.json();
 
-      // Secondary Client-side filtering for Type and Status
+      // Secondary Client-side filtering for Cashier, Type and Status
       data = data.filter((order: Order) => {
+        // STRICT CASHIER PRIVACY & ACTIVE BILLING RULE:
+        // 1. Hide all paid orders from past days. Only show orders paid TODAY.
+        // 2. Open orders (even from past days) MUST stay visible so cashier can collect payment today.
+        if (isCashier) {
+          if (order.status === 'paid') {
+            const paidDate = order.paid_at || order.updated_at || order.created_at;
+            if (!isDateToday(paidDate)) {
+              return false; // HIDE past paid orders for cashier
+            }
+          } else if (order.status === 'voided' || order.status === 'refunded') {
+            const actionDate = order.updated_at || order.created_at;
+            if (!isDateToday(actionDate)) {
+              return false;
+            }
+          }
+        }
+
         // Status Filter
         if (statusFilter !== 'all' && order.status !== statusFilter) return false;
 
@@ -268,6 +317,23 @@ export default function Orders() {
         }
 
         return true;
+      });
+
+      // Sorting: Paid & current orders first, unpaid / previous date orders displayed below
+      data.sort((a: Order, b: Order) => {
+        const aPastOpen = a.status === 'open' && isPastDate(a.created_at);
+        const bPastOpen = b.status === 'open' && isPastDate(b.created_at);
+        // Past open / previous date orders displayed below
+        if (aPastOpen && !bPastOpen) return 1;
+        if (!aPastOpen && bPastOpen) return -1;
+
+        // Paid orders first, open/unpaid orders below
+        if (a.status === 'paid' && b.status === 'open') return -1;
+        if (a.status === 'open' && b.status === 'paid') return 1;
+
+        const aTime = new Date(a.updated_at || a.created_at).getTime();
+        const bTime = new Date(b.updated_at || b.created_at).getTime();
+        return bTime - aTime;
       });
 
       setOrders(data);
@@ -643,13 +709,21 @@ export default function Orders() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 mb-6">
-            <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-              <button onClick={() => setFilter('today')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'today' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Today</button>
-              <button onClick={() => setFilter('week')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'week' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>This Week</button>
-              <button onClick={() => setFilter('month')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'month' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>This Month</button>
-              <button onClick={() => setFilter('custom')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2", filter === 'custom' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}><CalendarIcon size={14} /> Custom</button>
-            </div>
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            {isCashier ? (
+              <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 px-4 py-2.5 rounded-xl border border-emerald-200 text-sm font-bold shadow-sm">
+                <Clock size={16} className="text-emerald-600" />
+                <span>Today's Register & Active Orders</span>
+                <span className="text-[11px] bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-extrabold uppercase ml-1">Cashier Mode</span>
+              </div>
+            ) : (
+              <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                <button onClick={() => setFilter('today')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'today' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>Today</button>
+                <button onClick={() => setFilter('week')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'week' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>This Week</button>
+                <button onClick={() => setFilter('month')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", filter === 'month' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}>This Month</button>
+                <button onClick={() => setFilter('custom')} className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2", filter === 'custom' ? "bg-white text-slate-900 shadow" : "text-slate-500 hover:text-slate-700")}><CalendarIcon size={14} /> Custom</button>
+              </div>
+            )}
 
             {isLaundryBranch && (
               <div className="flex bg-slate-100 p-1.5 rounded-xl border border-slate-200">
@@ -674,7 +748,7 @@ export default function Orders() {
             )}
           </div>
 
-          {filter === 'custom' && (
+          {!isCashier && filter === 'custom' && (
             <div className="flex items-center gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-200 w-max">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-500">Start:</span>
@@ -687,150 +761,208 @@ export default function Orders() {
             </div>
           )}
 
+
+
         </div>
 
         <div className="flex-1 overflow-auto px-8 pb-8">
           <div className="grid gap-4">
-            {orders.map(order => (
-              <button
-                key={order.id}
-                onClick={() => setSelectedOrder(order)}
-                className={cn(
-                  "w-full text-left bg-white p-5 rounded-2xl border transition-all flex items-center justify-between",
-                  selectedOrder?.id === order.id ? "border-emerald-500 shadow-md ring-1 ring-emerald-500" : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
-                )}
-              >
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="flex flex-col">
-                      <span className="font-bold text-base text-slate-900">Order #{(order.order_number || order.id).toString().padStart(6, '0')}</span>
-                      {order.receipt_number !== undefined && order.receipt_number !== null ? (
-                        <span className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">Invoice #{order.receipt_number.toString().padStart(6, '0')}</span>
+            {orders.map(order => {
+              const isPastOpen = order.status === 'open' && isPastDate(order.created_at);
+              const isPastPaidToday = (order.is_past_paid_today || (order.status === 'paid' && isPastDate(order.created_at) && isDateToday(order.paid_at || order.updated_at || order.created_at)));
+              const origDateStr = order.original_order_date || order.created_at;
+              const paidDateStr = order.paid_at || order.updated_at || order.created_at;
+
+              return (
+                <button
+                  key={order.id}
+                  onClick={() => setSelectedOrder(order)}
+                  className={cn(
+                    "w-full text-left bg-white p-5 rounded-2xl border transition-all flex items-center justify-between relative overflow-hidden",
+                    isPastOpen
+                      ? (selectedOrder?.id === order.id
+                          ? "border-2 border-red-600 bg-red-50/70 shadow-lg ring-2 ring-red-500"
+                          : "border-2 border-red-500 bg-red-50/30 hover:bg-red-50/60 hover:border-red-600 shadow-sm ring-1 ring-red-400/40")
+                      : (selectedOrder?.id === order.id
+                          ? "border-emerald-500 shadow-md ring-1 ring-emerald-500"
+                          : "border-slate-200 hover:border-slate-300 hover:shadow-sm")
+                  )}
+                >
+                  <div className="flex-1 pr-4">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <div className="flex flex-col mr-1">
+                        <span className="font-bold text-base text-slate-900">Order #{(order.order_number || order.id).toString().padStart(6, '0')}</span>
+                        {order.receipt_number !== undefined && order.receipt_number !== null ? (
+                          <span className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">Invoice #{order.receipt_number.toString().padStart(6, '0')}</span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Invoice: Unpaid/Open</span>
+                        )}
+                      </div>
+
+                      {/* Prominent Status Badges */}
+                      {isPastOpen ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase bg-red-600 text-white flex items-center gap-1 shadow-sm">
+                          <AlertTriangle size={12} />
+                          Past Open Order
+                        </span>
+                      ) : isPastPaidToday ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                          <CheckCircle2 size={12} />
+                          Paid Today
+                        </span>
                       ) : (
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Invoice: Unpaid/Open</span>
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
+                          order.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
+                            order.status === 'open' ? 'bg-blue-100 text-blue-700' :
+                              order.status === 'refunded' ? 'bg-purple-100 text-purple-700' :
+                                'bg-red-100 text-red-700'
+                        )}>
+                          {order.status}
+                        </span>
+                      )}
+
+                      {/* Original Ordered Date Indicator for Past Orders */}
+                      {(isPastOpen || isPastPaidToday) && (
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase flex items-center gap-1 border",
+                          isPastOpen
+                            ? "bg-red-100 text-red-800 border-red-300"
+                            : "bg-amber-50 text-amber-900 border-amber-300"
+                        )}>
+                          <Clock size={11} />
+                          Ordered: {format(new Date(origDateStr), 'MMM d, yyyy')}
+                        </span>
+                      )}
+
+                      {(() => {
+                        let isLaundry = false;
+                        if (order.notes && order.notes.trim().startsWith('{')) {
+                          try {
+                            const parsed = JSON.parse(order.notes);
+                            if (parsed.is_laundry) isLaundry = true;
+                          } catch (e) { }
+                        }
+                        return (
+                          <span className={cn(
+                            "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
+                            isLaundry
+                              ? "bg-purple-50 border-purple-200 text-purple-700"
+                              : "bg-amber-50 border-amber-200 text-amber-805 font-semibold"
+                          )}>
+                            {isLaundry ? "Laundry" : "Cafe"}
+                          </span>
+                        );
+                      })()}
+                      {(() => {
+                        if (order.notes && order.notes.trim().startsWith('{')) {
+                          try {
+                            const parsed = JSON.parse(order.notes);
+                            if (parsed.is_laundry) {
+                              return (
+                                <span className={cn(
+                                  "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
+                                  parsed.is_claimed
+                                    ? "bg-teal-50 border-teal-200 text-teal-700"
+                                    : "bg-amber-50 border-amber-200 text-amber-700"
+                                )}>
+                                  {parsed.is_claimed ? "Claimed" : "Unclaimed"}
+                                </span>
+                              );
+                            }
+                          } catch (e) { }
+                        }
+                        return null;
+                      })()}
+                      {order.items.some(i => i.is_complimentary) && (
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase">
+                          Complimentary
+                        </span>
+                      )}
+                      {order.table_name ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase">
+                          Dine In - {order.table_name}
+                        </span>
+                      ) : (
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
+                          (order.order_type === 'takeout' && order.payment_method !== 'Voucher' && !order.items.some(i => i.notes?.includes('(Voucher)')))
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        )}>
+                          {(order.order_type === 'takeout' && order.payment_method !== 'Voucher' && !order.items.some(i => i.notes?.includes('(Voucher)'))) ? 'Takeaway' : 'Walk-In'}
+                        </span>
+                      )}
+                      {order.status === 'paid' && order.payment_method && (
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border",
+                          order.payment_method.toLowerCase() === 'cash' ? "bg-slate-50 border-slate-200 text-slate-600" :
+                            order.payment_method.toLowerCase() === 'gcash' ? "bg-blue-50 border-blue-200 text-blue-600" :
+                              order.payment_method.toLowerCase() === 'credit_card' ? "bg-purple-50 border-purple-200 text-purple-600" :
+                                order.payment_method.toLowerCase() === 'voucher' ? "bg-amber-50 border-amber-200 text-amber-600" :
+                                  "bg-slate-50 border-slate-200 text-slate-600"
+                        )}>
+                          {order.payment_method.toUpperCase() === 'CREDIT_CARD' ? 'CARD' : order.payment_method.toUpperCase()}
+                          {order.reference_number ? ` | REF: ${order.reference_number}` : ''}
+                        </span>
                       )}
                     </div>
-                    <span className={cn(
-                      "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
-                      order.status === 'paid' ? 'bg-emerald-100 text-emerald-700' :
-                        order.status === 'open' ? 'bg-blue-100 text-blue-700' :
-                          order.status === 'refunded' ? 'bg-purple-100 text-purple-700' :
-                            'bg-red-100 text-red-700'
-                    )}>
-                      {order.status}
-                    </span>
-                    {(() => {
-                      let isLaundry = false;
-                      if (order.notes && order.notes.trim().startsWith('{')) {
-                        try {
-                          const parsed = JSON.parse(order.notes);
-                          if (parsed.is_laundry) isLaundry = true;
-                        } catch (e) { }
-                      }
-                      return (
-                        <span className={cn(
-                          "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
-                          isLaundry
-                            ? "bg-purple-50 border-purple-200 text-purple-700"
-                            : "bg-amber-50 border-amber-200 text-amber-805 font-semibold"
-                        )}>
-                          {isLaundry ? "Laundry" : "Cafe"}
+                    <div className="text-sm text-slate-500 flex flex-wrap items-center gap-2 mt-1">
+                      {isPastOpen ? (
+                        <span className="font-semibold text-red-700 flex items-center gap-1 text-xs">
+                          <AlertCircle size={13} className="text-red-500 shrink-0" />
+                          Placed {new Date(origDateStr).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(origDateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      );
-                    })()}
-                    {(() => {
-                      if (order.notes && order.notes.trim().startsWith('{')) {
-                        try {
-                          const parsed = JSON.parse(order.notes);
-                          if (parsed.is_laundry) {
-                            return (
-                              <span className={cn(
-                                "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border",
-                                parsed.is_claimed
-                                  ? "bg-teal-50 border-teal-200 text-teal-700"
-                                  : "bg-amber-50 border-amber-200 text-amber-700"
-                              )}>
-                                {parsed.is_claimed ? "Claimed" : "Unclaimed"}
-                              </span>
-                            );
-                          }
-                        } catch (e) { }
-                      }
-                      return null;
-                    })()}
-                    {order.items.some(i => i.is_complimentary) && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold uppercase">
-                        Complimentary
-                      </span>
-                    )}
-                    {order.table_name ? (
-                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold uppercase">
-                        Dine In - {order.table_name}
-                      </span>
-                    ) : (
-                      <span className={cn(
-                        "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
-                        (order.order_type === 'takeout' && order.payment_method !== 'Voucher' && !order.items.some(i => i.notes?.includes('(Voucher)')))
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-emerald-100 text-emerald-700"
-                      )}>
-                        {(order.order_type === 'takeout' && order.payment_method !== 'Voucher' && !order.items.some(i => i.notes?.includes('(Voucher)'))) ? 'Takeaway' : 'Walk-In'}
-                      </span>
-                    )}
-                    {order.status === 'paid' && order.payment_method && (
-                      <span className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border",
-                        order.payment_method.toLowerCase() === 'cash' ? "bg-slate-50 border-slate-200 text-slate-600" :
-                          order.payment_method.toLowerCase() === 'gcash' ? "bg-blue-50 border-blue-200 text-blue-600" :
-                            order.payment_method.toLowerCase() === 'credit_card' ? "bg-purple-50 border-purple-200 text-purple-600" :
-                              order.payment_method.toLowerCase() === 'voucher' ? "bg-amber-50 border-amber-200 text-amber-600" :
-                                "bg-slate-50 border-slate-200 text-slate-600"
-                      )}>
-                        {order.payment_method.toUpperCase() === 'CREDIT_CARD' ? 'CARD' : order.payment_method.toUpperCase()}
-                        {order.reference_number ? ` | REF: ${order.reference_number}` : ''}
-                      </span>
-                    )}
+                      ) : isPastPaidToday ? (
+                        <span className="font-semibold text-emerald-700 flex items-center gap-1 text-xs">
+                          <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                          Paid Today at {new Date(paidDateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <span className="text-slate-400 font-normal ml-1">
+                            (Orig. {new Date(origDateStr).toLocaleDateString([], { month: 'short', day: 'numeric' })})
+                          </span>
+                        </span>
+                      ) : (
+                        <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      )}
+                      <span>•</span>
+                      <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)} Items</span>
+                      {(() => {
+                        if (order.notes && order.notes.trim().startsWith('{')) {
+                          try {
+                            const parsed = JSON.parse(order.notes);
+                            if (parsed.is_laundry && parsed.customer_name) {
+                              return (
+                                <>
+                                  <span>•</span>
+                                  <span className="font-semibold text-slate-700">{parsed.customer_name}</span>
+                                </>
+                              );
+                            }
+                          } catch (e) { }
+                        }
+                        return null;
+                      })()}
+                    </div>
                   </div>
-                  <div className="text-sm text-slate-500 flex items-center gap-2 mt-1">
-                    <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <span>•</span>
-                    <span>{order.items.reduce((sum, item) => sum + item.quantity, 0)} Items</span>
-                    {(() => {
-                      if (order.notes && order.notes.trim().startsWith('{')) {
-                        try {
-                          const parsed = JSON.parse(order.notes);
-                          if (parsed.is_laundry && parsed.customer_name) {
-                            return (
-                              <>
-                                <span>•</span>
-                                <span className="font-semibold text-slate-700">{parsed.customer_name}</span>
-                              </>
-                            );
-                          }
-                        } catch (e) { }
-                      }
-                      return null;
-                    })()}
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-xl text-slate-900">
+                      {order.payment_method?.toUpperCase() === 'VOUCHER' ? (
+                        `${order.items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
+                      ) : (
+                        `₱${(() => {
+                          const realSub = order.items && order.items.length > 0
+                            ? order.items.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0)
+                            : (order.subtotal || 0);
+                          const realTot = Math.max(0, realSub - (order.discount_amount || 0));
+                          return realTot.toFixed(2);
+                        })()}`
+                      )}
+                    </div>
+                    <div className="text-sm text-slate-500">{order.items.length} items</div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-xl text-slate-900">
-                    {order.payment_method?.toUpperCase() === 'VOUCHER' ? (
-                      `${order.items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
-                    ) : (
-                      `₱${(() => {
-                        const realSub = order.items && order.items.length > 0
-                          ? order.items.reduce((sum: number, item: any) => sum + (item.is_complimentary ? 0 : ((item.price || 0) * (item.quantity || 1))), 0)
-                          : (order.subtotal || 0);
-                        const realTot = Math.max(0, realSub - (order.discount_amount || 0));
-                        return realTot.toFixed(2);
-                      })()}`
-                    )}
-                  </div>
-                  <div className="text-sm text-slate-500">{order.items.length} items</div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
 
             {orders.length === 0 && (
               <div className="text-center py-16 text-slate-400">
@@ -854,7 +986,39 @@ export default function Orders() {
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Invoice: Unpaid/Open</p>
                 )}
               </div>
-              <p className="text-sm text-slate-500 mb-4">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+
+              {selectedOrder.status === 'open' && isPastDate(selectedOrder.created_at) ? (
+                <div className="mb-4 p-3.5 bg-red-50 border-2 border-red-500 rounded-xl text-red-900 shadow-sm">
+                  <div className="flex items-center gap-1.5 font-black uppercase text-red-700 text-xs mb-1">
+                    <AlertTriangle size={15} /> Past Day Open Order • Settle Today
+                  </div>
+                  <p className="text-xs text-red-800">
+                    Originally placed on <strong>{new Date(selectedOrder.created_at).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })} at {new Date(selectedOrder.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>.
+                  </p>
+                  <p className="text-[11px] font-semibold text-red-700 mt-1">
+                    Settling this order now will record payment as <strong>Today ({new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })})</strong> while noting the original order date.
+                  </p>
+                </div>
+              ) : (selectedOrder.is_past_paid_today || (selectedOrder.status === 'paid' && isPastDate(selectedOrder.created_at))) ? (
+                <div className="mb-4 p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 shadow-sm">
+                  <div className="flex items-center gap-1.5 font-black uppercase text-amber-800 text-xs mb-1">
+                    <Clock size={15} /> Past Order Settled Today
+                  </div>
+                  <div className="text-xs space-y-1 text-amber-800">
+                    <div>Original Order Date: <strong className="text-slate-900">{new Date(selectedOrder.original_order_date || selectedOrder.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                    <div>Payment Recorded: <strong className="text-emerald-700">{new Date(selectedOrder.paid_at || selectedOrder.updated_at || selectedOrder.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} (Today)</strong></div>
+                  </div>
+                </div>
+              ) : null}
+
+              {selectedOrder.status === 'paid' && isPastDate(selectedOrder.created_at) ? (
+                <div className="text-xs text-slate-500 mb-4 space-y-0.5">
+                  <div>Payment Date: <span className="font-bold text-emerald-700">{new Date(selectedOrder.paid_at || selectedOrder.updated_at || selectedOrder.created_at).toLocaleString()} (Today)</span></div>
+                  <div>Original Placed: <span className="font-semibold text-slate-600">{new Date(selectedOrder.created_at).toLocaleString()}</span></div>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 mb-4">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+              )}
 
               {(() => {
                 if (selectedOrder.notes && selectedOrder.notes.trim().startsWith('{')) {
@@ -1255,11 +1419,9 @@ export default function Orders() {
 
                         {/* Company Details */}
                         <div className="text-center section-block">
-                          <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                          <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || activeBranch?.name || 'S1P & SPIN LAUNDRY SHOP'}</p>
                           <p className="text-[9.5pt]">
-                            {activeBranch?.name?.toLowerCase().includes('spin')
-                              ? activeBranch.address
-                              : 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City'}
+                            {activeBranch?.address || laundryDetails.branch_address || 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City'}
                           </p>
                           {/* <p className="text-[9.5pt]">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                         </div>
@@ -1273,12 +1435,17 @@ export default function Orders() {
                         <div className="section-block pt-1 font-mono text-[9.5pt]">
                           <div className="flex justify-between row-item">
                             <span>Order: #{(receiptData.order_number || receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
-                            <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
+                            <span className="text-right">Date: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                           </div>
                           <div className="flex justify-between row-item">
-                            <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
+                            <span>Time: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
                             <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                           </div>
+                          {receiptData.status === 'paid' && isPastDate(receiptData.created_at) && (
+                            <div className="text-[8.5pt] text-slate-700 italic text-center border-t border-dotted border-black pt-1 mt-1 font-sans">
+                              Orig. Ordered: {new Date(receiptData.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })} {new Date(receiptData.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}
+                            </div>
+                          )}
                         </div>
 
                         <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
@@ -1351,7 +1518,7 @@ export default function Orders() {
                         {/* Footer */}
                         <div className="text-center pt-3 border-t border-dashed border-black mt-3 text-[9.5pt]">
                           <p className="font-bold">Thank you for choosing</p>
-                          <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                          <p className="font-extrabold uppercase text-[10pt] tracking-wider">{laundryDetails.company_name || activeBranch?.name || 'S1P & SPIN LAUNDRY SHOP'}</p>
                         </div>
                       </div>
                     );
@@ -1389,12 +1556,17 @@ export default function Orders() {
                       <div className="section-block pt-1">
                         <div className="flex justify-between row-item">
                           <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
-                          <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
+                          <span className="text-right">Date: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                         </div>
                         <div className="flex justify-between row-item">
-                          <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
+                          <span>Time: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
                           <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                         </div>
+                        {receiptData.status === 'paid' && isPastDate(receiptData.created_at) && (
+                          <div className="text-[8.5pt] text-slate-700 italic text-center border-t border-dotted border-black pt-1 mt-1">
+                            Orig. Ordered: {new Date(receiptData.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })} {new Date(receiptData.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Receipt Items list */}

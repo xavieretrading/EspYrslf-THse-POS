@@ -1338,7 +1338,8 @@ app.post('/api/orders', async (req, res) => {
 });
 
 app.get('/api/orders/history', async (req, res) => {
-  const { branch_id, filter } = req.query;
+  const { branch_id, filter, role } = req.query;
+  const isCashier = role === 'cashier';
   // filter can be 'today', 'week', 'month', 'custom'
   // for 'custom', we pass start_date and end_date
   let query = supabase.from('orders_espresso').select(`
@@ -1355,56 +1356,89 @@ app.get('/api/orders/history', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
 
   const manilaOffset = 8 * 60 * 60 * 1000;
-  
-  const filterDate = (dateStr: string) => {
-    if (filter === 'vouchers') return true; 
-    
-    const d = new Date(dateStr);
-    switch(filter) {
-      case 'today': {
-        const orderDateStr = new Date(d.getTime() + manilaOffset).toISOString().split('T')[0];
-        const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
-        return orderDateStr === todayStr;
-      }
-      case 'week': {
-        const nowManila = new Date(Date.now() + manilaOffset);
-        const startOfWeekManila = new Date(nowManila);
-        startOfWeekManila.setUTCDate(nowManila.getUTCDate() - nowManila.getUTCDay());
-        startOfWeekManila.setUTCHours(0, 0, 0, 0);
-        
-        const dManila = new Date(d.getTime() + manilaOffset);
-        return dManila >= startOfWeekManila;
-      }
-      case 'month': {
-        const nowManila = new Date(Date.now() + manilaOffset);
-        const dManila = new Date(d.getTime() + manilaOffset);
-        return dManila.getUTCMonth() === nowManila.getUTCMonth() && 
-               dManila.getUTCFullYear() === nowManila.getUTCFullYear();
-      }
-      case 'custom': {
-        const { start_date, end_date } = req.query;
-        if (start_date && end_date) {
-            const startBoundary = new Date(`${start_date}T00:00:00+08:00`);
-            const endBoundary = new Date(`${end_date}T23:59:59.999+08:00`);
-            return d >= startBoundary && d <= endBoundary;
-        }
-        return true;
-      }
-      default:
-        return true;
-    }
+  const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+
+  const getPhtDateStr = (dateVal: any) => {
+    if (!dateVal) return '';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    return new Date(d.getTime() + manilaOffset).toISOString().split('T')[0];
   };
 
-  const filteredOrdersBase = data.filter((o: any) => {
-      if (filter === 'vouchers') {
-          const paymentVoucher = o.payment_method?.toLowerCase() === 'voucher';
-          const oItemsRaw = o.order_items || [];
-          const oItems = Array.isArray(oItemsRaw) ? oItemsRaw : [oItemsRaw];
-          const hasVoucherItem = oItems.some((oi: any) => oi.notes?.includes('(Voucher)'));
-          return paymentVoucher || hasVoucherItem;
+  const isToday = (dateVal: any) => {
+    return getPhtDateStr(dateVal) === todayStr;
+  };
+
+  const isPast = (dateVal: any) => {
+    const s = getPhtDateStr(dateVal);
+    return s !== '' && s < todayStr;
+  };
+
+  const filteredOrdersBase = (data || []).filter((o: any) => {
+    if (filter === 'vouchers') {
+      const paymentVoucher = o.payment_method?.toLowerCase() === 'voucher';
+      const oItemsRaw = o.order_items || [];
+      const oItems = Array.isArray(oItemsRaw) ? oItemsRaw : [oItemsRaw];
+      const hasVoucherItem = oItems.some((oi: any) => oi.notes?.includes('(Voucher)'));
+      return paymentVoucher || hasVoucherItem;
+    }
+
+    // CASHIER MODE:
+    // 1. Never show past paid orders. Only orders paid TODAY are shown.
+    // 2. Open orders from past days MUST be displayed in today's register.
+    // 3. Voided / Refunded only if happened today.
+    if (isCashier) {
+      if (o.status === 'open') {
+        return true; // All open orders (today and past) are kept for cashier
       }
-      return filterDate(o.created_at);
-    });
+      if (o.status === 'paid') {
+        const paidAt = o.updated_at || o.created_at;
+        return isToday(paidAt); // Only paid today! Past paid orders are hidden
+      }
+      const actionDate = o.updated_at || o.created_at;
+      return isToday(actionDate);
+    }
+
+    // ADMIN / MANAGER FILTERS:
+    if (filter === 'today') {
+      const createdToday = isToday(o.created_at);
+      const paidToday = o.status === 'paid' && isToday(o.updated_at || o.created_at);
+      const isOpen = o.status === 'open'; // Keep all open orders visible in today's active register
+      return createdToday || paidToday || isOpen;
+    }
+
+    if (filter === 'week') {
+      if (o.status === 'open') return true;
+      const nowManila = new Date(Date.now() + manilaOffset);
+      const startOfWeekManila = new Date(nowManila);
+      startOfWeekManila.setUTCDate(nowManila.getUTCDate() - nowManila.getUTCDay());
+      startOfWeekManila.setUTCHours(0, 0, 0, 0);
+      const effectiveDate = new Date(new Date(o.updated_at || o.created_at).getTime() + manilaOffset);
+      return effectiveDate >= startOfWeekManila;
+    }
+
+    if (filter === 'month') {
+      if (o.status === 'open') return true;
+      const nowManila = new Date(Date.now() + manilaOffset);
+      const effectiveDate = new Date(new Date(o.updated_at || o.created_at).getTime() + manilaOffset);
+      return effectiveDate.getUTCMonth() === nowManila.getUTCMonth() &&
+             effectiveDate.getUTCFullYear() === nowManila.getUTCFullYear();
+    }
+
+    if (filter === 'custom') {
+      const { start_date, end_date } = req.query;
+      if (start_date && end_date) {
+        if (o.status === 'open') return true;
+        const d = new Date(o.updated_at || o.created_at);
+        const startBoundary = new Date(`${start_date}T00:00:00+08:00`);
+        const endBoundary = new Date(`${end_date}T23:59:59.999+08:00`);
+        return d >= startBoundary && d <= endBoundary;
+      }
+      return true;
+    }
+
+    return true;
+  });
 
   // Fetch redemptions and active voucher item points for correct mapping
   const orderIds = filteredOrdersBase.map(o => o.id);
@@ -1464,6 +1498,9 @@ app.get('/api/orders/history', async (req, res) => {
         }
       }
       
+      const isPastOpen = order.status === 'open' && isPast(order.created_at);
+      const isPastPaidToday = order.status === 'paid' && isPast(order.created_at) && isToday(order.updated_at || order.created_at);
+
       return {
         ...order,
         subtotal: realSubtotal,
@@ -1472,6 +1509,10 @@ app.get('/api/orders/history', async (req, res) => {
         discount_name: discount?.name,
         branch_name: branch?.name,
         branch_address: branch?.address,
+        is_past_open: isPastOpen,
+        is_past_paid_today: isPastPaidToday,
+        original_order_date: order.created_at,
+        paid_at: order.status === 'paid' ? (order.updated_at || order.created_at) : null,
         items: oItems.map((oi: any) => {
           const product = Array.isArray(oi.products) ? oi.products[0] : oi.products;
           const comp = parseItemNotes(oi.notes);
@@ -1488,6 +1529,15 @@ app.get('/api/orders/history', async (req, res) => {
         })
       };
     });
+
+  // Sort past open orders prominently to the top, then sort by effective timestamp descending
+  filteredOrders.sort((a: any, b: any) => {
+    if (a.is_past_open && !b.is_past_open) return -1;
+    if (!a.is_past_open && b.is_past_open) return 1;
+    const aTime = new Date(a.updated_at || a.created_at).getTime();
+    const bTime = new Date(b.updated_at || b.created_at).getTime();
+    return bTime - aTime;
+  });
 
   const ordersWithNo = await attachReceiptNumbers(filteredOrders);
   res.json(ordersWithNo);
@@ -2414,6 +2464,253 @@ app.get('/api/inventory/transactions', async (req, res) => {
     res.json(data || []);
   } catch (e: any) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Dedicated Item Tracker Endpoint with Complete Categorization and Paginated DB Query
+app.get('/api/inventory/item-tracker', async (req, res) => {
+  try {
+    const { branch_id, start_date, end_date } = req.query;
+    
+    // 1. Fetch active products for branch
+    let prodQuery = supabase
+      .from('products_espresso')
+      .select('*, categories:categories_espresso(name, division)')
+      .eq('is_active', 1);
+      
+    if (branch_id) {
+      prodQuery = prodQuery.eq('branch_id', branch_id);
+    }
+    
+    const { data: products, error: prodErr } = await prodQuery;
+    if (prodErr) return res.status(500).json({ error: prodErr.message });
+
+    // 2. Fetch all transactions for branch using pagination to avoid 1000-row limit
+    let allTxs: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    while (true) {
+      let txQuery = supabase
+        .from('inventory_transactions_espresso')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      const { data: pageData, error: txErr } = await txQuery;
+      if (txErr) return res.status(500).json({ error: txErr.message });
+      if (!pageData || pageData.length === 0) break;
+      allTxs = allTxs.concat(pageData);
+      if (pageData.length < pageSize) break;
+      page++;
+    }
+
+    // Map transactions by product_id
+    const txMap: Record<number, any[]> = {};
+    allTxs.forEach((tx: any) => {
+      const pid = tx.product_id;
+      if (pid) {
+        if (!txMap[pid]) txMap[pid] = [];
+        txMap[pid].push(tx);
+      }
+    });
+
+    // Determine date filters if provided
+    const hasDateRange = Boolean(start_date && end_date);
+    const rangeStart = hasDateRange ? new Date(`${start_date}T00:00:00+08:00`).getTime() : 0;
+    const rangeEnd = hasDateRange ? new Date(`${end_date}T23:59:59.999+08:00`).getTime() : Infinity;
+
+    // Process every product
+    const items = (products || []).map((p: any) => {
+      const pTxs = txMap[p.id] || [];
+      const isUnlimited = (p.stock || 0) >= 9990;
+
+      let startStock = 0;
+      let totalAddons = 0;
+      let totalPullout = 0;
+      let totalSold = 0;
+
+      const addonsList: any[] = [];
+      const pulloutsList: any[] = [];
+      const salesList: any[] = [];
+
+      let preRangeIn = 0;
+      let preRangeOut = 0;
+      let postRangeIn = 0;
+      let postRangeOut = 0;
+
+      pTxs.forEach((t: any) => {
+        const txTime = new Date(t.created_at).getTime();
+        const rem = (t.remarks || '').trim();
+        const remLower = rem.toLowerCase();
+
+        // Categorize transaction
+        const isInitial = remLower.includes('initial') || remLower.includes('setup') || remLower.includes('creation') || remLower.includes('baseline');
+        const isPullout = remLower.includes('expired') || remLower.includes('pull') || remLower.includes('spoilage') || remLower.includes('damage') || remLower.includes('waste') || remLower.includes('defect') || remLower.includes('loss');
+        const isSales = remLower.includes('order #') || remLower.includes('sales order') || remLower.includes('retail sale') || remLower.includes('recipe usage') || remLower.includes('deduction for order') || remLower.includes('item deduction');
+
+        // Extract Order # if sales
+        let orderNumber = '';
+        const orderMatch = rem.match(/(?:Order\s*#|Order\s+)(\d+)/i);
+        if (orderMatch) {
+          orderNumber = `#${orderMatch[1]}`;
+        }
+
+        if (hasDateRange) {
+          if (txTime < rangeStart) {
+            if (t.type === 'in') preRangeIn += (t.quantity || 0);
+            else if (t.type === 'out') preRangeOut += (t.quantity || 0);
+          } else if (txTime > rangeEnd) {
+            if (t.type === 'in') postRangeIn += (t.quantity || 0);
+            else if (t.type === 'out') postRangeOut += (t.quantity || 0);
+          } else {
+            // Inside active range
+            if (t.type === 'in') {
+              if (isInitial) {
+                startStock += (t.quantity || 0);
+              } else {
+                totalAddons += (t.quantity || 0);
+                addonsList.push({
+                  id: t.id,
+                  date: t.created_at,
+                  quantity: t.quantity || 0,
+                  remarks: rem || 'Restock / Stock In'
+                });
+              }
+            } else if (t.type === 'out') {
+              if (isPullout) {
+                totalPullout += (t.quantity || 0);
+                pulloutsList.push({
+                  id: t.id,
+                  date: t.created_at,
+                  quantity: t.quantity || 0,
+                  remarks: rem || 'Pull out / Expired',
+                  reason: remLower.includes('expired') ? 'Expired' : remLower.includes('damage') ? 'Damaged' : 'Pull Out / Spoilage',
+                  loss_value: (t.quantity || 0) * (p.cost || p.price || 0)
+                });
+              } else {
+                totalSold += (t.quantity || 0);
+                salesList.push({
+                  id: t.id,
+                  date: t.created_at,
+                  quantity: t.quantity || 0,
+                  order_number: orderNumber || 'POS Sale',
+                  remarks: rem || 'Sales Order',
+                  total_price: (t.quantity || 0) * (p.price || 0)
+                });
+              }
+            } else if (t.type === 'adjustment') {
+              const diff = (t.quantity || 0);
+              if (diff >= 0) {
+                totalAddons += diff;
+                addonsList.push({ id: t.id, date: t.created_at, quantity: diff, remarks: rem || 'Stock Adjustment (+)' });
+              } else {
+                totalPullout += Math.abs(diff);
+                pulloutsList.push({ id: t.id, date: t.created_at, quantity: Math.abs(diff), remarks: rem || 'Stock Adjustment (-)', reason: 'Inventory Adjustment' });
+              }
+            }
+          }
+        } else {
+          // All Time
+          if (t.type === 'in') {
+            if (isInitial) {
+              startStock += (t.quantity || 0);
+            } else {
+              totalAddons += (t.quantity || 0);
+              addonsList.push({
+                id: t.id,
+                date: t.created_at,
+                quantity: t.quantity || 0,
+                remarks: rem || 'Stock In / Delivery'
+              });
+            }
+          } else if (t.type === 'out') {
+            if (isPullout) {
+              totalPullout += (t.quantity || 0);
+              pulloutsList.push({
+                id: t.id,
+                date: t.created_at,
+                quantity: t.quantity || 0,
+                remarks: rem || 'Pull out / Expired',
+                reason: remLower.includes('expired') ? 'Expired' : remLower.includes('damage') ? 'Damaged' : 'Pull Out / Spoilage',
+                loss_value: (t.quantity || 0) * (p.cost || p.price || 0)
+              });
+            } else {
+              totalSold += (t.quantity || 0);
+              salesList.push({
+                id: t.id,
+                date: t.created_at,
+                quantity: t.quantity || 0,
+                order_number: orderNumber || 'POS Sale',
+                remarks: rem || 'Sales Order',
+                total_price: (t.quantity || 0) * (p.price || 0)
+              });
+            }
+          } else if (t.type === 'adjustment') {
+            const diff = (t.quantity || 0);
+            if (diff >= 0) {
+              totalAddons += diff;
+              addonsList.push({ id: t.id, date: t.created_at, quantity: diff, remarks: rem || 'Stock Adjustment (+)' });
+            } else {
+              totalPullout += Math.abs(diff);
+              pulloutsList.push({ id: t.id, date: t.created_at, quantity: Math.abs(diff), remarks: rem || 'Stock Adjustment (-)', reason: 'Inventory Adjustment' });
+            }
+          }
+        }
+      });
+
+      // Compute Start and Current stocks
+      let computedCurrent = p.stock || 0;
+      let computedStart = 0;
+
+      if (hasDateRange) {
+        const endingAtRange = (p.stock || 0) - postRangeIn + postRangeOut;
+        computedCurrent = endingAtRange;
+        computedStart = endingAtRange - totalAddons + totalPullout + totalSold;
+      } else {
+        computedStart = startStock;
+        computedCurrent = p.stock || 0;
+      }
+
+      // Sort lists newest first
+      addonsList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      pulloutsList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      salesList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      const cleanNum = (val: number) => {
+        if (isUnlimited) return 'Unlimited';
+        const rounded = Math.round(val * 1000) / 1000;
+        return rounded;
+      };
+
+      return {
+        id: p.id,
+        name: p.name,
+        category_name: p.categories?.name || 'General',
+        division: p.categories?.division || p.division || 'coffee',
+        unit: p.unit || 'pcs',
+        cost: p.cost || 0,
+        price: p.price || 0,
+        is_unlimited: isUnlimited,
+        start: cleanNum(computedStart),
+        addons: isUnlimited ? 0 : Math.round(totalAddons * 1000) / 1000,
+        pullout: isUnlimited ? 0 : Math.round(totalPullout * 1000) / 1000,
+        sold: isUnlimited ? 0 : Math.round(totalSold * 1000) / 1000,
+        current: cleanNum(computedCurrent),
+        addons_list: addonsList,
+        pullouts_list: pulloutsList,
+        sales_list: salesList
+      };
+    });
+
+    res.json({
+      success: true,
+      branch_id,
+      range: { start_date, end_date },
+      items
+    });
+  } catch (err: any) {
+    console.error('Error in /api/inventory/item-tracker:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

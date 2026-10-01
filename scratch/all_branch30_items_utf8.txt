@@ -1,0 +1,213 @@
+=== ALL BRANCH 30 ITEMS ===
+ID:420  | Cat: Coffee Supplies      | Name: Concept Blend 1                     | Stock: 5.932      | Unit: pack       | Sellable: 0
+ID:421  | Cat: Coffee Supplies      | Name: Easy Dark Chocolate                 | Stock: 1          | Unit: pack       | Sellable: 0
+ID:422  | Cat: Coffee Supplies      | Name: Equal S. Sachet 50s                 | Stock: 1          | Unit: pack       | Sellable: 0
+ID:423  | Cat: Coffee Supplies      | Name: Soymilk                             | Stock: 2          | Unit: pack       | Sellable: 0
+ID:424  | Cat: Coffee Supplies      | Name: Arla Full Cream Milk 1L             | Stock: -29.99     | Unit: packs      | Sellable: 0
+ID:425  | Cat: Coffee Supplies      | Name: Doreen Condense Milk 390G           | Stock: 18.7427    | Unit: can        | Sellable: 0
+ID:426  | Cat: Syrups & Flavors     | Name: Shott Pink Guava 1L                 | Stock: -0.08      | Unit: bot        | Sellable: 0
+ID:427  | Cat: Syrups & Flavors     | Name: Shott Mango 1L                      | Stock: 0.18       | Unit: bot        | Sellable: 0
+ID:428  | Cat: Syrups & Flavors     | Name: Shott Pomegranate 1L                | Stock: 0.25       | Unit: bot        | Sellable: 0
+ID:429  | Cat: Syrups & Flavors     | Name: Shott Lychee 1L                     | Stock: 0.76       | Unit: bot        | Sellable: 0
+ID:430  | Cat: Syrups & Flavors     | Name: Shott Macadamia 1L                  | Stock: -0.21      | Unit: bot        | Sellable: 0
+ID:431  | Cat: Syrups & Flavors     | Name: Shott Irish Cream 1L                | Stock: 1          | Unit: bot        | Sellable: 0
+ID:432  | Cat: Syrups & Flavors     | Name: Shott Vanilla 1L                    | Stock: 0.75       | Unit: bot        | Sellable: 0
+ID:433  | Cat: Syrups & Flavors     | Name: Hi Fructose Corn Syrup 500ML        | Stock: -6.25      | Unit: bot        | Sellable: 0
+ID:434  | Cat: Cleaning & Supplies  | Name: Dr. Coffee Descaling Powder         | Stock: 1          | Unit: bot        | Sellable: 0
+ID:435  | Cat: Cleaning & Supplies  | Name: Dr. Coffee Milk Deep Clean          | Stock: 1          | Unit: bot        | Sellable: 0
+ID:436  | Cat: Cleaning & Supplies  | Name: Jade Pre-Cut Tissue 1000s           | Stock: 1          | Unit: pack       | Sellable: 0
+ID:437  | Cat: Cleaning & Supplies  | Name: Garbage Bag 50s 26x32               | Stock: 1          | Unit: pack       | Sellable: 0
+ID:438  | Cat: Cleaning & Supplies  | Name: Fiber Cloth                         | Stock: 1          | Unit: pc         | Sellable: 0
+ID:439  | Cat: Beverages            | Name: Sprite 1.5L                         | Stock: -0.473542  | Unit: bottles    | Sellable: 0
+ID:440  | Cat: Packaging & Misc     | Name: Wooden Coffee Stirrer               | Stock: 2          | Unit: pack       | Sellable: 0
+ID:441  | Cat: Packaging & Misc     | Name: Serving Tray                        | Stock: 2          | Unit: pack       | Sellable: 0
+ID:442  | Cat: Packaging & Misc     | Name: Cup Holder                          | Stock: 1          | Unit: pc         | Sellable: 0
+ID:443  | Cat: Packaging & Misc     | Name: Balloon                             | Stock: 1          | Unit: pack       | Sellable: 0
+ID:444  | Cat: Packaging & Misc     | Name: Record Book                         | Stock: 1          | Unit: pc         | Sellable: 0
+ID:445  | Cat: Packaging & Misc     | Name: Tape                                | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:446  | Cat: Packaging & Misc     | Name: Whiteboard Marker                   | Stock: 1          | Unit: pc         | Sellable: 0
+ID:447  | Cat: Equipment & Tools    | Name: Steaming Pitcher Matte Black 600ML  | Stock: 1          | Unit: pc         | Sellable: 0
+ID:448  | Cat: Equipment & Tools    | Name: Condiment Organizer                 | Stock: 1          | Unit: pc         | Sellable: 0
+ID:449  | Cat: Equipment & Tools    | Name: Bar Spoon Glossy                    | Stock: 1          | Unit: pc         | Sellable: 0
+ID:450  | Cat: Equipment & Tools    | Name: Acrylic Jigger 10ML/20ML            | Stock: 2          | Unit: pc         | Sellable: 0
+ID:451  | Cat: Equipment & Tools    | Name: Bar Mat                             | Stock: 1          | Unit: pc         | Sellable: 0
+ID:452  | Cat: Equipment & Tools    | Name: Ice Box                             | Stock: 1          | Unit: pc         | Sellable: 0
+ID:453  | Cat: Equipment & Tools    | Name: Trash Can 30L                       | Stock: 1          | Unit: pc         | Sellable: 0
+ID:454  | Cat: Equipment & Tools    | Name: Can Opener                          | Stock: 1          | Unit: pc         | Sellable: 0
+ID:455  | Cat: Equipment & Tools    | Name: Scissors                            | Stock: 1          | Unit: pc         | Sellable: 0
+ID:456  | Cat: Equipment & Tools    | Name: Akari Adaptor                       | Stock: 1          | Unit: pc         | Sellable: 0
+ID:457  | Cat: Equipment & Tools    | Name: Cash Box                            | Stock: 1          | Unit: pc         | Sellable: 0
+ID:458  | Cat: Equipment & Tools    | Name: Universal Outlet                    | Stock: 1          | Unit: pc         | Sellable: 0
+ID:459  | Cat: Equipment & Tools    | Name: Air Pump Balloon                    | Stock: 1          | Unit: pc         | Sellable: 0
+ID:461  | Cat: No Category          | Name: Shott Butterscotch 1L               | Stock: 1          | Unit: bot        | Sellable: 0
+ID:462  | Cat: No Category          | Name: Shott Caramel 1L                    | Stock: 0.17       | Unit: bot        | Sellable: 0
+ID:463  | Cat: No Category          | Name: Jasmine Tea Leaves 1kg              | Stock: 0.91       | Unit: pack       | Sellable: 0
+ID:464  | Cat: No Category          | Name: Black Tea Leaves 1kg                | Stock: 0.976      | Unit: pack       | Sellable: 0
+ID:465  | Cat: No Category          | Name: Matcha Powder 1kg                   | Stock: 0.848      | Unit: pack       | Sellable: 0
+ID:466  | Cat: No Category          | Name: Biscoff Spread 400g                 | Stock: 0.625      | Unit: jar        | Sellable: 0
+ID:467  | Cat: No Category          | Name: Whipping Cream 1L                   | Stock: 1          | Unit: bot        | Sellable: 0
+ID:468  | Cat: No Category          | Name: White Sugar 1kg                     | Stock: 1          | Unit: pack       | Sellable: 0
+ID:469  | Cat: Hot Coffee           | Name: Hot Americano (Small)               | Stock: 9958       | Unit: cups       | Sellable: 1
+ID:470  | Cat: Hot Coffee           | Name: Hot Americano (Large)               | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:471  | Cat: Iced & Blended       | Name: Iced Americano (Small)              | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:472  | Cat: Iced & Blended       | Name: Iced Americano                      | Stock: 9963       | Unit: cups       | Sellable: 1
+ID:473  | Cat: Hot Coffee           | Name: Hot Mocha (Small)                   | Stock: 9992       | Unit: cups       | Sellable: 1
+ID:474  | Cat: Hot Coffee           | Name: Hot Mocha (Large)                   | Stock: 9994       | Unit: cups       | Sellable: 1
+ID:475  | Cat: Iced & Blended       | Name: Iced Mocha (Small)                  | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:476  | Cat: Iced & Blended       | Name: Iced Mocha                          | Stock: 9994       | Unit: cups       | Sellable: 1
+ID:477  | Cat: Hot Coffee           | Name: Hot Latte (Small)                   | Stock: 9975       | Unit: cups       | Sellable: 1
+ID:478  | Cat: Hot Coffee           | Name: Hot Latte (Large)                   | Stock: 9984       | Unit: cups       | Sellable: 1
+ID:479  | Cat: Iced & Blended       | Name: Iced Latte (Small)                  | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:480  | Cat: Iced & Blended       | Name: Iced Latte (Large)                  | Stock: 9989       | Unit: cups       | Sellable: 1
+ID:481  | Cat: Hot Coffee           | Name: Hot Macadamia Latte (Small)         | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:482  | Cat: Hot Coffee           | Name: Hot Macadamia Latte (Large)         | Stock: 9990       | Unit: cups       | Sellable: 1
+ID:483  | Cat: Iced & Blended       | Name: Iced Macadamia Latte (Small)        | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:484  | Cat: Iced & Blended       | Name: Iced Macadamia Latte (Large)        | Stock: 9973       | Unit: cups       | Sellable: 1
+ID:485  | Cat: Hot Coffee           | Name: Hot Butterscotch (Small)            | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:486  | Cat: Hot Coffee           | Name: Hot Butterscotch (Large)            | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:487  | Cat: Iced & Blended       | Name: Iced Butterscotch (Small)           | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:488  | Cat: Iced & Blended       | Name: Iced Butterscotch                   | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:489  | Cat: Hot Coffee           | Name: Hot French Vanilla (Small)          | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:490  | Cat: Hot Coffee           | Name: Hot French Vanilla (Large)          | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:491  | Cat: Iced & Blended       | Name: Iced French Vanilla (Small)         | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:492  | Cat: Iced & Blended       | Name: Iced French Vanilla                 | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:493  | Cat: Hot Coffee           | Name: Hot Caramel Macchiato (Small)       | Stock: 9993       | Unit: cups       | Sellable: 1
+ID:494  | Cat: Hot Coffee           | Name: Hot Caramel Macchiato (Large)       | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:495  | Cat: Iced & Blended       | Name: Iced Caramel Macchiato (Small)      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:496  | Cat: Iced & Blended       | Name: Iced Caramel Macchiato              | Stock: 9986       | Unit: cups       | Sellable: 1
+ID:497  | Cat: Hot Coffee           | Name: Hot Spanish Latte (Small)           | Stock: 9982       | Unit: cups       | Sellable: 1
+ID:498  | Cat: Hot Coffee           | Name: Hot Spanish Latte (Large)           | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:499  | Cat: Iced & Blended       | Name: Iced Spanish Latte (Small)          | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:500  | Cat: Iced & Blended       | Name: Iced Spanish Latte                  | Stock: 9975       | Unit: cups       | Sellable: 1
+ID:501  | Cat: Hot Coffee           | Name: Hot Cappuccino (Small)              | Stock: 9983       | Unit: cups       | Sellable: 1
+ID:502  | Cat: Hot Coffee           | Name: Hot Cappuccino (Large)              | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:503  | Cat: Iced & Blended       | Name: Iced Cappuccino (Small)             | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:504  | Cat: Iced & Blended       | Name: Iced Cappuccino                     | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:505  | Cat: Hot Coffee           | Name: Hot White Chocolate Latte (Small)   | Stock: 9997       | Unit: cups       | Sellable: 1
+ID:506  | Cat: Hot Coffee           | Name: Hot White Chocolate Latte (Large)   | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:507  | Cat: Iced & Blended       | Name: Iced White Chocolate Latte (Small)  | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:508  | Cat: Iced & Blended       | Name: Iced White Chocolate Latte          | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:509  | Cat: Soda Based           | Name: Pink Guava (16 oz)                  | Stock: 9976       | Unit: cups       | Sellable: 1
+ID:510  | Cat: Soda Based           | Name: Mango (16 oz)                       | Stock: 9974       | Unit: cups       | Sellable: 1
+ID:511  | Cat: Soda Based           | Name: Pomegranate (16 oz)                 | Stock: 9991       | Unit: cups       | Sellable: 1
+ID:512  | Cat: Soda Based           | Name: Lychee (16 oz)                      | Stock: 9994       | Unit: cups       | Sellable: 1
+ID:513  | Cat: Soda Based           | Name: Pink Guava & Pomegranate (16 oz)    | Stock: 9979       | Unit: cups       | Sellable: 1
+ID:514  | Cat: Fruit Teas           | Name: Lychee Tea (16 oz)                  | Stock: 9996       | Unit: cups       | Sellable: 1
+ID:515  | Cat: Fruit Teas           | Name: Pink Guava Tea (16 oz)              | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:516  | Cat: Fruit Teas           | Name: Mango Tea (16 oz)                   | Stock: 9996       | Unit: cups       | Sellable: 1
+ID:517  | Cat: Fruit Teas           | Name: Pomegranate Tea (16 oz)             | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:518  | Cat: Fruit Teas           | Name: Pink Guava & Pomegranate Tea (16 oz) | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:519  | Cat: TEA                  | Name: Hot Jasmine Tea (Small)             | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:520  | Cat: TEA                  | Name: Hot Black Tea (Small)               | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:521  | Cat: Matcha Series        | Name: Iced Matcha Seasalt (Small)         | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:522  | Cat: Matcha Series        | Name: Matcha Seasalt (Large)              | Stock: 9988       | Unit: cups       | Sellable: 1
+ID:523  | Cat: Matcha Series        | Name: Iced Matcha Latte (Small)           | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:524  | Cat: Matcha Series        | Name: Matcha Latte (Large)                | Stock: 9992       | Unit: cups       | Sellable: 1
+ID:525  | Cat: Matcha Series        | Name: White Chocolate Matcha (Small)      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:526  | Cat: Matcha Series        | Name: White Chocolate Matcha (Large)      | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:527  | Cat: Matcha Series        | Name: Biscoff Matcha (Small)              | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:528  | Cat: Matcha Series        | Name: Biscoff Matcha (Large)              | Stock: 9996       | Unit: cups       | Sellable: 1
+ID:529  | Cat: Matcha Series        | Name: Dirty Matcha (Small)                | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:530  | Cat: Matcha Series        | Name: Dirty Matcha (Large)                | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:537  | Cat: Beverages            | Name: Pale Pelsin 320ML                   | Stock: 9999       | Unit: Bottle     | Sellable: 1
+ID:538  | Cat: Beverages            | Name: San Mig Light-Apple                 | Stock: 9999       | Unit: bottles    | Sellable: 1
+ID:539  | Cat: Beverages            | Name: Red Horse Stallion                  | Stock: 9985       | Unit: bottles    | Sellable: 1
+ID:541  | Cat: Beverages            | Name: Nature Spring 500 ML                | Stock: 9946       | Unit: bottles    | Sellable: 1
+ID:542  | Cat: Beverages            | Name: Nature Spring 1L                    | Stock: 9995       | Unit: bottles    | Sellable: 1
+ID:578  | Cat: Hot Coffee           | Name: Hot Choco (Small)                   | Stock: 9993       | Unit: cups       | Sellable: 1
+ID:579  | Cat: Hot Coffee           | Name: Hot Choco (Large)                   | Stock: 9984       | Unit: cups       | Sellable: 1
+ID:580  | Cat: Hot Coffee           | Name: Hot Irish Cream (Small)             | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:581  | Cat: Hot Coffee           | Name: Hot Irish Cream (Large)             | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:582  | Cat: Iced & Blended       | Name: Dirty Oreo                          | Stock: 9997       | Unit: cups       | Sellable: 1
+ID:583  | Cat: Iced & Blended       | Name: Iced Sea Salt Biscoff               | Stock: 9890       | Unit: cups       | Sellable: 1
+ID:584  | Cat: Iced & Blended       | Name: Iced Oreo Milk                      | Stock: 9992       | Unit: cups       | Sellable: 1
+ID:585  | Cat: Iced & Blended       | Name: Iced Irish Cream                    | Stock: 9988       | Unit: cups       | Sellable: 1
+ID:586  | Cat: Iced & Blended       | Name: Iced Biscoff Mango                  | Stock: 9996       | Unit: cups       | Sellable: 1
+ID:587  | Cat: TEA                  | Name: Hot Jasmine Tea (Large)             | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:588  | Cat: TEA                  | Name: Hot Black Tea (Large)               | Stock: 9995       | Unit: cups       | Sellable: 1
+ID:589  | Cat: Matcha Series        | Name: Mango Matcha                        | Stock: 9997       | Unit: cups       | Sellable: 1
+ID:590  | Cat: Beverages            | Name: Pale Pilsin 320ML                   | Stock: 9995       | Unit: bottles    | Sellable: 1
+ID:591  | Cat: Coffee Supplies      | Name: Master Barista cows milk 1L         | Stock: 12         | Unit: packs      | Sellable: 0
+ID:592  | Cat: Syrups & Flavors     | Name: Torani Macadamia nut syrup 750ml    | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:593  | Cat: Syrups & Flavors     | Name: Torani Salted Caramel syrup 750ml   | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:594  | Cat: Syrups & Flavors     | Name: Torani Lychee Syrup 750ml           | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:595  | Cat: Syrups & Flavors     | Name: Torani Pomegranate syrup 750ml      | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:596  | Cat: Syrups & Flavors     | Name: French Vanilla syrup 750ml          | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:597  | Cat: Syrups & Flavors     | Name: Hazelnut syrup 750ml                | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:598  | Cat: Syrups & Flavors     | Name: Irish cream syrup 750ml             | Stock: 1          | Unit: bottles    | Sellable: 0
+ID:599  | Cat: Coffee Supplies      | Name: Whoop Classic Ube taro Beverage wonder 1kg | Stock: 1          | Unit: packs      | Sellable: 0
+ID:600  | Cat: TEA                  | Name: Dilmah Gourment Green Tea           | Stock: 100        | Unit: bag        | Sellable: 1
+ID:601  | Cat: TEA                  | Name: Dilmah Green Tea with Jasmine       | Stock: 100        | Unit: bag        | Sellable: 1
+ID:602  | Cat: TEA                  | Name: Dilmah Earl Grey                    | Stock: 91         | Unit: bag        | Sellable: 1
+ID:603  | Cat: TEA                  | Name: Dilmah Pure Chamomile flowers       | Stock: 100        | Unit: bag        | Sellable: 1
+ID:604  | Cat: TEA                  | Name: Dilmah Traditional oolong tea       | Stock: 100        | Unit: bag        | Sellable: 1
+ID:605  | Cat: TEA                  | Name: Dilmah pure peppermint leaves       | Stock: 98         | Unit: bag        | Sellable: 1
+ID:606  | Cat: Syrups & Flavors     | Name: Torani Mango puree blend 1.89L      | Stock: 1          | Unit: gallons    | Sellable: 0
+ID:607  | Cat: Syrups & Flavors     | Name: Torani strawberry puree blend 1.89L | Stock: 1          | Unit: gallons    | Sellable: 0
+ID:608  | Cat: Snacks               | Name: Pringles Cheddar Cheese 158g        | Stock: 9999       | Unit: cans       | Sellable: 1
+ID:609  | Cat: Snacks               | Name: Pringle Sour Cream                  | Stock: 9996       | Unit: cans       | Sellable: 1
+ID:610  | Cat: Snacks               | Name: Pringle's Original 158g             | Stock: 9998       | Unit: cans       | Sellable: 1
+ID:611  | Cat: Snacks               | Name: Cheetos cheddar jalapeño 226.8g     | Stock: 9999       | Unit: packs      | Sellable: 1
+ID:612  | Cat: Beverages            | Name: Coke                                | Stock: 9999       | Unit: cans       | Sellable: 1
+ID:613  | Cat: Beverages            | Name: Sprite 320ml                        | Stock: 9994       | Unit: cans       | Sellable: 1
+ID:614  | Cat: Beverages            | Name: Coke Zero sugar 320ml               | Stock: 9993       | Unit: cans       | Sellable: 1
+ID:615  | Cat: Snacks               | Name: Butter Lover Popcorn                | Stock: 9999       | Unit: bags       | Sellable: 1
+ID:616  | Cat: Beverages            | Name: Perrier 330ml                       | Stock: 9999       | Unit: bottles    | Sellable: 1
+ID:617  | Cat: Beverages            | Name: Evian water 500ml                   | Stock: 9999       | Unit: bottles    | Sellable: 1
+ID:618  | Cat: Pastries             | Name: Crinkles                            | Stock: 15         | Unit: pcs        | Sellable: 1
+ID:619  | Cat: Pastries             | Name: Ensaymada 6pcs                      | Stock: 0          | Unit: pcs        | Sellable: 0
+ID:620  | Cat: Pastries             | Name: Muffin                              | Stock: 0          | Unit: pcs        | Sellable: 0
+ID:621  | Cat: Pastries             | Name: Cake                                | Stock: 0          | Unit: pcs        | Sellable: 0
+ID:622  | Cat: Coffee Supplies      | Name: Oreo Crumbs 454g                    | Stock: 1          | Unit: packs      | Sellable: 0
+ID:623  | Cat: Packaging & Misc     | Name: white Sauce Squeez                  | Stock: 4          | Unit: pcs        | Sellable: 0
+ID:624  | Cat: Coffee Supplies      | Name: easy matcha pure 100g               | Stock: 3          | Unit: packs      | Sellable: 0
+ID:625  | Cat: Coffee Supplies      | Name: possmei Jasmine Tea 600g            | Stock: 1          | Unit: packs      | Sellable: 0
+ID:626  | Cat: Coffee Supplies      | Name: possmei Black Tea 600g              | Stock: 1          | Unit: packs      | Sellable: 0
+ID:627  | Cat: Syrups & Flavors     | Name: Bakersfield Caramel Fudge 1kg       | Stock: 1          | Unit: packs      | Sellable: 0
+ID:628  | Cat: Coffee Supplies      | Name: Easy Dark Chocolate Base 1kg        | Stock: 1          | Unit: packs      | Sellable: 0
+ID:629  | Cat: Coffee Supplies      | Name: Easy Cookies & Cream 1kg            | Stock: 1          | Unit: packs      | Sellable: 0
+ID:630  | Cat: Coffee Supplies      | Name: Lotus Biscoff Spread Smod           | Stock: 1          | Unit: packs      | Sellable: 0
+ID:631  | Cat: Coffee Supplies      | Name: Lotus Biscoff 250gx10               | Stock: 1          | Unit: packs      | Sellable: 0
+ID:632  | Cat: Coffee Supplies      | Name: Artisanal Salted Cream Cheese       | Stock: 2          | Unit: packs      | Sellable: 0
+ID:633  | Cat: Syrups & Flavors     | Name: Hi-Fructose Corn Syrup 500ml        | Stock: 10         | Unit: bottles    | Sellable: 0
+ID:634  | Cat: Coffee Supplies      | Name: Australia's Own                     | Stock: 1          | Unit: packs      | Sellable: 0
+ID:635  | Cat: Equipment & Tools    | Name: Mixing Bowl                         | Stock: 1          | Unit: packs      | Sellable: 0
+ID:636  | Cat: Equipment & Tools    | Name: Stackable FK Square small           | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:637  | Cat: Equipment & Tools    | Name: Cocktail Shaker 1L                  | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:638  | Cat: Equipment & Tools    | Name: Cocktail Shaker 700ml               | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:639  | Cat: Equipment & Tools    | Name: Fliptop Wide 1.8L                   | Stock: 6          | Unit: pcs        | Sellable: 0
+ID:640  | Cat: Equipment & Tools    | Name: Electric Hand Mixer                 | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:641  | Cat: Equipment & Tools    | Name: AWD DO3 Frother                     | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:642  | Cat: Equipment & Tools    | Name: Knife                               | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:643  | Cat: Equipment & Tools    | Name: Cutting Board                       | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:644  | Cat: Equipment & Tools    | Name: espresso glass                      | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:645  | Cat: Equipment & Tools    | Name: matcha bowl                         | Stock: 1          | Unit: pcs        | Sellable: 0
+ID:646  | Cat: Syrups & Flavors     | Name: SHOTT White Chocolate Syrup 1L      | Stock: 9.7        | Unit: bottles    | Sellable: 0
+ID:647  | Cat: Packaging & Misc     | Name: Lemon Fruit                         | Stock: 42         | Unit: pieces     | Sellable: 0
+ID:648  | Cat: Snacks               | Name: Stitch Ceramic Mug (with Box)       | Stock: 20         | Unit: pcs        | Sellable: 1
+ID:649  | Cat: Snacks               | Name: Lotso Bear Ceramic Mug (with Box)   | Stock: 20         | Unit: pcs        | Sellable: 1
+ID:650  | Cat: Snacks               | Name: Mickey Mouse Ceramic Mug (with Box) | Stock: 20         | Unit: pcs        | Sellable: 1
+ID:651  | Cat: Snacks               | Name: Nick Wilde Fox Ceramic Mug (with Box) | Stock: 20         | Unit: pcs        | Sellable: 1
+ID:652  | Cat: Pastries             | Name: Assorted Flavor Muffin              | Stock: 3          | Unit: pcs        | Sellable: 1
+ID:653  | Cat: Hot Coffee           | Name: Hot Biscoff Latte (Small)           | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:654  | Cat: Hot Coffee           | Name: Hot Biscoff Latte (Large)           | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:655  | Cat: Hot Coffee           | Name: Hot Salted Caramel (Small)          | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:656  | Cat: Hot Coffee           | Name: Hot Salted Caramel (Large)          | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:657  | Cat: Hot Coffee           | Name: Hot Affogato (Small)                | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:658  | Cat: Hot Coffee           | Name: Hot Affogato (Large)                | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:659  | Cat: Hot Coffee           | Name: Hot Seasalt Latte (Small)           | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:660  | Cat: Hot Coffee           | Name: Hot Seasalt Latte (Large)           | Stock: 9999       | Unit: pcs        | Sellable: 1
+ID:661  | Cat: Hot Coffee           | Name: Hot Hazelnut Latte (Small)          | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:662  | Cat: Hot Coffee           | Name: Hot Hazelnut Latte (Large)          | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:663  | Cat: Fruit Teas           | Name: Chamomile Flowers                   | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:664  | Cat: Frappe               | Name: Frappe Strawberry                   | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:665  | Cat: Frappe               | Name: Frappe Chocolate                    | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:666  | Cat: Frappe               | Name: Frappe Macha                        | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:667  | Cat: Frappe               | Name: Frappe Ube Taro                     | Stock: 9998       | Unit: cups       | Sellable: 1
+ID:668  | Cat: Frappe               | Name: Frappe Coffee                       | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:669  | Cat: Frappe               | Name: Frappe Oreo                         | Stock: 9997       | Unit: cups       | Sellable: 1
+ID:670  | Cat: Frappe               | Name: Frappe Vanilla                      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:671  | Cat: Hot Coffee           | Name: Hot Dirty Oreo                      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:672  | Cat: Hot Coffee           | Name: Hot Dirty Oreo                      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:673  | Cat: Hot Coffee           | Name: Hot Dirty Oreo                      | Stock: 9999       | Unit: cups       | Sellable: 1
+ID:674  | Cat: Matcha Series        | Name: Ube Matcha                          | Stock: 9999       | Unit: cups       | Sellable: 1

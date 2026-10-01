@@ -455,6 +455,7 @@ export function normalizeQueueName(name: string): string {
     .replace(/\((?:copy\s*)?\d*\)\s*$/i, '')
     .replace(/\s*-\s*copy(\s*\(\d+\))?\s*$/i, '')
     .replace(/\s*copy\s*\d*\s*$/i, '')
+    .replace(/(80[a-z]?|58[a-z]?)\d+$/i, (m) => m.replace(/\d+$/, ''))
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 }
@@ -536,9 +537,18 @@ export function resolveQueue(
       reasons.push('a device is physically attached to its port');
     }
 
+    const realThermalPrinters = snapshot.printers.filter(
+      (p) => isLikelyThermal(p) && !isVirtualQueue(p)
+    );
+    const isSoleThermalPrinter = isLikelyThermal(printer) && realThermalPrinters.length === 1;
+
     if (isLikelyThermal(printer)) {
-      score += 90;
-      reasons.push('looks like a thermal receipt printer');
+      score += isSoleThermalPrinter ? 350 : 90;
+      reasons.push(
+        isSoleThermalPrinter
+          ? 'sole physical thermal receipt printer on this machine'
+          : 'looks like a thermal receipt printer'
+      );
     }
 
     if (claimed.has(printer.name.trim().toLowerCase())) {

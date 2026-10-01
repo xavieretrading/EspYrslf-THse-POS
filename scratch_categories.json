@@ -1,0 +1,240 @@
+[
+  {
+    "id": 74,
+    "name": "Coffee Supplies",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 75,
+    "name": "Syrups & Flavors",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 76,
+    "name": "Cleaning & Supplies",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 77,
+    "name": "Beverages",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 78,
+    "name": "Packaging & Misc",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 79,
+    "name": "Equipment & Tools",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 80,
+    "name": "Hot Coffee",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 81,
+    "name": "Iced & Blended",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 82,
+    "name": "Soda Based",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 83,
+    "name": "Fruit Teas",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 84,
+    "name": "Matcha Series",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 85,
+    "name": "Snacks",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 86,
+    "name": "Pastries",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 87,
+    "name": "Frappe",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 1,
+    "name": "Hot Coffee",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 2,
+    "name": "Iced & Blended",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 3,
+    "name": "Tea & Alternatives",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 4,
+    "name": "Pastries & Desserts",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 39,
+    "name": "Beverages",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 40,
+    "name": "Pastries",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 59,
+    "name": "Everyday Wear (Wash, Dry & Fold)",
+    "division": "laundry",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 60,
+    "name": "Pressing & Ironing",
+    "division": "laundry",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 61,
+    "name": "Everyday Wear (Wash only)",
+    "division": "laundry",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 64,
+    "name": "Add On",
+    "division": "laundry",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 62,
+    "name": "Dry Clean ( Min of 2weeks & Max of 1month)",
+    "division": "laundry",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 65,
+    "name": "Non-Coffee",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 66,
+    "name": "Snacks",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 67,
+    "name": "Hard Drinks",
+    "division": "coffee",
+    "branch_id": 27,
+    "is_active": 1
+  },
+  {
+    "id": 88,
+    "name": "TEA",
+    "division": "coffee",
+    "branch_id": 30,
+    "is_active": 1
+  },
+  {
+    "id": 89,
+    "name": "Everyday Wear (Wash, Dry & Fold)",
+    "division": "laundry",
+    "branch_id": 31,
+    "is_active": 1
+  },
+  {
+    "id": 90,
+    "name": "Pressing & Ironing",
+    "division": "laundry",
+    "branch_id": 31,
+    "is_active": 1
+  },
+  {
+    "id": 91,
+    "name": "Everyday Wear (Wash only)",
+    "division": "laundry",
+    "branch_id": 31,
+    "is_active": 1
+  },
+  {
+    "id": 92,
+    "name": "Add On",
+    "division": "laundry",
+    "branch_id": 31,
+    "is_active": 1
+  },
+  {
+    "id": 93,
+    "name": "Dry Clean ( Min of 2weeks & Max of 1month)",
+    "division": "laundry",
+    "branch_id": 31,
+    "is_active": 1
+  }
+]

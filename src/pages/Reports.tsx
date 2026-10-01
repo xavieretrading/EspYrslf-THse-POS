@@ -168,15 +168,14 @@ export default function Reports() {
 
           let endingStock = p.stock || 0;
           let stockIn = 0;
-          let stockOut = 0;
+          let pullOut = 0;
+          let soldItems = 0;
 
           pTxs.forEach((t: any) => {
             const txDate = new Date(t.created_at);
-            const isInitial = t.remarks && (
-              t.remarks.toLowerCase().includes('initial') ||
-              t.remarks.toLowerCase().includes('setup') ||
-              t.remarks.toLowerCase().includes('creation')
-            );
+            const rem = (t.remarks || '').toLowerCase();
+            const isInitial = rem.includes('initial') || rem.includes('setup') || rem.includes('creation') || rem.includes('baseline');
+            const isPullout = rem.includes('expired') || rem.includes('pull') || rem.includes('spoilage') || rem.includes('damage') || rem.includes('waste') || rem.includes('defect') || rem.includes('loss');
 
             if (txDate > rangeEnd) {
               if (t.type === 'in') {
@@ -186,26 +185,26 @@ export default function Reports() {
               }
             } else if (txDate >= rangeStart && txDate <= rangeEnd) {
               if (t.type === 'in') {
-                if (isInitial) {
-                  // Initial setups do not count as Stock In (+), they represent the starting balance
-                } else {
+                if (!isInitial) {
                   stockIn += t.quantity;
                 }
               } else {
-                stockOut += t.quantity;
+                if (isPullout) {
+                  pullOut += t.quantity;
+                } else {
+                  soldItems += t.quantity;
+                }
               }
             }
           });
 
-          const beginningStock = endingStock - stockIn + stockOut;
+          const totalOut = pullOut + soldItems;
+          const beginningStock = endingStock - stockIn + totalOut;
 
           const restockTxs = pTxs.filter((t: any) => {
             const txDate = new Date(t.created_at);
-            const isInitial = t.remarks && (
-              t.remarks.toLowerCase().includes('initial') ||
-              t.remarks.toLowerCase().includes('setup') ||
-              t.remarks.toLowerCase().includes('creation')
-            );
+            const rem = (t.remarks || '').toLowerCase();
+            const isInitial = rem.includes('initial') || rem.includes('setup') || rem.includes('creation') || rem.includes('baseline');
             return t.type === 'in' && !isInitial && txDate >= rangeStart && txDate <= rangeEnd;
           });
 
@@ -224,8 +223,10 @@ export default function Reports() {
             beginningStock: p.stock >= 9997 ? 'Unlimited' : beginningStock,
             endingStock: p.stock >= 9997 ? 'Unlimited' : endingStock,
             stockIn: p.stock >= 9997 ? 0 : stockIn,
-            stockOut: p.stock >= 9997 ? 0 : stockOut,
-            salesValue: p.stock >= 9997 ? 0 : stockOut * (p.price || 0),
+            pullOut: p.stock >= 9997 ? 0 : pullOut,
+            soldItems: p.stock >= 9997 ? 0 : soldItems,
+            stockOut: p.stock >= 9997 ? 0 : totalOut,
+            salesValue: p.stock >= 9997 ? 0 : soldItems * (p.price || 0),
             restockLogs
           };
         });
@@ -2811,20 +2812,20 @@ export default function Reports() {
             <thead>
               <tr className="bg-slate-50 border-y border-slate-100 text-slate-500 uppercase tracking-wider print:border-black">
                 <th className="py-2.5 px-3 font-bold text-center">ID</th>
-                <th className="py-2.5 px-4 font-bold">Product Name</th>
+                <th className="py-2.5 px-4 font-bold">Items</th>
                 <th className="py-2.5 px-3 font-bold">Category</th>
-                <th className="py-2.5 px-3 font-bold text-center">Beginning Stock</th>
-                <th className="py-2.5 px-3 font-bold text-center">Stock In (+)</th>
-                <th className="py-2.5 px-3 font-bold text-center">Restock Logs</th>
-                <th className="py-2.5 px-3 font-bold text-center">Stock Out (-)</th>
-                <th className="py-2.5 px-3 font-bold text-center">Ending Stock</th>
+                <th className="py-2.5 px-3 font-bold text-center">Start</th>
+                <th className="py-2.5 px-3 font-bold text-center">Add-ons (+)</th>
+                <th className="py-2.5 px-3 font-bold text-center">Pull out (-)</th>
+                <th className="py-2.5 px-3 font-bold text-center">Sold items (-)</th>
+                <th className="py-2.5 px-3 font-bold text-center">Current</th>
                 <th className="py-2.5 px-3 font-bold text-right">Price</th>
                 <th className="py-2.5 px-4 font-bold text-right">Sales Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 print:divide-black">
               {filteredStocks.map((item: any) => {
-                const salesVal = (item.stockOut || 0) * (item.price || 0);
+                const salesVal = (item.soldItems || item.stockOut || 0) * (item.price || 0);
                 const isOutOfStock = item.endingStock !== 'Unlimited' && Number(item.endingStock) <= 0;
 
                 return (
@@ -2832,28 +2833,12 @@ export default function Reports() {
                     <td className="py-2 px-3 text-slate-400 text-center font-mono">{item.id}</td>
                     <td className="py-2 px-4 font-bold text-slate-900">{item.name}</td>
                     <td className="py-2 px-3 text-slate-500 font-semibold">{item.category_name || 'General'}</td>
-                    <td className="py-2 px-3 text-center font-bold">{item.beginningStock}</td>
-                    <td className="py-2 px-3 text-center text-emerald-600 font-bold">+{item.stockIn}</td>
-                    <td className="py-2 px-3 text-center">
-                      {item.restockLogs && item.restockLogs.length > 0 ? (
-                        <div className="flex flex-col gap-1 items-center">
-                          {item.restockLogs.map((log: any, logIdx: number) => {
-                            const dateObj = new Date(log.date);
-                            const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                            return (
-                              <span key={logIdx} className="inline-block bg-emerald-50 text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-100 text-[10px] w-max" title={log.remarks}>
-                                {displayDate}: +{log.quantity}
-                              </span>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 font-normal">—</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-center text-rose-600 font-bold">-{item.stockOut}</td>
+                    <td className="py-2 px-3 text-center font-bold font-mono">{item.beginningStock}</td>
+                    <td className="py-2 px-3 text-center text-emerald-600 font-bold font-mono">+{item.stockIn}</td>
+                    <td className="py-2 px-3 text-center text-amber-700 font-bold font-mono">-{item.pullOut || 0}</td>
+                    <td className="py-2 px-3 text-center text-blue-700 font-bold font-mono">-{item.soldItems || 0}</td>
                     <td className={clsx(
-                      "py-2 px-3 text-center font-black",
+                      "py-2 px-3 text-center font-black font-mono",
                       isOutOfStock ? "text-rose-700 bg-rose-50/50" : "text-slate-800"
                     )}>
                       {item.endingStock}

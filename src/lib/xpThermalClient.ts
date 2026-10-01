@@ -230,6 +230,15 @@ export async function printReceiptViaXpThermal(
       }
     });
 
+    const manilaOffset = 8 * 60 * 60 * 1000;
+    const todayPhtStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+    const orderCreatedPhtStr = receiptData.created_at ? new Date(new Date(receiptData.created_at).getTime() + manilaOffset).toISOString().split('T')[0] : '';
+    const isPastOrder = orderCreatedPhtStr !== '' && orderCreatedPhtStr < todayPhtStr;
+    const isPaid = receiptData.status === 'paid';
+    const effectiveDate = (isPaid && (receiptData.paid_at || receiptData.updated_at))
+      ? (receiptData.paid_at || receiptData.updated_at)
+      : (receiptData.created_at || Date.now());
+
     const idempotencyKey = `rec-${receiptData.receipt_number || receiptData.id || Date.now()}-${Date.now()}`;
 
     const payload = {
@@ -242,15 +251,17 @@ export async function printReceiptViaXpThermal(
         orderNumber: receiptData.receipt_number 
           ? `INV-${receiptData.receipt_number.toString().padStart(6, '0')}`
           : `#${(receiptData.order_number || receiptData.id || '').toString().padStart(6, '0')}`,
-        orderDate: new Date(receiptData.created_at || Date.now()).toLocaleDateString('en-US', {
+        orderDate: new Date(effectiveDate).toLocaleDateString('en-US', {
           month: 'short',
           day: '2-digit',
-          year: 'numeric'
+          year: 'numeric',
+          timeZone: 'Asia/Manila'
         }),
-        orderTime: new Date(receiptData.created_at || Date.now()).toLocaleTimeString('en-US', {
+        orderTime: new Date(effectiveDate).toLocaleTimeString('en-US', {
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true
+          hour12: true,
+          timeZone: 'Asia/Manila'
         }),
         items: formattedItems,
         subtotal: subtotal,
@@ -293,7 +304,14 @@ export async function printReceiptViaXpThermal(
           taxId: undefined // Removed Tax ID / TIN per branch requirements
         },
         footer: {
-          message: ['Thank you for your visit!', 'Please come again!']
+          message: (isPaid && isPastOrder) ? [
+            'Thank you for your visit!',
+            `[Orig. Ordered: ${new Date(receiptData.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}]`,
+            'Please come again!'
+          ] : [
+            'Thank you for your visit!',
+            'Please come again!'
+          ]
         },
         options: {
           template: 'classic',

@@ -187,23 +187,25 @@ export function computeOrderTotals(input: ComputeTotalsInput): CalculationResult
     }
   }
 
-  const netFoodAmount = Math.max(0, subtotal - discountAmount);
+  const round2 = (num: number) => Math.round((num + Number.EPSILON) * 100) / 100;
+
+  const netFoodAmount = round2(Math.max(0, subtotal - discountAmount));
 
   // Service charge is disabled globally
   const serviceChargeAmount = 0;
-  const total = Math.max(0, netFoodAmount);
+  const total = round2(Math.max(0, netFoodAmount));
 
   return {
     paxCount,
     discountPaxCount,
-    subtotal,
-    vatableSales,
-    vatExemptSales,
-    vatRelief,
-    scDiscount,
-    discountAmount,
+    subtotal: round2(subtotal),
+    vatableSales: round2(vatableSales),
+    vatExemptSales: round2(vatExemptSales),
+    vatRelief: round2(vatRelief),
+    scDiscount: round2(scDiscount),
+    discountAmount: round2(discountAmount),
     netFoodAmount,
-    vatAmount,
+    vatAmount: round2(vatAmount),
     serviceChargeAmount,
     total,
     computedItems

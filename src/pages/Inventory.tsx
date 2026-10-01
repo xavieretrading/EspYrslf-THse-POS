@@ -22,8 +22,18 @@ import {
   ChevronRight,
   Info,
   UploadCloud,
-  Package
+  Package,
+  Boxes,
+  Clock,
+  Receipt,
+  Download,
+  ArrowDownRight,
+  CheckCircle2,
+  History,
+  CalendarRange
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 import { cn } from '../App';
 import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
@@ -34,7 +44,45 @@ import { getProductImage, getValidImageUrl } from './POS';
 type Category = { id: number; name: string };
 type Product = { id: number; name: string; stock: number; category_name: string; category_id: number; cost: number; price: number; division?: string };
 
-type TabType = 'active_stocks' | 'warehouses' | 'in_out_reports' | 'fast_moving' | 'cycle_counts';
+export type ItemTrackerProduct = {
+  id: number;
+  name: string;
+  category_name: string;
+  division: string;
+  unit: string;
+  cost: number;
+  price: number;
+  is_unlimited: boolean;
+  start: number | string;
+  addons: number;
+  pullout: number;
+  sold: number;
+  current: number | string;
+  addons_list: {
+    id: number;
+    date: string;
+    quantity: number;
+    remarks: string;
+  }[];
+  pullouts_list: {
+    id: number;
+    date: string;
+    quantity: number;
+    remarks: string;
+    reason: string;
+    loss_value: number;
+  }[];
+  sales_list: {
+    id: number;
+    date: string;
+    quantity: number;
+    order_number: string;
+    remarks: string;
+    total_price: number;
+  }[];
+};
+
+type TabType = 'active_stocks' | 'item_tracker' | 'warehouses' | 'in_out_reports' | 'fast_moving' | 'cycle_counts';
 
 export default function Inventory() {
   const { activeBranch } = useBranch();
@@ -45,6 +93,13 @@ export default function Inventory() {
   const [activeTab, setActiveTab] = useState<TabType>('active_stocks');
   const [selectedDivision, setSelectedDivision] = useState<'coffee' | 'laundry'>('coffee');
   const isLaundryBranch = activeBranch?.name.toLowerCase().includes('laundry') || activeBranch?.name.toLowerCase().includes('s1p') || activeBranch?.name.toLowerCase().includes('spin');
+  const isLaundryOnlyBranch = isLaundryBranch && (activeBranch?.name?.toLowerCase().includes('mandaue') || activeBranch?.name?.toLowerCase().includes('laundry only'));
+
+  useEffect(() => {
+    if (isLaundryOnlyBranch) {
+      setSelectedDivision('laundry');
+    }
+  }, [isLaundryOnlyBranch, activeBranch?.id]);
   const [isTogglingStrict, setIsTogglingStrict] = useState(false);
 
   const handleToggleStrictLock = async () => {
@@ -127,6 +182,42 @@ export default function Inventory() {
   const [cycleCountFilterCategory, setCycleCountFilterCategory] = useState<string>('all');
   const [selectedCycleCountDetail, setSelectedCycleCountDetail] = useState<any | null>(null);
 
+  // === NEW STATES FOR ITEM TRACKER (START | ADD-ONS | PULL OUT | SOLD | CURRENT) ===
+  const [trackerItems, setTrackerItems] = useState<ItemTrackerProduct[]>([]);
+  const [isTrackerLoading, setIsTrackerLoading] = useState(false);
+  const [trackerSearch, setTrackerSearch] = useState('');
+  const [trackerCategoryFilter, setTrackerCategoryFilter] = useState('all');
+  const [trackerDivisionFilter, setTrackerDivisionFilter] = useState<'all' | 'coffee' | 'laundry'>('all');
+  const [trackerDateFilter, setTrackerDateFilter] = useState<'all' | 'today' | 'this_week' | 'this_month' | 'last_30_days' | 'custom'>('all');
+  const [trackerCustomDates, setTrackerCustomDates] = useState({
+    start: format(new Date(), 'yyyy-MM-01'),
+    end: format(new Date(), 'yyyy-MM-dd')
+  });
+  const [trackerPage, setTrackerPage] = useState(1);
+  const TRACKER_ITEMS_PER_PAGE = 12;
+
+  // Drill-down Modal State
+  const [trackerModal, setTrackerModal] = useState<{
+    isOpen: boolean;
+    item: ItemTrackerProduct | null;
+    viewType: 'addons' | 'pullout' | 'sold';
+    searchQuery: string;
+  }>({
+    isOpen: false,
+    item: null,
+    viewType: 'addons',
+    searchQuery: ''
+  });
+
+  const openTrackerModal = (item: ItemTrackerProduct, viewType: 'addons' | 'pullout' | 'sold') => {
+    setTrackerModal({
+      isOpen: true,
+      item,
+      viewType,
+      searchQuery: ''
+    });
+  };
+
   useEffect(() => {
     setProductsPage(1);
   }, [searchQuery, selectedDivision]);
@@ -136,11 +227,108 @@ export default function Inventory() {
   }, [reportsSearch, reportsFilterType]);
 
   useEffect(() => {
+    setTrackerPage(1);
+  }, [trackerSearch, trackerCategoryFilter, trackerDivisionFilter, trackerDateFilter]);
+
+  useEffect(() => {
     setProductsPage(1);
     setReportsPage(1);
     setFastMovingPage(1);
     setCycleCountsPage(1);
+    setTrackerPage(1);
   }, [activeTab]);
+
+  const fetchTrackerData = async () => {
+    if (!activeBranch) return;
+    setIsTrackerLoading(true);
+    try {
+      let dateParams = '';
+      if (trackerDateFilter !== 'all') {
+        const today = new Date();
+        let sDate = '';
+        let eDate = format(today, 'yyyy-MM-dd');
+
+        if (trackerDateFilter === 'today') {
+          sDate = format(today, 'yyyy-MM-dd');
+        } else if (trackerDateFilter === 'this_week') {
+          const firstDay = new Date(today);
+          firstDay.setDate(today.getDate() - today.getDay());
+          sDate = format(firstDay, 'yyyy-MM-dd');
+        } else if (trackerDateFilter === 'this_month') {
+          const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+          sDate = format(firstDay, 'yyyy-MM-dd');
+        } else if (trackerDateFilter === 'last_30_days') {
+          const thirtyAgo = new Date();
+          thirtyAgo.setDate(today.getDate() - 30);
+          sDate = format(thirtyAgo, 'yyyy-MM-dd');
+        } else if (trackerDateFilter === 'custom') {
+          sDate = trackerCustomDates.start;
+          eDate = trackerCustomDates.end;
+        }
+
+        if (sDate && eDate) {
+          dateParams = `&start_date=${sDate}&end_date=${eDate}`;
+        }
+      }
+
+      const res = await fetch(`/api/inventory/item-tracker?branch_id=${activeBranch.id}${dateParams}`);
+      if (res.ok) {
+        const json = await res.json();
+        setTrackerItems(json.items || []);
+      }
+    } catch (err) {
+      console.error('Error fetching item tracker data:', err);
+    } finally {
+      setIsTrackerLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'item_tracker' && activeBranch) {
+      fetchTrackerData();
+    }
+  }, [activeTab, activeBranch?.id, trackerDateFilter, trackerCustomDates.start, trackerCustomDates.end]);
+
+  const handleExportTrackerExcel = () => {
+    if (!filteredTrackerItems.length) {
+      swalAlert('No Data', 'No items available to export with current filters.', 'info');
+      return;
+    }
+    const rows = filteredTrackerItems.map(item => ({
+      'Product ID': item.id,
+      'Product Name': item.name,
+      'Category': item.category_name,
+      'Division': item.division,
+      'Unit': item.unit,
+      'Cost (PHP)': item.cost,
+      'Price (PHP)': item.price,
+      'Start (Beginning Stock)': item.start,
+      'Add-ons (+ Restock)': item.addons,
+      'Pull out (- Expired/Waste)': item.pullout,
+      'Sold items (- POS Orders)': item.sold,
+      'Current Stock': item.current
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Item Movement Tracker');
+    const branchName = (activeBranch?.name || 'Branch').replace(/[^a-zA-Z0-9_-]/g, '_');
+    XLSX.writeFile(wb, `Item_Tracker_${branchName}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+  };
+
+  const filteredTrackerItems = trackerItems.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(trackerSearch.toLowerCase()) ||
+      item.category_name.toLowerCase().includes(trackerSearch.toLowerCase());
+    const matchesCategory = trackerCategoryFilter === 'all' || item.category_name === trackerCategoryFilter;
+    const matchesDivision = trackerDivisionFilter === 'all' || item.division === trackerDivisionFilter;
+    return matchesSearch && matchesCategory && matchesDivision;
+  });
+
+  const totalTrackerPages = Math.ceil(filteredTrackerItems.length / TRACKER_ITEMS_PER_PAGE) || 1;
+  const paginatedTrackerItems = filteredTrackerItems.slice(
+    (trackerPage - 1) * TRACKER_ITEMS_PER_PAGE,
+    trackerPage * TRACKER_ITEMS_PER_PAGE
+  );
 
   const fetchData = async () => {
     if (!activeBranch) return;
@@ -578,6 +766,17 @@ export default function Inventory() {
         >
           <List size={16} /> Active Stocks
         </button>
+        <button
+          id="tab_item_tracker"
+          onClick={() => { setActiveTab('item_tracker'); setIsCreatingCycleCount(false); }}
+          className={cn(
+            "px-4 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all flex items-center gap-2 pr-5",
+            activeTab === 'item_tracker' ? "border-emerald-500 text-emerald-600 font-extrabold" : "border-transparent text-slate-500 hover:text-slate-800"
+          )}
+        >
+          <Boxes size={16} /> Item Tracker
+          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-black px-1.5 py-0.5 rounded-full uppercase tracking-tighter">Live</span>
+        </button>
         {/* Warehouse and Transfers tab button removed */}
         <button
           id="tab_in_out_reports"
@@ -618,7 +817,7 @@ export default function Inventory() {
         {activeTab === 'active_stocks' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-              {isLaundryBranch && (
+              {isLaundryBranch && !isLaundryOnlyBranch && (
                 <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 font-sans">
                   <button
                     onClick={() => setSelectedDivision('coffee')}
@@ -892,6 +1091,392 @@ export default function Inventory() {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ----------------- TAB: ITEM TRACKER (START | ADD-ONS | PULL OUT | SOLD | CURRENT) ----------------- */}
+        {activeTab === 'item_tracker' && (
+          <div className="space-y-6">
+
+            {/* Quick KPI Overview Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block">Tracked Products</span>
+                  <span className="text-2xl font-black text-slate-900 mt-1 block">
+                    {filteredTrackerItems.length} <span className="text-xs font-semibold text-slate-400">Items</span>
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700">
+                  <Boxes size={22} />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-emerald-100 bg-emerald-50/20 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest block">Total Add-ons (+)</span>
+                  <span className="text-2xl font-black text-emerald-800 mt-1 block font-mono">
+                    +{filteredTrackerItems.reduce((acc, i) => acc + (typeof i.addons === 'number' ? i.addons : 0), 0).toLocaleString()} <span className="text-xs font-semibold text-emerald-600">units</span>
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-700">
+                  <ArrowDownRight size={22} />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-amber-100 bg-amber-50/20 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-amber-700 tracking-widest block">Total Pulled Out (-)</span>
+                  <span className="text-2xl font-black text-amber-800 mt-1 block font-mono">
+                    -{filteredTrackerItems.reduce((acc, i) => acc + (typeof i.pullout === 'number' ? i.pullout : 0), 0).toLocaleString()} <span className="text-xs font-semibold text-amber-600">units</span>
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <AlertTriangle size={22} />
+                </div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-blue-100 bg-blue-50/20 shadow-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-blue-700 tracking-widest block">Total POS Sold (-)</span>
+                  <span className="text-2xl font-black text-blue-800 mt-1 block font-mono">
+                    -{filteredTrackerItems.reduce((acc, i) => acc + (typeof i.sold === 'number' ? i.sold : 0), 0).toLocaleString()} <span className="text-xs font-semibold text-blue-600">units</span>
+                  </span>
+                </div>
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-700">
+                  <Receipt size={22} />
+                </div>
+              </div>
+            </div>
+
+            {/* Filter and Controls Toolbar */}
+            <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                
+                {/* Search Bar */}
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search by item name or category..."
+                    value={trackerSearch}
+                    onChange={(e) => setTrackerSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all placeholder:text-slate-400"
+                  />
+                  {trackerSearch && (
+                    <button
+                      onClick={() => setTrackerSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Categories & Actions */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={trackerCategoryFilter}
+                    onChange={(e) => setTrackerCategoryFilter(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-2xl px-4 py-2.5 outline-none focus:border-emerald-500 cursor-pointer"
+                  >
+                    <option value="all">All Categories</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+
+                  {/* Division Filter */}
+                  {isLaundryBranch && !isLaundryOnlyBranch && (
+                    <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                      <button
+                        type="button"
+                        onClick={() => setTrackerDivisionFilter('all')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-black transition-all",
+                          trackerDivisionFilter === 'all' ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"
+                        )}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTrackerDivisionFilter('coffee')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-black transition-all",
+                          trackerDivisionFilter === 'coffee' ? "bg-white text-emerald-800 shadow-xs" : "text-slate-500 hover:text-emerald-800"
+                        )}
+                      >
+                        Cafe
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTrackerDivisionFilter('laundry')}
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs font-black transition-all",
+                          trackerDivisionFilter === 'laundry' ? "bg-white text-blue-800 shadow-xs" : "text-slate-500 hover:text-blue-800"
+                        )}
+                      >
+                        Laundry
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Export Excel */}
+                  <button
+                    onClick={handleExportTrackerExcel}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-all shadow-sm active:scale-[0.98]"
+                    title="Export current table to Excel"
+                  >
+                    <Download size={15} />
+                    <span>Export</span>
+                  </button>
+
+                  {/* Refresh */}
+                  <button
+                    onClick={fetchTrackerData}
+                    disabled={isTrackerLoading}
+                    className="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition-all shadow-xs"
+                    title="Refresh Tracker Data"
+                  >
+                    <RefreshCw size={15} className={cn(isTrackerLoading && "animate-spin text-emerald-600")} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Date Presets Row */}
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider mr-1">
+                  Time Period:
+                </span>
+                {[
+                  { id: 'all', label: 'All Time' },
+                  { id: 'today', label: 'Today' },
+                  { id: 'this_week', label: 'This Week' },
+                  { id: 'this_month', label: 'This Month' },
+                  { id: 'last_30_days', label: 'Last 30 Days' },
+                  { id: 'custom', label: 'Custom Range' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setTrackerDateFilter(p.id as any)}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-xs font-bold transition-all border",
+                      trackerDateFilter === p.id
+                        ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+
+                {/* Custom Date Pickers */}
+                {trackerDateFilter === 'custom' && (
+                  <div className="flex items-center gap-2 ml-auto">
+                    <input
+                      type="date"
+                      value={trackerCustomDates.start}
+                      onChange={(e) => setTrackerCustomDates(prev => ({ ...prev, start: e.target.value }))}
+                      className="px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none"
+                    />
+                    <span className="text-slate-400 text-xs">to</span>
+                    <input
+                      type="date"
+                      value={trackerCustomDates.end}
+                      onChange={(e) => setTrackerCustomDates(prev => ({ ...prev, end: e.target.value }))}
+                      className="px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Main Item Tracker Table */}
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="p-4 pl-6">Items</th>
+                      <th className="p-4 text-center font-mono">Start</th>
+                      <th className="p-4 text-center">Add-ons</th>
+                      <th className="p-4 text-center">Pull out</th>
+                      <th className="p-4 text-center">Sold items</th>
+                      <th className="p-4 text-center">Current</th>
+                      <th className="p-4 pr-6 text-center">Inspect</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {isTrackerLoading ? (
+                      <tr>
+                        <td colSpan={7} className="p-16 text-center text-slate-400 font-bold">
+                          <RefreshCw size={28} className="animate-spin mx-auto mb-3 text-emerald-600 opacity-60" />
+                          Loading item tracker metrics & transaction history...
+                        </td>
+                      </tr>
+                    ) : paginatedTrackerItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-16 text-center text-slate-400 font-medium">
+                          <AlertCircle size={32} className="mx-auto mb-2 opacity-30" />
+                          No items match the current filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedTrackerItems.map(item => {
+                        const currentNum = typeof item.current === 'number' ? item.current : parseFloat(String(item.current));
+                        const isOutOfStock = !item.is_unlimited && currentNum <= 0;
+                        const isLowStock = !item.is_unlimited && currentNum > 0 && currentNum <= 10;
+
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                            {/* Items Column */}
+                            <td className="p-4 pl-6 font-bold text-slate-900">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 text-slate-500 font-mono text-xs">
+                                  <Package size={16} />
+                                </div>
+                                <div>
+                                  <span className="text-sm font-black text-slate-900 block">{item.name}</span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/60">
+                                      {item.category_name}
+                                    </span>
+                                    <span className="text-[10px] font-mono text-slate-400">
+                                      {item.unit}
+                                    </span>
+                                    {item.price > 0 && (
+                                      <span className="text-[10px] font-bold text-slate-600">
+                                        ₱{item.price.toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Start Column */}
+                            <td className="p-4 text-center font-mono font-bold text-slate-700 text-sm">
+                              {item.start}
+                            </td>
+
+                            {/* Add-ons Column (CLICKABLE) */}
+                            <td className="p-4 text-center">
+                              <button
+                                type="button"
+                                onClick={() => openTrackerModal(item, 'addons')}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono font-black text-xs transition-all shadow-xs group",
+                                  item.addons > 0
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 hover:scale-105 active:scale-95 cursor-pointer"
+                                    : "bg-slate-50 text-slate-400 border border-slate-200 cursor-pointer hover:bg-slate-100"
+                                )}
+                                title="Click to view Add-ons timeline"
+                              >
+                                <ArrowDownRight size={13} className="group-hover:translate-y-0.5 transition-transform" />
+                                <span>+{item.addons}</span>
+                                <span className="text-[10px] font-normal opacity-70">{item.unit}</span>
+                              </button>
+                            </td>
+
+                            {/* Pull out Column (CLICKABLE) */}
+                            <td className="p-4 text-center">
+                              <button
+                                type="button"
+                                onClick={() => openTrackerModal(item, 'pullout')}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono font-black text-xs transition-all shadow-xs group",
+                                  item.pullout > 0
+                                    ? "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:scale-105 active:scale-95 cursor-pointer"
+                                    : "bg-slate-50 text-slate-400 border border-slate-200 cursor-pointer hover:bg-slate-100"
+                                )}
+                                title="Click to view Pull-outs & Spoilage reasons"
+                              >
+                                <AlertTriangle size={13} className="group-hover:scale-110 transition-transform" />
+                                <span>-{item.pullout}</span>
+                                <span className="text-[10px] font-normal opacity-70">{item.unit}</span>
+                              </button>
+                            </td>
+
+                            {/* Sold items Column (CLICKABLE) */}
+                            <td className="p-4 text-center">
+                              <button
+                                type="button"
+                                onClick={() => openTrackerModal(item, 'sold')}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono font-black text-xs transition-all shadow-xs group",
+                                  item.sold > 0
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 hover:scale-105 active:scale-95 cursor-pointer"
+                                    : "bg-slate-50 text-slate-400 border border-slate-200 cursor-pointer hover:bg-slate-100"
+                                )}
+                                title="Click to view sales order numbers"
+                              >
+                                <Receipt size={13} className="group-hover:scale-110 transition-transform" />
+                                <span>-{item.sold}</span>
+                                <span className="text-[10px] font-normal opacity-70">{item.unit}</span>
+                              </button>
+                            </td>
+
+                            {/* Current Column */}
+                            <td className="p-4 text-center">
+                              <span className={cn(
+                                "inline-block px-3 py-1.5 rounded-xl font-mono font-black text-xs border shadow-xs",
+                                item.is_unlimited
+                                  ? "bg-slate-100 text-slate-700 border-slate-200"
+                                  : isOutOfStock
+                                    ? "bg-rose-50 text-rose-700 border-rose-200 animate-pulse"
+                                    : isLowStock
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              )}>
+                                {item.current} {item.unit}
+                              </span>
+                            </td>
+
+                            {/* Action Button */}
+                            <td className="p-4 pr-6 text-center">
+                              <button
+                                onClick={() => openTrackerModal(item, 'addons')}
+                                className="p-2 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all shadow-xs"
+                                title="Inspect Full Item History"
+                              >
+                                <History size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination bar */}
+              <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold text-slate-500 bg-slate-50/50">
+                <span>
+                  Showing {filteredTrackerItems.length === 0 ? 0 : (trackerPage - 1) * TRACKER_ITEMS_PER_PAGE + 1} to {Math.min(trackerPage * TRACKER_ITEMS_PER_PAGE, filteredTrackerItems.length)} of {filteredTrackerItems.length} items
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setTrackerPage(prev => Math.max(prev - 1, 1))}
+                    disabled={trackerPage === 1}
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors shadow-xs"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1.5 font-bold font-mono text-slate-800">
+                    {trackerPage} / {totalTrackerPages}
+                  </span>
+                  <button
+                    onClick={() => setTrackerPage(prev => Math.min(prev + 1, totalTrackerPages))}
+                    disabled={trackerPage === totalTrackerPages}
+                    className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors shadow-xs"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -2156,6 +2741,388 @@ export default function Inventory() {
                 className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-black text-xs uppercase shadow-md transition-all active:scale-[0.98]"
               >
                 Save Recipe
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- ITEM TRACKER DRILL-DOWN TIMELINE MODAL ----------------- */}
+      {trackerModal.isOpen && trackerModal.item && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/70">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2.5">
+                  <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+                    <Boxes size={22} />
+                  </span>
+                  <div>
+                    <h2 className="text-xl font-black text-slate-900 leading-tight">
+                      {trackerModal.item.name}
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-slate-500 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-xs">
+                        {trackerModal.item.category_name}
+                      </span>
+                      <span className="text-xs font-mono text-slate-400">
+                        Unit: {trackerModal.item.unit}
+                      </span>
+                      {trackerModal.item.price > 0 && (
+                        <span className="text-xs font-bold text-slate-700">
+                          ₱{trackerModal.item.price.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Metrics Bar inside Modal Header */}
+                <div className="flex flex-wrap gap-2 pt-3">
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+                    Start: <strong className="font-mono font-bold text-slate-900">{trackerModal.item.start}</strong>
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Add-ons: <strong className="font-mono font-bold">+{trackerModal.item.addons} {trackerModal.item.unit}</strong>
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
+                    Pull out: <strong className="font-mono font-bold">-{trackerModal.item.pullout} {trackerModal.item.unit}</strong>
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+                    Sold: <strong className="font-mono font-bold">-{trackerModal.item.sold} {trackerModal.item.unit}</strong>
+                  </span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-900 text-white shadow-xs">
+                    Current: <strong className="font-mono font-bold">{trackerModal.item.current} {trackerModal.item.unit}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setTrackerModal(prev => ({ ...prev, isOpen: false, item: null }))}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-xl transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Internal Tabs Switcher */}
+            <div className="flex border-b border-slate-200 px-6 pt-3 bg-white gap-2 flex-wrap">
+              <button
+                onClick={() => setTrackerModal(prev => ({ ...prev, viewType: 'addons', searchQuery: '' }))}
+                className={cn(
+                  "pb-3 px-3 text-xs font-black uppercase tracking-wider border-b-2 flex items-center gap-2 transition-all cursor-pointer",
+                  trackerModal.viewType === 'addons'
+                    ? "border-emerald-600 text-emerald-700"
+                    : "border-transparent text-slate-400 hover:text-slate-700"
+                )}
+              >
+                <ArrowDownRight size={16} />
+                Add-ons Timeline ({trackerModal.item.addons_list.length})
+              </button>
+              <button
+                onClick={() => setTrackerModal(prev => ({ ...prev, viewType: 'pullout', searchQuery: '' }))}
+                className={cn(
+                  "pb-3 px-3 text-xs font-black uppercase tracking-wider border-b-2 flex items-center gap-2 transition-all cursor-pointer",
+                  trackerModal.viewType === 'pullout'
+                    ? "border-amber-600 text-amber-700"
+                    : "border-transparent text-slate-400 hover:text-slate-700"
+                )}
+              >
+                <AlertTriangle size={16} />
+                Pull Out & Spoilage ({trackerModal.item.pullouts_list.length})
+              </button>
+              <button
+                onClick={() => setTrackerModal(prev => ({ ...prev, viewType: 'sold', searchQuery: '' }))}
+                className={cn(
+                  "pb-3 px-3 text-xs font-black uppercase tracking-wider border-b-2 flex items-center gap-2 transition-all cursor-pointer",
+                  trackerModal.viewType === 'sold'
+                    ? "border-blue-600 text-blue-700"
+                    : "border-transparent text-slate-400 hover:text-slate-700"
+                )}
+              >
+                <Receipt size={16} />
+                Sales Orders ({trackerModal.item.sales_list.length})
+              </button>
+            </div>
+
+            {/* Modal Tab Content Area */}
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+              
+              {/* VIEW 1: ADDONS TIMELINE */}
+              {trackerModal.viewType === 'addons' && (
+                <div className="space-y-4">
+                  <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900">Add-ons Chronological Timeline</h4>
+                      <p className="text-xs text-emerald-700 mt-0.5">
+                        Showing how <strong>+{trackerModal.item.addons} {trackerModal.item.unit}</strong> was accumulated across {trackerModal.item.addons_list.length} batch deliveries/restocks.
+                      </p>
+                    </div>
+                    <span className="text-base font-black font-mono text-emerald-800 bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-xs whitespace-nowrap self-start sm:self-auto">
+                      +{trackerModal.item.addons} {trackerModal.item.unit} Total
+                    </span>
+                  </div>
+
+                  {trackerModal.item.addons_list.length === 0 ? (
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <AlertCircle size={36} className="mx-auto mb-2 opacity-40" />
+                      <p className="text-sm font-semibold">No additions or restocks recorded for this item in this period.</p>
+                    </div>
+                  ) : (
+                    <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-emerald-200">
+                      {(() => {
+                        let runningCumulative = 0;
+                        const reversed = [...trackerModal.item.addons_list].reverse();
+                        const withCumulative = reversed.map(a => {
+                          runningCumulative += a.quantity;
+                          return { ...a, cumulative: runningCumulative };
+                        });
+                        const displayList = [...withCumulative].reverse();
+
+                        return displayList.map((entry, idx) => {
+                          const dateObj = new Date(entry.date);
+                          const formattedDate = dateObj.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          });
+                          const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          });
+
+                          return (
+                            <div key={entry.id || idx} className="relative group">
+                              {/* Timeline node */}
+                              <div className="absolute -left-[27px] top-3.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-xs group-hover:scale-125 transition-transform" />
+
+                              <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs hover:border-emerald-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-black text-slate-900 font-mono">
+                                      📅 {formattedDate}
+                                    </span>
+                                    <span className="text-[11px] text-slate-400 font-medium font-mono">
+                                      • {formattedTime}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {entry.remarks || 'Restock batch received'}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-3 self-end sm:self-center">
+                                  <div className="text-right">
+                                    <span className="text-sm font-black font-mono text-emerald-600 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200 inline-block">
+                                      +{entry.quantity} {trackerModal.item.unit}
+                                    </span>
+                                    <span className="block text-[10px] text-slate-400 font-mono font-medium mt-0.5">
+                                      Cumulative: {entry.cumulative} {trackerModal.item.unit}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* VIEW 2: PULLOUT VIEW */}
+              {trackerModal.viewType === 'pullout' && (
+                <div className="space-y-4">
+                  <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-amber-900">Pull Out & Spoilage Audit Log</h4>
+                      <p className="text-xs text-amber-700 mt-0.5">
+                        Detailed timeline of expired items, damaged goods, or pull-outs for this product.
+                      </p>
+                    </div>
+                    <span className="text-base font-black font-mono text-amber-800 bg-white px-3 py-1.5 rounded-xl border border-amber-200 shadow-xs whitespace-nowrap self-start sm:self-auto">
+                      -{trackerModal.item.pullout} {trackerModal.item.unit} Pulled
+                    </span>
+                  </div>
+
+                  {trackerModal.item.pullouts_list.length === 0 ? (
+                    <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                      <CheckCircle2 size={36} className="mx-auto mb-2 text-emerald-500 opacity-60" />
+                      <p className="text-sm font-semibold text-slate-700">Clean record! No pull-outs, expired, or damaged items recorded.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {trackerModal.item.pullouts_list.map((entry, idx) => {
+                        const dateObj = new Date(entry.date);
+                        const formattedDate = dateObj.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        });
+                        const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        });
+
+                        return (
+                          <div key={entry.id || idx} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:border-amber-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-black text-slate-900 font-mono">
+                                  📅 {formattedDate}
+                                </span>
+                                <span className="text-[11px] text-slate-400 font-mono">
+                                  • {formattedTime}
+                                </span>
+                                <span className={cn(
+                                  "text-[10px] font-black uppercase px-2 py-0.5 rounded-md",
+                                  entry.reason === 'Expired' ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
+                                )}>
+                                  {entry.reason}
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium text-slate-800">
+                                {entry.remarks}
+                              </p>
+                            </div>
+
+                            <div className="text-right self-end sm:self-center">
+                              <span className="text-sm font-black font-mono text-rose-600 bg-rose-50 px-3 py-1 rounded-xl border border-rose-200 inline-block">
+                                -{entry.quantity} {trackerModal.item.unit}
+                              </span>
+                              {entry.loss_value > 0 && (
+                                <span className="block text-[11px] text-slate-400 font-mono font-medium mt-0.5">
+                                  Loss: ₱{entry.loss_value.toFixed(2)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* VIEW 3: SALES ORDERS VIEW */}
+              {trackerModal.viewType === 'sold' && (
+                <div className="space-y-4">
+                  <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-blue-900">POS Sales Orders Breakdown</h4>
+                      <p className="text-xs text-blue-700 mt-0.5">
+                        Complete list of sales orders and receipts that deducted this item.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-base font-black font-mono text-blue-800 bg-white px-3 py-1.5 rounded-xl border border-blue-200 shadow-xs whitespace-nowrap self-start sm:self-auto">
+                        {trackerModal.item.sold} {trackerModal.item.unit} Sold
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quick search by order number */}
+                  <div className="relative">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search by order number (e.g. 917, 801)..."
+                      value={trackerModal.searchQuery}
+                      onChange={(e) => setTrackerModal(prev => ({ ...prev, searchQuery: e.target.value }))}
+                      className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  {(() => {
+                    const filteredSales = trackerModal.item.sales_list.filter(s =>
+                      !trackerModal.searchQuery ||
+                      s.order_number.toLowerCase().includes(trackerModal.searchQuery.toLowerCase()) ||
+                      s.remarks.toLowerCase().includes(trackerModal.searchQuery.toLowerCase())
+                    );
+
+                    if (filteredSales.length === 0) {
+                      return (
+                        <div className="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                          <Receipt size={36} className="mx-auto mb-2 opacity-40" />
+                          <p className="text-sm font-semibold">
+                            {trackerModal.searchQuery ? `No sales orders found matching "${trackerModal.searchQuery}"` : 'No sales orders recorded for this item in this period.'}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+                        <div className="overflow-x-auto max-h-[420px]">
+                          <table className="w-full text-left border-collapse text-xs">
+                            <thead className="bg-slate-50 border-b border-slate-100 sticky top-0 z-10 text-slate-500 font-bold uppercase tracking-wider">
+                              <tr>
+                                <th className="p-3 pl-4">Order Number</th>
+                                <th className="p-3">Date & Time</th>
+                                <th className="p-3 text-right">Qty Deducted</th>
+                                <th className="p-3 text-right">Revenue</th>
+                                <th className="p-3 pr-4">Remarks / Deduction Source</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 font-medium">
+                              {filteredSales.map((sale, idx) => {
+                                const dateObj = new Date(sale.date);
+                                const formattedDate = dateObj.toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                });
+                                const formattedTime = dateObj.toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
+
+                                return (
+                                  <tr key={sale.id || idx} className="hover:bg-blue-50/30 transition-colors">
+                                    <td className="p-3 pl-4 font-black">
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-mono text-xs">
+                                        <Receipt size={12} />
+                                        {sale.order_number}
+                                      </span>
+                                    </td>
+                                    <td className="p-3 text-slate-500 font-mono text-xs">
+                                      {formattedDate} <span className="text-slate-400 font-normal">{formattedTime}</span>
+                                    </td>
+                                    <td className="p-3 text-right font-black font-mono text-blue-700">
+                                      -{sale.quantity} {trackerModal.item.unit}
+                                    </td>
+                                    <td className="p-3 text-right font-mono font-bold text-slate-800">
+                                      {sale.total_price > 0 ? `₱${sale.total_price.toFixed(2)}` : '—'}
+                                    </td>
+                                    <td className="p-3 pr-4 text-slate-600 truncate max-w-xs" title={sale.remarks}>
+                                      {sale.remarks}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="text-slate-500 font-medium">
+                Reconciliation: <span className="font-mono text-slate-800 font-bold">Start ({trackerModal.item.start})</span> + <span className="font-mono text-emerald-700 font-bold">Add-ons (+{trackerModal.item.addons})</span> - <span className="font-mono text-amber-700 font-bold">Pull out (-{trackerModal.item.pullout})</span> - <span className="font-mono text-blue-700 font-bold">Sold (-{trackerModal.item.sold})</span> = <span className="font-mono text-slate-900 font-black">Current ({trackerModal.item.current} {trackerModal.item.unit})</span>
+              </div>
+              <button
+                onClick={() => setTrackerModal(prev => ({ ...prev, isOpen: false, item: null }))}
+                className="px-5 py-2 bg-slate-900 text-white rounded-xl font-bold uppercase tracking-wider text-xs hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

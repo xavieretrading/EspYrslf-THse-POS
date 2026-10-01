@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { connectQzTray, getQzPrinters, printHtmlViaQz } from '../lib/qzTrayClient';
 import { checkXpServiceHealth, printReceiptViaXpThermal } from '../lib/xpThermalClient';
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown, Lock, CheckCircle } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, CreditCard, Banknote, User, Percent, ShoppingCart, Eye, ExternalLink, Maximize, Minimize, Smartphone, Ticket, X, Gift, Clock, Filter, Calendar as CalendarIcon, ArrowRightLeft, RefreshCw, Printer, Check, Package, ChevronDown, Lock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../App';
 import { useBranch } from '../BranchContext';
@@ -263,6 +263,13 @@ export default function POS() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDivision, setSelectedDivision] = useState<'coffee' | 'laundry'>('coffee');
   const isLaundryBranch = activeBranch?.name?.toLowerCase().includes('laundry') || activeBranch?.name?.toLowerCase().includes('s1p') || activeBranch?.name?.toLowerCase().includes('spin');
+  const isLaundryOnlyBranch = isLaundryBranch && (activeBranch?.name?.toLowerCase().includes('mandaue') || activeBranch?.name?.toLowerCase().includes('laundry only'));
+
+  useEffect(() => {
+    if (isLaundryOnlyBranch) {
+      setSelectedDivision('laundry');
+    }
+  }, [isLaundryOnlyBranch, activeBranch?.id]);
 
   // Laundry POS Redesigned Form States
   const [laundryCustomerName, setLaundryCustomerName] = useState('');
@@ -413,6 +420,17 @@ export default function POS() {
   const [expandedCartItemId, setExpandedCartItemId] = useState<string | number | null>(null);
 
   const [activeOrderId, setActiveOrderId] = useState<number | null>(null);
+  const [activeOrderCreatedAt, setActiveOrderCreatedAt] = useState<string | null>(null);
+
+  const isPastDate = (dateVal: string | Date | null | undefined): boolean => {
+    if (!dateVal) return false;
+    const manilaOffset = 8 * 60 * 60 * 1000;
+    const todayStr = new Date(Date.now() + manilaOffset).toISOString().split('T')[0];
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return false;
+    const dateStr = new Date(d.getTime() + manilaOffset).toISOString().split('T')[0];
+    return dateStr !== '' && dateStr < todayStr;
+  };
   const [showComplimentaryModal, setShowComplimentaryModal] = useState(false);
   const [complimentaryItemIdx, setComplimentaryItemIdx] = useState<number | null>(null);
   const [compData, setCompData] = useState({ recipient: '', authorizedBy: '', server: '', slipNumber: '' });
@@ -625,6 +643,7 @@ export default function POS() {
       if (orderIdParam) {
         fetch(`/api/orders/${orderIdParam}`).then(res => res.json()).then(order => {
           setActiveOrderId(order.id);
+          setActiveOrderCreatedAt(order.created_at);
           setOrderType(order.table_id ? 'dine-in' : 'takeout');
           if (order.table_id) {
             const tb = t.find((tbl: any) => tbl.id === order.table_id);
@@ -673,7 +692,7 @@ export default function POS() {
   }, [activeBranch, location.search, branches]);
 
   const filteredProducts = products.filter(p => {
-    const isSellable = (p as any).is_sellable !== 0;
+    const isSellable = (p as any).is_sellable !== 0 && (p as any).is_active !== 0;
     const matchesDivision = !isLaundryBranch || p.division === selectedDivision;
     const matchesCategory = selectedCategory === 'All' || p.category_name === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -975,11 +994,15 @@ export default function POS() {
   const vatAmount = cartCalculations.vatAmount;
   const serviceChargeAmount = cartCalculations.serviceChargeAmount;
   const total = cartCalculations.total;
-  const change = parseFloat(amountTendered) - total;
+  const change = !isNaN(parseFloat(amountTendered))
+    ? Math.max(0, Math.round(((parseFloat(amountTendered) || 0) - total) * 100) / 100)
+    : 0;
 
   const [customServices, setCustomServices] = useState<any[]>([]);
   const laundryServices = [
     ...products.filter(p => {
+      const isSellable = (p as any).is_sellable !== 0 && (p as any).is_active !== 0;
+      if (!isSellable) return false;
       const div = p.division?.toLowerCase() || '';
       const cat = p.category_name?.toLowerCase() || '';
       const isAddonCat = ['detergents & additives', 'add on', 'add-on', 'supplies', 'detergents', 'additives'].includes(cat);
@@ -1379,10 +1402,11 @@ export default function POS() {
       }
     });
 
-    const grandTotal = subtotalCost + addonTotal - laundryDiscountAmount;
+    const grandTotal = Math.round((subtotalCost + addonTotal - laundryDiscountAmount + Number.EPSILON) * 100) / 100;
 
-    const cashRec = parseFloat(laundryCashReceived) || 0;
-    if (payImmediately && laundryPaymentMethod === 'cash' && cashRec < grandTotal) {
+    const rawCashRec = parseFloat(laundryCashReceived) || 0;
+    const cashRec = Math.round((rawCashRec + Number.EPSILON) * 100) / 100;
+    if (payImmediately && laundryPaymentMethod === 'cash' && (grandTotal - cashRec) > 0.009) {
       swalAlert('Invalid Payment', 'Cash received is less than grand total amount', 'error');
       setIsProcessingPayment(false);
       return;
@@ -1444,7 +1468,8 @@ export default function POS() {
 
       const laundryDetails = {
         is_laundry: true,
-        company_name: settings?.company_name || 'SIP & SPIN LAUNDRY SHOP',
+        company_name: activeBranch?.name || settings?.company_name || 'S1P & SPIN LAUNDRY SHOP',
+        branch_address: activeBranch?.address || 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City',
         customer_name: laundryCustomerName,
         phone: laundryPhone,
         service_name: activeList.length > 0 ? activeList.map(item => item.name).join(', ') : 'Supplies & Add-ons Only',
@@ -1879,6 +1904,7 @@ export default function POS() {
     isProcessingPayRef.current = true;
     if (!activeOrderId) {
       swalAlert('No Active Order', 'Please place the order first', 'warning');
+      isProcessingPayRef.current = false;
       return;
     }
 
@@ -1892,13 +1918,38 @@ export default function POS() {
         `You have ${unsavedItems.length} item(s) not yet saved to the order.\n\nPlease press "Place Order" first to save them before proceeding to payment.`,
         'warning'
       );
+      isProcessingPayRef.current = false;
       return;
     }
 
-    if (parseFloat(amountTendered) < total || isNaN(parseFloat(amountTendered))) {
-      swalAlert('Invalid Amount', 'Insufficient amount tendered', 'error');
-      return;
+    const roundedTotal = Math.round((total + Number.EPSILON) * 100) / 100;
+    const rawTendered = parseFloat(amountTendered);
+    const tenderedNum = !isNaN(rawTendered) ? Math.round((rawTendered + Number.EPSILON) * 100) / 100 : NaN;
+    
+    // For non-cash payments (GCash, Card, Bank, etc.), default to exact roundedTotal if left blank or 0
+    const finalAmountTendered = (paymentMethod !== 'cash')
+      ? (!isNaN(tenderedNum) && tenderedNum > 0 ? tenderedNum : roundedTotal)
+      : (!isNaN(tenderedNum) ? tenderedNum : NaN);
+
+    if (paymentMethod === 'cash') {
+      if (isNaN(finalAmountTendered) || (finalAmountTendered < roundedTotal && (roundedTotal - finalAmountTendered) > 0.009)) {
+        swalAlert('Invalid Amount', 'Insufficient amount tendered', 'error');
+        isProcessingPayRef.current = false;
+        return;
+      }
+    } else {
+      // Non-cash (GCash, Credit Card, Bank Transfer, Voucher, Store Credit):
+      // Only error if user explicitly entered an amount that is less than roundedTotal (allowing for centavo precision)
+      if (!isNaN(tenderedNum) && tenderedNum > 0 && (roundedTotal - tenderedNum) > 0.009) {
+        swalAlert('Invalid Amount', 'Insufficient amount tendered', 'error');
+        isProcessingPayRef.current = false;
+        return;
+      }
     }
+
+    const finalChange = (paymentMethod === 'cash')
+      ? Math.max(0, Math.round((finalAmountTendered - roundedTotal) * 100) / 100)
+      : 0;
 
     setIsProcessingPayment(true);
     try {
@@ -1912,8 +1963,8 @@ export default function POS() {
           service_charge: serviceChargeAmount,
           total: total,
           payment_method: paymentMethod,
-          amount_tendered: parseFloat(amountTendered) || total,
-          change: change,
+          amount_tendered: finalAmountTendered,
+          change: finalChange,
           reference_number: referenceNumber,
           discount_customer_name: discountCustomerName || null,
           discount_customer_id_no: discountCustomerIdNo || null,
@@ -1952,6 +2003,8 @@ export default function POS() {
           cashier_name: cashierName,
           paxCount: paxCount,
           discountPaxCount: discountPaxCount,
+          original_order_date: activeOrderCreatedAt || receipt.created_at,
+          paid_at: new Date().toISOString(),
           discount_customer_name: discountCustomerName || null,
           discount_customer_id_no: discountCustomerIdNo || null,
           discount_customer_tin: discountCustomerTin || null,
@@ -1978,6 +2031,7 @@ export default function POS() {
         setDiscountChildAge('');
         setBankInput('');
         setActiveOrderId(null);
+        setActiveOrderCreatedAt(null);
         fetch(`/api/tables?branch_id=${activeBranch?.id}`).then(res => res.json()).then(setTables);
       } else {
         let errMsg = 'Unknown error';
@@ -2823,6 +2877,8 @@ export default function POS() {
                       {/* Dynamic Detergent Additives */}
                       {products
                         .filter(p => {
+                          const isSellable = (p as any).is_sellable !== 0 && (p as any).is_active !== 0;
+                          if (!isSellable) return false;
                           const cat = (p.category_name || '').toLowerCase();
                           return cat === 'detergents & additives' || cat === 'add on' || cat === 'add-on' || cat === 'supplies' || cat === 'detergents' || cat === 'additives';
                         })
@@ -3192,8 +3248,8 @@ export default function POS() {
               </div>
             </div>
 
-            {/* Division Selector Toggle for Laundry hybrid branch */}
-            {isLaundryBranch && (
+            {/* Division Selector Toggle for Laundry hybrid branch (hidden on Laundry-only branches like Mandaue) */}
+            {isLaundryBranch && !isLaundryOnlyBranch && (
               <div className="p-3 bg-slate-50 border-b border-slate-100 flex gap-2 flex-shrink-0 font-sans">
                 <button
                   onClick={() => {
@@ -3246,6 +3302,7 @@ export default function POS() {
                   return products.some(p =>
                     p.category_name === c.name &&
                     (p as any).is_sellable !== 0 &&
+                    (p as any).is_active !== 0 &&
                     (!isLaundryBranch || p.division === selectedDivision)
                   );
                 }).map(c => (
@@ -3863,6 +3920,19 @@ export default function POS() {
 
                 {activeOrderId ? (
                   <div className="space-y-3 pt-4 border-t border-slate-200">
+                    {activeOrderId && activeOrderCreatedAt && isPastDate(activeOrderCreatedAt) && (
+                      <div className="p-3.5 bg-red-50 border-2 border-red-500 rounded-xl text-red-900 shadow-sm animate-pulse mb-3">
+                        <div className="flex items-center gap-1.5 font-black uppercase text-red-700 text-xs mb-1">
+                          <AlertTriangle size={16} /> Settling Past Open Order #{activeOrderId}
+                        </div>
+                        <p className="text-[11px] text-red-800 leading-snug">
+                          Originally placed on <strong>{new Date(activeOrderCreatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(activeOrderCreatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>.
+                        </p>
+                        <p className="text-[11px] font-semibold text-emerald-800 mt-1">
+                          Payment will be recorded today ({new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}).
+                        </p>
+                      </div>
+                    )}
                     {cart.some(c => !c._isSaved) && (
                       <button
                         onClick={handlePlaceOrder}
@@ -3882,7 +3952,12 @@ export default function POS() {
                         <div className="grid grid-cols-2 gap-2 mb-3">
                           <button
                             type="button"
-                            onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
+                            onClick={() => {
+                              setPaymentMethod('cash');
+                              setReferenceNumber('');
+                              setAmountTendered('');
+                              setSelectedStoreCredit(null);
+                            }}
                             className={cn(
                               "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
                               paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -3897,6 +3972,7 @@ export default function POS() {
                               const defaultBank = bankInput || customBanks[0] || 'GCash';
                               setBankInput(defaultBank);
                               setPaymentMethod(defaultBank);
+                              setAmountTendered(total > 0 ? total.toFixed(2) : '');
                               setSelectedStoreCredit(null);
                             }}
                             className={cn(
@@ -3912,7 +3988,12 @@ export default function POS() {
                         <div className="grid grid-cols-3 gap-2 mb-3">
                           <button
                             type="button"
-                            onClick={() => { setPaymentMethod('cash'); setReferenceNumber(''); setSelectedStoreCredit(null); }}
+                            onClick={() => {
+                              setPaymentMethod('cash');
+                              setReferenceNumber('');
+                              setAmountTendered('');
+                              setSelectedStoreCredit(null);
+                            }}
                             className={cn(
                               "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
                               paymentMethod === 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -3923,7 +4004,11 @@ export default function POS() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setPaymentMethod('gcash'); setSelectedStoreCredit(null); }}
+                            onClick={() => {
+                              setPaymentMethod('gcash');
+                              setAmountTendered(total > 0 ? total.toFixed(2) : '');
+                              setSelectedStoreCredit(null);
+                            }}
                             className={cn(
                               "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
                               paymentMethod === 'gcash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -3934,7 +4019,11 @@ export default function POS() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setPaymentMethod('rcbc'); setSelectedStoreCredit(null); }}
+                            onClick={() => {
+                              setPaymentMethod('rcbc');
+                              setAmountTendered(total > 0 ? total.toFixed(2) : '');
+                              setSelectedStoreCredit(null);
+                            }}
                             className={cn(
                               "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
                               paymentMethod === 'rcbc' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
@@ -4144,11 +4233,9 @@ export default function POS() {
 
                         {/* Company Details */}
                         <div className="text-center section-block">
-                          <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || 'SIP & SPIN LAUNDRY SHOP'}</p>
+                          <p className="company-name font-black text-sm uppercase">{laundryDetails.company_name || activeBranch?.name || 'S1P & SPIN LAUNDRY SHOP'}</p>
                           <p className="text-[9.5pt]">
-                            {activeBranch?.name?.toLowerCase().includes('spin')
-                              ? activeBranch.address
-                              : 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City'}
+                            {activeBranch?.address || laundryDetails.branch_address || 'De Sylca 1 Building, Tigatto Road, Buhangin, Davao City'}
                           </p>
                           {/* <p className="text-[9.5pt] hidden">TIN: {settings?.tin || '899-352-898-00000'}</p> */}
                         </div>
@@ -4162,12 +4249,17 @@ export default function POS() {
                         <div className="section-block pt-1 font-mono text-[9.5pt]">
                           <div className="flex justify-between row-item">
                             <span>Order: #{(receiptData.order_number || receiptData.receipt_number || receiptData.id).toString().padStart(6, '0')}</span>
-                            <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
+                            <span className="text-right">Date: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                           </div>
                           <div className="flex justify-between row-item">
-                            <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
+                            <span>Time: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
                             <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                           </div>
+                          {receiptData.status === 'paid' && isPastDate(receiptData.created_at) && (
+                            <div className="text-[8.5pt] text-slate-700 italic text-center border-t border-dotted border-black pt-1 mt-1 font-sans">
+                              Orig. Ordered: {new Date(receiptData.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })} {new Date(receiptData.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}
+                            </div>
+                          )}
                         </div>
 
                         <div className="section-block border-t border-dashed border-black pt-1.5 mt-1.5 font-mono text-[9.5pt] space-y-0.5">
@@ -4325,12 +4417,17 @@ export default function POS() {
                       <div className="section-block pt-1 text-[9.5pt]">
                         <div className="flex justify-between row-item">
                           <span>Order: #{(receiptData.order_number || receiptData.id).toString().padStart(6, '0')}</span>
-                          <span className="text-right">Date: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
+                          <span className="text-right">Date: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })}</span>
                         </div>
                         <div className="flex justify-between row-item">
-                          <span>Time: {new Date(receiptData.created_at || receiptData.updated_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
+                          <span>Time: {new Date(receiptData.status === 'paid' && (receiptData.paid_at || receiptData.updated_at) ? (receiptData.paid_at || receiptData.updated_at) : (receiptData.created_at || Date.now())).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}</span>
                           <span className="text-right truncate max-w-[50%]">Cashier: {receiptData.cashier_name || 'Staff'}</span>
                         </div>
+                        {receiptData.status === 'paid' && isPastDate(receiptData.created_at) && (
+                          <div className="text-[8.5pt] text-slate-700 italic text-center border-t border-dotted border-black pt-1 mt-1">
+                            Orig. Ordered: {new Date(receiptData.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'Asia/Manila' })} {new Date(receiptData.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Manila' })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Receipt Items list */}

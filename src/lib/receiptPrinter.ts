@@ -7,7 +7,7 @@ export const RECEIPT_PRINT_STYLES = `
     *, *::before, *::after {
       box-sizing: border-box !important;
     }
-    html, body { 
+    html, body {  
       margin: 0 !important; 
       padding: 0 !important;
       background-color: #ffffff !important;

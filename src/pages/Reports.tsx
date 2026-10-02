@@ -8,6 +8,7 @@ import * as XLSX from 'xlsx';
 
 import { logActivity } from '../lib/audit';
 import { swalAlert } from '../lib/swal';
+import { getPaymentSplits, getCashPortion, formatPaymentLabel } from '../lib/paymentSplits';
 
 type ReportType = 'Z' | 'Y' | 'X' | 'BIR_SALES_SUMMARY' | 'SENIOR_CITIZEN' | 'PWD' | 'NATIONAL_ATHLETES' | 'SOLO_PARENT' | 'MEDAL_OF_VALOR' | 'REGULAR_DISCOUNT' | 'EJOURNAL' | 'VOUCHER_PAYMENTS' | 'VOUCHER_REDEMPTIONS' | 'COMPLIMENTARY' | 'VOIDED' | 'INVENTORY_STOCKS';
 
@@ -921,7 +922,7 @@ export default function Reports() {
       let shiftCash = 0;
       if (s.orders) {
         s.orders.forEach((o: any) => {
-          if ((o.payment_method || 'CASH').toUpperCase() === 'CASH') shiftCash += (o.total || 0);
+          shiftCash += getCashPortion(o);
         });
       }
       const expectedCash = (s.cash_in || 0) + shiftCash;
@@ -2259,7 +2260,7 @@ export default function Reports() {
                     </div>
                   </td>
                   <td className="p-1.5 sm:p-2 border border-slate-200 print:border-black font-mono break-all font-bold">
-                    {t.payment_method?.toUpperCase()}
+                    {formatPaymentLabel(t)}
                   </td>
                   <td className="p-1.5 sm:p-2 border border-slate-200 print:border-black break-words max-w-[120px]">
                     {t.items?.map((item: any, idx: number) => (
@@ -2312,7 +2313,10 @@ export default function Reports() {
         if (pm === 'VOUCHER') {
           paymentGroup[pm] = (paymentGroup[pm] || 0) + (pointsSum || o.total || 0);
         } else {
-          paymentGroup[pm] = (paymentGroup[pm] || 0) + (o.total || 0);
+          getPaymentSplits(o).forEach(sp => {
+            const key = sp.method.toUpperCase();
+            paymentGroup[key] = (paymentGroup[key] || 0) + sp.amount;
+          });
         }
       });
     }
@@ -2443,7 +2447,7 @@ export default function Reports() {
                   <span className="text-[9px] text-slate-400">({format(new Date(o.updated_at), 'hh:mm a')})</span>
                 </div>
                 <div>
-                  <span className="text-[9px] bg-slate-100 px-1 py-0.2 rounded font-bold mr-1 print:bg-transparent">{o.payment_method}</span>
+                  <span className="text-[9px] bg-slate-100 px-1 py-0.2 rounded font-bold mr-1 print:bg-transparent">{formatPaymentLabel(o)}</span>
                   {o.payment_method?.toUpperCase() === 'VOUCHER' ? (
                     `${o.order_items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
                   ) : (
@@ -2515,7 +2519,10 @@ export default function Reports() {
                     if (pm === 'VOUCHER') {
                       paymentGroup[pm] = (paymentGroup[pm] || 0) + (pointsSum || o.total || 0);
                     } else {
-                      paymentGroup[pm] = (paymentGroup[pm] || 0) + (o.total || 0);
+                      getPaymentSplits(o).forEach(sp => {
+                        const key = sp.method.toUpperCase();
+                        paymentGroup[key] = (paymentGroup[key] || 0) + sp.amount;
+                      });
                     }
                   });
                 }
@@ -2650,7 +2657,7 @@ export default function Reports() {
                                           <span className="text-[9px] text-slate-400">({format(new Date(o.updated_at), 'hh:mm a')})</span>
                                         </div>
                                         <div className="shrink-0 font-semibold text-slate-600">
-                                          <span className="text-[9px] bg-slate-200 text-slate-500 px-1 py-0.2 rounded font-bold mr-1.5 uppercase">{o.payment_method}</span>
+                                          <span className="text-[9px] bg-slate-200 text-slate-500 px-1 py-0.2 rounded font-bold mr-1.5 uppercase">{formatPaymentLabel(o)}</span>
                                           {o.payment_method?.toUpperCase() === 'VOUCHER' ? (
                                             `${o.order_items?.reduce((sum: number, item: any) => sum + (item.points_used || 0) * (item.quantity || 1), 0) || 0} PTS`
                                           ) : (

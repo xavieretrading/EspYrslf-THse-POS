@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { getPaymentSplits, getCashPortion, SPLIT_REF_PREFIX } from './src/lib/paymentSplits';
 
 // Set system timezone
 process.env.TZ = 'Asia/Manila';
@@ -976,12 +977,9 @@ app.post('/api/shifts/end', async (req, res) => {
               vatExemptSales += (o.subtotal || 0);
             }
 
-            const pm = (o.payment_method || 'cash').toLowerCase();
-            if (pm === 'cash') {
-              cashTotal += o.total || 0;
-            } else {
-              nonCashTotal += o.total || 0;
-            }
+            const cashPortion = getCashPortion(o);
+            cashTotal += cashPortion;
+            nonCashTotal += (o.total || 0) - cashPortion;
 
             const rNum = o.receipt_number || o.id;
             if (rNum) {
@@ -1987,10 +1985,51 @@ app.post('/api/orders/:id/pay', async (req, res) => {
     discount_customer_tin,
     discount_child_name,
     discount_child_birthdate,
-    discount_child_age
+    discount_child_age,
+    backdate_to, // Optional 'YYYY-MM-DDTHH:mm' (Manila time) — admin/developer only
+    user_id,
+    payment_splits // Required when payment_method === 'split': [{ method, amount, reference? }]
   } = req.body;
 
   try {
+    // 0. Backdated sale: verify role from the DB and resolve the sale timestamp
+    let backdateIso: string | null = null;
+    if (backdate_to) {
+      if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(backdate_to)) {
+        return res.status(400).json({ error: 'Invalid backdate format' });
+      }
+      const backdate = new Date(`${backdate_to}:00+08:00`);
+      if (isNaN(backdate.getTime()) || backdate.getTime() > Date.now()) {
+        return res.status(400).json({ error: 'Backdate cannot be in the future' });
+      }
+      const { data: actingUser } = await supabase.from('users_espresso').select('role').eq('id', user_id).single();
+      if (!actingUser || !['admin', 'developer'].includes(actingUser.role)) {
+        return res.status(403).json({ error: 'Only admin or developer can record a sale on a past date' });
+      }
+      backdateIso = backdate.toISOString();
+    }
+    const saleTimestamp = backdateIso || new Date().toISOString();
+
+    // Split payment: portions must be positive and add up to the order total
+    let splits: any[] | null = null;
+    if (payment_method === 'split') {
+      if (!Array.isArray(payment_splits) || payment_splits.length < 2) {
+        return res.status(400).json({ error: 'Split payment needs at least two payment methods' });
+      }
+      splits = payment_splits.map((sp: any) => ({
+        method: String(sp.method || '').toLowerCase(),
+        amount: Math.round((Number(sp.amount) || 0) * 100) / 100,
+        reference: sp.reference || null
+      }));
+      if (splits.some(sp => !sp.method || sp.amount <= 0)) {
+        return res.status(400).json({ error: 'Each split payment must have a method and an amount greater than zero' });
+      }
+      const splitSum = splits.reduce((sum, sp) => sum + sp.amount, 0);
+      if (Math.abs(splitSum - Number(total || 0)) > 0.009) {
+        return res.status(400).json({ error: `Split amounts (₱${splitSum.toFixed(2)}) must equal the total (₱${Number(total || 0).toFixed(2)})` });
+      }
+    }
+
     // 1. Fetch order branch info & precalculate receipt number in parallel
     const { data: orderOriginal } = await supabase.from('orders_espresso').select('branch_id, table_id').eq('id', orderId).single();
     const branchId = orderOriginal?.branch_id || 1;
@@ -2014,10 +2053,22 @@ app.post('/api/orders/:id/pay', async (req, res) => {
       discount_child_birthdate: discount_child_birthdate || null,
       discount_child_age: discount_child_age !== undefined && discount_child_age !== '' ? Number(discount_child_age) : null,
       reference_number: reference_number || null,
-      updated_at: new Date().toISOString()
+      updated_at: saleTimestamp
     };
+    // Reports bucket sales by updated_at || created_at, so move both to the chosen date
+    if (backdateIso) updatePayload.created_at = backdateIso;
+    if (splits) updatePayload.payment_splits = splits;
 
     let { error } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+
+    if (error && splits && error.message.includes('payment_splits')) {
+      // Column not migrated yet (add-payment-splits-column.sql): keep the breakdown in reference_number
+      console.warn('[Pay] payment_splits column missing — storing split breakdown in reference_number. Run add-payment-splits-column.sql');
+      delete updatePayload.payment_splits;
+      updatePayload.reference_number = SPLIT_REF_PREFIX + JSON.stringify(splits);
+      const { error: retryError } = await supabase.from('orders_espresso').update(updatePayload).eq('id', orderId);
+      error = retryError;
+    }
 
     if (error && (error.message.includes("'service_charge' column") || error.message.includes("column \"service_charge\""))) {
       delete updatePayload.service_charge;
@@ -2102,7 +2153,8 @@ app.post('/api/orders/:id/pay', async (req, res) => {
           };
         }),
         discount_name: discountName,
-        reference_number: reference_number
+        reference_number: reference_number,
+        ...(splits ? { payment_splits: splits } : {})
       }
     });
 
@@ -2162,7 +2214,8 @@ app.post('/api/orders/:id/pay', async (req, res) => {
               product_id: item.product_id,
               type: 'out',
               quantity: item.quantity,
-              remarks: `Sales Order #${orderId}`
+              remarks: `Sales Order #${orderId}`,
+              ...(backdateIso ? { created_at: backdateIso } : {})
             }]);
 
             // 2. Fetch and deduct recipe ingredients if defined
@@ -2188,7 +2241,8 @@ app.post('/api/orders/:id/pay', async (req, res) => {
                   product_id: recItem.ingredient_id,
                   type: 'out',
                   quantity: deductQty,
-                  remarks: `Recipe usage for Order #${orderId} (${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : '')
+                  remarks: `Recipe usage for Order #${orderId} (${product?.name || 'Item'})` + (factor !== 1.0 ? ` (Sugar: ${(factor * 100).toFixed(0)}%)` : ''),
+                  ...(backdateIso ? { created_at: backdateIso } : {})
                 }]);
               }
             }
@@ -3532,10 +3586,12 @@ app.get('/api/reports/sales', async (req, res) => {
       vatable_sales += ((o.subtotal || 0) - (o.discount_amount || 0));
     }
 
-    const payMethod = (o.payment_method || 'cash').toLowerCase();
-    if (!paymentStats[payMethod]) paymentStats[payMethod] = { amount: 0, count: 0 };
-    paymentStats[payMethod].amount += o.total;
-    paymentStats[payMethod].count += 1;
+    // Split payments count toward each method they used (e.g. cash ₱50 + gcash ₱50)
+    getPaymentSplits(o).forEach(sp => {
+      if (!paymentStats[sp.method]) paymentStats[sp.method] = { amount: 0, count: 0 };
+      paymentStats[sp.method].amount += sp.amount;
+      paymentStats[sp.method].count += 1;
+    });
 
     const currentOR = o.receipt_number || o.id;
     if (!min_or || currentOR < min_or) min_or = currentOR;
@@ -3575,11 +3631,9 @@ app.get('/api/reports/sales', async (req, res) => {
       voided_vouchers_total_pts += o.voucher_points_sum || 0;
     } else {
       total_voided_amount += o.total || 0;
-      if (pm === 'CASH') {
-        voided_cash_total += o.total || 0;
-      } else {
-        voided_card_total += o.total || 0;
-      }
+      const voidedCash = getCashPortion(o);
+      voided_cash_total += voidedCash;
+      voided_card_total += (o.total || 0) - voidedCash;
     }
   });
 

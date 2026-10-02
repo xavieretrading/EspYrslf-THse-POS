@@ -9,6 +9,7 @@ import { useBranch } from '../BranchContext';
 import { useSettings } from '../SettingsContext';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
+import { getCashPortion, formatPaymentLabel, getDisplayReference } from '../lib/paymentSplits';
 import Swal from 'sweetalert2';
 import BarbershopView from '../components/barbershop/BarbershopView';
 import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
@@ -398,7 +399,14 @@ export default function POS() {
   const [discountPaxCount, setDiscountPaxCount] = useState<number>(1);
   const [manualCafeDiscountPercent, setManualCafeDiscountPercent] = useState<number>(0);
   const [amountTendered, setAmountTendered] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'gcash' | 'rcbc' | 'voucher' | 'store_credit'>('cash');
+  // Admin/developer only: record the sale on a past date instead of today
+  const [backdateEnabled, setBackdateEnabled] = useState(false);
+  const [backdateDate, setBackdateDate] = useState('');
+  const [backdateTime, setBackdateTime] = useState('12:00');
+  // Split payment: cash portion + the rest on splitOtherMethod (e.g. GCash)
+  const [splitCashAmount, setSplitCashAmount] = useState<string>('');
+  const [splitOtherMethod, setSplitOtherMethod] = useState<string>('gcash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit_card' | 'gcash' | 'rcbc' | 'voucher' | 'store_credit' | 'split'>('cash');
   const [referenceNumber, setReferenceNumber] = useState('');
   const [storeCreditQuery, setStoreCreditQuery] = useState('');
   const [storeCreditsList, setStoreCreditsList] = useState<any[]>([]);
@@ -994,8 +1002,9 @@ export default function POS() {
   const vatAmount = cartCalculations.vatAmount;
   const serviceChargeAmount = cartCalculations.serviceChargeAmount;
   const total = cartCalculations.total;
+  const canBackdate = currentUser?.role === 'admin' || currentUser?.role === 'developer';
   const change = !isNaN(parseFloat(amountTendered))
-    ? Math.max(0, Math.round(((parseFloat(amountTendered) || 0) - total) * 100) / 100)
+    ? Math.max(0, Math.round(((parseFloat(amountTendered) || 0) - (paymentMethod === 'split' ? (parseFloat(splitCashAmount) || 0) : total)) * 100) / 100)
     : 0;
 
   const [customServices, setCustomServices] = useState<any[]>([]);
@@ -1926,12 +1935,38 @@ export default function POS() {
     const rawTendered = parseFloat(amountTendered);
     const tenderedNum = !isNaN(rawTendered) ? Math.round((rawTendered + Number.EPSILON) * 100) / 100 : NaN;
     
+    const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+    const isSplit = paymentMethod === 'split';
+    let splitsPayload: { method: string; amount: number; reference?: string | null }[] | null = null;
+    let splitCashReceived = 0;
+    let splitCashPortion = 0;
+
     // For non-cash payments (GCash, Card, Bank, etc.), default to exact roundedTotal if left blank or 0
-    const finalAmountTendered = (paymentMethod !== 'cash')
+    let finalAmountTendered = (paymentMethod !== 'cash')
       ? (!isNaN(tenderedNum) && tenderedNum > 0 ? tenderedNum : roundedTotal)
       : (!isNaN(tenderedNum) ? tenderedNum : NaN);
 
-    if (paymentMethod === 'cash') {
+    if (isSplit) {
+      // Split: part cash, rest on the selected e-wallet/bank. Amount Tendered = cash received (for change).
+      splitCashPortion = round2(parseFloat(splitCashAmount) || 0);
+      const otherPortion = round2(roundedTotal - splitCashPortion);
+      if (splitCashPortion <= 0 || otherPortion <= 0) {
+        swalAlert('Invalid Split', `Cash amount must be more than ₱0.00 and less than the total ₱${roundedTotal.toFixed(2)}`, 'error');
+        isProcessingPayRef.current = false;
+        return;
+      }
+      splitCashReceived = !isNaN(tenderedNum) && tenderedNum > 0 ? tenderedNum : splitCashPortion;
+      if ((splitCashPortion - splitCashReceived) > 0.009) {
+        swalAlert('Invalid Amount', `Cash received is less than the cash portion ₱${splitCashPortion.toFixed(2)}`, 'error');
+        isProcessingPayRef.current = false;
+        return;
+      }
+      splitsPayload = [
+        { method: 'cash', amount: splitCashPortion },
+        { method: splitOtherMethod, amount: otherPortion, reference: referenceNumber || null }
+      ];
+      finalAmountTendered = round2(splitCashReceived + otherPortion);
+    } else if (paymentMethod === 'cash') {
       if (isNaN(finalAmountTendered) || (finalAmountTendered < roundedTotal && (roundedTotal - finalAmountTendered) > 0.009)) {
         swalAlert('Invalid Amount', 'Insufficient amount tendered', 'error');
         isProcessingPayRef.current = false;
@@ -1949,7 +1984,25 @@ export default function POS() {
 
     const finalChange = (paymentMethod === 'cash')
       ? Math.max(0, Math.round((finalAmountTendered - roundedTotal) * 100) / 100)
-      : 0;
+      : isSplit
+        ? Math.max(0, round2(splitCashReceived - splitCashPortion))
+        : 0;
+
+    const backdateTo = canBackdate && backdateEnabled && backdateDate
+      ? `${backdateDate}T${backdateTime || '12:00'}`
+      : null;
+    if (backdateTo) {
+      if (new Date(`${backdateTo}:00+08:00`).getTime() > Date.now()) {
+        swalAlert('Invalid Date', 'The sale date cannot be in the future', 'error');
+        isProcessingPayRef.current = false;
+        return;
+      }
+      const ok = await swalConfirm(`Record this sale (₱${roundedTotal.toFixed(2)}) on ${backdateDate} ${backdateTime}? It will NOT appear in today's sales.`);
+      if (!ok) {
+        isProcessingPayRef.current = false;
+        return;
+      }
+    }
 
     setIsProcessingPayment(true);
     try {
@@ -1971,7 +2024,10 @@ export default function POS() {
           discount_customer_tin: discountCustomerTin || null,
           discount_child_name: discountChildName || null,
           discount_child_birthdate: discountChildBirthdate || null,
-          discount_child_age: discountChildAge || null
+          discount_child_age: discountChildAge || null,
+          backdate_to: backdateTo,
+          user_id: currentUser?.id || null,
+          payment_splits: splitsPayload
         })
       });
 
@@ -2004,7 +2060,7 @@ export default function POS() {
           paxCount: paxCount,
           discountPaxCount: discountPaxCount,
           original_order_date: activeOrderCreatedAt || receipt.created_at,
-          paid_at: new Date().toISOString(),
+          paid_at: backdateTo ? new Date(`${backdateTo}:00+08:00`).toISOString() : new Date().toISOString(),
           discount_customer_name: discountCustomerName || null,
           discount_customer_id_no: discountCustomerIdNo || null,
           discount_customer_tin: discountCustomerTin || null,
@@ -2014,6 +2070,9 @@ export default function POS() {
         });
 
         logActivity(activeUser?.full_name || activeUser?.username || 'Unknown', 'Checkout', `Completed Payment for Order #${activeOrderId}. Total: ₱${total.toFixed(2)}`);
+        if (backdateTo) {
+          logActivity(activeUser?.full_name || activeUser?.username || 'Unknown', 'Backdated Sale', `Order #${activeOrderId} (₱${total.toFixed(2)}) recorded on ${backdateDate} ${backdateTime}`);
+        }
 
         // We clear the POS state but let the user view/print the modal
         setCart([]);
@@ -2032,6 +2091,11 @@ export default function POS() {
         setBankInput('');
         setActiveOrderId(null);
         setActiveOrderCreatedAt(null);
+        setBackdateEnabled(false);
+        setSplitCashAmount('');
+        if (paymentMethod === 'split') setPaymentMethod('cash');
+        setBackdateDate('');
+        setBackdateTime('12:00');
         fetch(`/api/tables?branch_id=${activeBranch?.id}`).then(res => res.json()).then(setTables);
       } else {
         let errMsg = 'Unknown error';
@@ -2237,7 +2301,7 @@ export default function POS() {
           branchName: isL ? (activeBranch?.name || 'S1p and Sp1n Laundry Shop') : activeBranch?.name,
           address: branchAddr,
           tin: settings?.tin,
-          openDrawer: receiptData?.payment_method?.toLowerCase() === 'cash'
+          openDrawer: getCashPortion(receiptData) > 0
         });
         if (res.success) {
           swalAlert('Success', 'Receipt printed successfully via XP Thermal Service.', 'success');
@@ -3929,7 +3993,9 @@ export default function POS() {
                           Originally placed on <strong>{new Date(activeOrderCreatedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(activeOrderCreatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>.
                         </p>
                         <p className="text-[11px] font-semibold text-emerald-800 mt-1">
-                          Payment will be recorded today ({new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}).
+                          {backdateEnabled && backdateDate
+                            ? <>Payment will be recorded on {backdateDate} {backdateTime}.</>
+                            : <>Payment will be recorded today ({new Date().toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}).</>}
                         </p>
                       </div>
                     )}
@@ -3949,7 +4015,7 @@ export default function POS() {
                     <div>
                       <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Payment Method</label>
                       {isLaundryBranch ? (
-                        <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="grid grid-cols-3 gap-2 mb-3">
                           <button
                             type="button"
                             onClick={() => {
@@ -3977,15 +4043,32 @@ export default function POS() {
                             }}
                             className={cn(
                               "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
-                              paymentMethod !== 'cash' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                              paymentMethod !== 'cash' && paymentMethod !== 'split' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                             )}
                           >
                             <Smartphone size={18} />
                             <span className="text-[10px] font-bold mt-1">E-Wallet / Bank</span>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentMethod('split');
+                              setAmountTendered('');
+                              setSplitCashAmount('');
+                              setSplitOtherMethod(isLaundryBranch ? (customBanks[0] || 'GCash').toLowerCase() : 'gcash');
+                              setSelectedStoreCredit(null);
+                            }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'split' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <ArrowRightLeft size={18} />
+                            <span className="text-[10px] font-bold mt-1">Split</span>
+                          </button>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="grid grid-cols-4 gap-2 mb-3">
                           <button
                             type="button"
                             onClick={() => {
@@ -4032,10 +4115,72 @@ export default function POS() {
                             <Smartphone size={18} />
                             <span className="text-[10px] font-bold mt-1">RCBC</span>
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPaymentMethod('split');
+                              setAmountTendered('');
+                              setSplitCashAmount('');
+                              setSplitOtherMethod(isLaundryBranch ? (customBanks[0] || 'GCash').toLowerCase() : 'gcash');
+                              setSelectedStoreCredit(null);
+                            }}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-2 rounded-xl border transition-all",
+                              paymentMethod === 'split' ? "bg-emerald-500 text-white border-emerald-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                            )}
+                          >
+                            <ArrowRightLeft size={18} />
+                            <span className="text-[10px] font-bold mt-1">Split</span>
+                          </button>
                         </div>
                       )}
 
-                      {paymentMethod !== 'cash' && (
+                      {paymentMethod === 'split' && (() => {
+                        const cashPart = Math.round((parseFloat(splitCashAmount) || 0) * 100) / 100;
+                        const otherPart = Math.max(0, Math.round((total - cashPart) * 100) / 100);
+                        const otherOptions = isLaundryBranch
+                          ? Array.from(new Set([...customBanks, 'GCash'].map(b => b.toLowerCase())))
+                          : ['gcash', 'rcbc'];
+                        return (
+                          <div className="space-y-2 mb-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50/50">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Cash Amount</label>
+                                <input
+                                  type="number"
+                                  placeholder="0.00"
+                                  value={splitCashAmount}
+                                  onChange={(e) => setSplitCashAmount(e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none font-bold text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 block">Rest Paid Via</label>
+                                <select
+                                  value={splitOtherMethod}
+                                  onChange={(e) => setSplitOtherMethod(e.target.value)}
+                                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none font-bold text-sm uppercase"
+                                >
+                                  {otherOptions.map(m => <option key={m} value={m}>{m.toUpperCase()}</option>)}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex justify-between text-xs font-bold text-slate-700 px-1">
+                              <span>Cash ₱{cashPart.toFixed(2)}</span>
+                              <span>{splitOtherMethod.toUpperCase()} ₱{otherPart.toFixed(2)}</span>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder={`${splitOtherMethod.toUpperCase()} Reference Number`}
+                              value={referenceNumber}
+                              onChange={(e) => setReferenceNumber(e.target.value)}
+                              className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-sm"
+                            />
+                          </div>
+                        );
+                      })()}
+
+                      {paymentMethod !== 'cash' && paymentMethod !== 'split' && (
                         <div className="space-y-2 mb-3">
                           {isLaundryBranch && (
                             <div className="relative">
@@ -4090,11 +4235,59 @@ export default function POS() {
                       )}
                     </div>
 
+                    {canBackdate && (
+                      <div className={cn(
+                        "p-3 rounded-xl border",
+                        backdateEnabled ? "bg-amber-50 border-amber-300" : "bg-slate-50 border-slate-200"
+                      )}>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={backdateEnabled}
+                            onChange={(e) => {
+                              setBackdateEnabled(e.target.checked);
+                              if (e.target.checked && !backdateDate) {
+                                const y = getManilaDate();
+                                y.setDate(y.getDate() - 1);
+                                setBackdateDate(format(y, 'yyyy-MM-dd'));
+                              }
+                            }}
+                            className="w-4 h-4 accent-amber-500"
+                          />
+                          <CalendarIcon size={14} className="text-amber-600" />
+                          <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Record sale on a past date</span>
+                          <span className="ml-auto text-[9px] font-black text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">ADMIN</span>
+                        </label>
+                        {backdateEnabled && (
+                          <>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              <input
+                                type="date"
+                                value={backdateDate}
+                                max={format(getManilaDate(), 'yyyy-MM-dd')}
+                                onChange={(e) => setBackdateDate(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg font-bold text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                              />
+                              <input
+                                type="time"
+                                value={backdateTime}
+                                onChange={(e) => setBackdateTime(e.target.value)}
+                                className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg font-bold text-sm outline-none focus:ring-2 focus:ring-amber-200"
+                              />
+                            </div>
+                            <p className="text-[10px] text-amber-800 font-semibold mt-1.5 leading-snug">
+                              This sale and its inventory deduction will be recorded on the selected date, not today.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )}
+
                     <div className="relative">
                       <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                       <input
                         type="number"
-                        placeholder="Amount Tendered"
+                        placeholder={paymentMethod === 'split' ? 'Cash Received (for change)' : 'Amount Tendered'}
                         value={amountTendered}
                         onChange={(e) => setAmountTendered(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all outline-none font-bold text-lg"
@@ -4345,15 +4538,15 @@ export default function POS() {
                           </div>
                           <div className="flex justify-between row-item text-[9.5pt]">
                             <span>Payment Method:</span>
-                            <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
+                            <span className="uppercase font-bold">{formatPaymentLabel(receiptData)}</span>
                           </div>
-                          {receiptData.reference_number && (
+                          {getDisplayReference(receiptData) && (
                             <div className="flex justify-between row-item text-[9.5pt]">
                               <span>Ref No:</span>
-                              <span className="font-bold">{receiptData.reference_number}</span>
+                              <span className="font-bold">{getDisplayReference(receiptData)}</span>
                             </div>
                           )}
-                          {receiptData.payment_method?.toLowerCase() === 'cash' && (
+                          {getCashPortion(receiptData) > 0 && (
                             <>
                               <div className="flex justify-between row-item text-[9.5pt]">
                                 <span>Cash Received:</span>
@@ -4490,13 +4683,13 @@ export default function POS() {
                         {receiptData.status !== 'open' && (
                           <>
                             <div className="flex justify-between row-item text-[10.5pt]">
-                              <span>{receiptData.payment_method || 'CASH'}</span>
+                              <span>{formatPaymentLabel(receiptData)}</span>
                               <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
                             </div>
-                            {receiptData.reference_number && (
+                            {getDisplayReference(receiptData) && (
                               <div className="flex justify-between row-item text-[9.5pt] italic">
                                 <span>Ref No:</span>
-                                <span>{receiptData.reference_number}</span>
+                                <span>{getDisplayReference(receiptData)}</span>
                               </div>
                             )}
                             <div className="flex justify-between print-bold-text row-item font-bold text-[11.5pt]">

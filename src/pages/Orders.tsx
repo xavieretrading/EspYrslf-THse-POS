@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { cn } from '../App';
 import { logActivity } from '../lib/audit';
 import { swalAlert, swalConfirm } from '../lib/swal';
+import { getCashPortion, formatPaymentLabel, getDisplayReference } from '../lib/paymentSplits';
 import { ESPRESSO_RECEIPT_LOGO } from '../lib/espressoLogo';
 import { printReceiptViaBrowser, RECEIPT_PRINT_STYLES } from '../lib/receiptPrinter';
 
@@ -553,7 +554,7 @@ export default function Orders() {
           branchName: isL ? (activeBranch?.name || 'S1p and Sp1n Laundry Shop') : activeBranch?.name,
           address: branchAddr,
           tin: settings?.tin,
-          openDrawer: receiptData?.payment_method?.toLowerCase() === 'cash'
+          openDrawer: getCashPortion(receiptData) > 0
         });
         if (res.success) {
           swalAlert('Success', 'Receipt reprinted successfully via XP Thermal Service.', 'success');
@@ -1239,7 +1240,7 @@ export default function Orders() {
                     <div className="flex justify-between text-slate-500 text-sm">
                       <span>Payment Method</span>
                       <span className="font-bold text-slate-700 uppercase">
-                        {selectedOrder.payment_method}
+                        {formatPaymentLabel(selectedOrder)}
                         {selectedOrder.reference_number ? ` (Ref: ${selectedOrder.reference_number})` : ''}
                       </span>
                     </div>
@@ -1485,15 +1486,15 @@ export default function Orders() {
                           </div>
                           <div className="flex justify-between row-item text-[9.5pt]">
                             <span>Payment Method:</span>
-                            <span className="uppercase font-bold">{receiptData.payment_method || 'CASH'}</span>
+                            <span className="uppercase font-bold">{formatPaymentLabel(receiptData)}</span>
                           </div>
-                          {receiptData.reference_number && (
+                          {getDisplayReference(receiptData) && (
                             <div className="flex justify-between row-item text-[9.5pt]">
                               <span>Ref No:</span>
-                              <span className="font-bold">{receiptData.reference_number}</span>
+                              <span className="font-bold">{getDisplayReference(receiptData)}</span>
                             </div>
                           )}
-                          {receiptData.payment_method?.toLowerCase() === 'cash' && (
+                          {getCashPortion(receiptData) > 0 && (
                             <>
                               <div className="flex justify-between row-item text-[9.5pt]">
                                 <span>Cash Received:</span>
@@ -1619,13 +1620,13 @@ export default function Orders() {
                         {receiptData.status !== 'open' && (
                           <>
                             <div className="flex justify-between row-item text-[10.5pt]">
-                              <span>{receiptData.payment_method || 'CASH'}</span>
+                              <span>{formatPaymentLabel(receiptData)}</span>
                               <span>₱{(receiptData.amount_tendered || 0).toFixed(2)}</span>
                             </div>
-                            {receiptData.reference_number && (
+                            {getDisplayReference(receiptData) && (
                               <div className="flex justify-between row-item text-[9.5pt] italic">
                                 <span>Ref No:</span>
-                                <span>{receiptData.reference_number}</span>
+                                <span>{getDisplayReference(receiptData)}</span>
                               </div>
                             )}
                             <div className="flex justify-between print-bold-text row-item font-bold text-[11.5pt]">

@@ -1,3 +1,4 @@
+import { formatPaymentLabel, getCashPortion } from './paymentSplits';
 // src/lib/xpThermalClient.ts
 // Direct REST Client for XP Thermal Service (http://127.0.0.1:9100)
 
@@ -268,7 +269,7 @@ export async function printReceiptViaXpThermal(
         discount: discount,
         discountName: receiptData.discount_name ? receiptData.discount_name.replace(/₱/g, 'PHP ') : undefined,
         total: total,
-        paymentMethod: (receiptData.payment_method || 'CASH').toUpperCase(),
+        paymentMethod: formatPaymentLabel(receiptData, 'PHP '),
         amountPaid: Number(receiptData.amount_tendered || total),
         change: Number(receiptData.change || 0),
         customerName: receiptData.customer_name || undefined,
@@ -346,7 +347,7 @@ export async function printReceiptViaXpThermal(
         }
       },
       metadata: {
-        openCashDrawer: options.openDrawer ?? (receiptData.payment_method?.toLowerCase() === 'cash')
+        openCashDrawer: options.openDrawer ?? (getCashPortion(receiptData) > 0)
       }
     };
 

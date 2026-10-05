@@ -3,9 +3,10 @@ import crypto from 'crypto';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
-import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { getPaymentSplits, getCashPortion, SPLIT_REF_PREFIX } from './src/lib/paymentSplits';
+import { supabase } from './supabaseClient';
+import { createCustomerRouter } from './customer-api';
 
 // Set system timezone
 process.env.TZ = 'Asia/Manila';
@@ -46,9 +47,7 @@ function parseItemNotes(notes: string) {
 
 dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://aziowvhzfrmtrbypiodm.supabase.co';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6aW93dmh6ZnJtdHJieXBpb2RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MTQzMTgsImV4cCI6MjEwMDE5MDMxOH0.cCyA0z20cRfGotnzcatm-9AgZRXR0UEyW7SjGBo-HqQ';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Supabase client lives in supabaseClient.ts so the laundry customer API can share it
 
 // Helper to generate the next unique non-skipped tax-compliant receipt number
 async function generateNextReceiptNumber(orderId: string | number, branchId: string | number): Promise<number> {
@@ -282,6 +281,9 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// S1p & Sp1n Laundry customer app (Davao laundry branch only) — see customer-api.ts
+app.use('/api/customer', createCustomerRouter(supabase));
 
 // API Routes ---
 

@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import { getPaymentSplits, getCashPortion, SPLIT_REF_PREFIX } from './src/lib/paymentSplits';
 import { supabase } from './supabaseClient';
 import { createCustomerRouter } from './customer-api';
+import { createLaundryStaffRouter } from './laundry-staff-api';
 
 // Set system timezone
 process.env.TZ = 'Asia/Manila';
@@ -284,6 +285,8 @@ app.use((req, res, next) => {
 
 // S1p & Sp1n Laundry customer app (Davao laundry branch only) — see customer-api.ts
 app.use('/api/customer', createCustomerRouter(supabase));
+// Staff side for the POS "Laundry App" page — see laundry-staff-api.ts
+app.use('/api/laundry-staff', createLaundryStaffRouter(supabase));
 
 // API Routes ---
 

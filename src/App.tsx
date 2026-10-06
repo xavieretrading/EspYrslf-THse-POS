@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingCart, Coffee, Package, FileText, Settings as SettingsIcon, Database, MapPin, Store, LogOut, Ticket, Users, Menu, ChefHat, X } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Coffee, Package, FileText, Settings as SettingsIcon, Database, MapPin, Store, LogOut, Ticket, Users, Menu, ChefHat, X, Smartphone } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import Tables from './pages/Tables';
 import Branches from './pages/Branches';
 import Orders from './pages/Orders';
+import LaundryApp from './pages/LaundryApp';
 import Login from './pages/Login';
 import Vouchers from './pages/Vouchers';
 import UserManagement from './pages/UserManagement';
@@ -48,6 +49,7 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/pos', icon: ShoppingCart, label: 'POS' },
     { to: '/orders', icon: FileText, label: 'Orders' },
+    ...(isLaundryBranch ? [{ to: '/laundry-app', icon: Smartphone, label: 'Laundry App' }] : []),
     { to: '/inventory', icon: Package, label: 'Inventory' },
     { to: '/branches', icon: Store, label: 'Branches' },
     { to: '/reports', icon: FileText, label: 'Reports' },
@@ -68,8 +70,22 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
      
      // New object format
      const level = perms[link.to];
-     return level && level !== 'none';
+     return (level && level !== 'none') || (link.to === '/laundry-app' && canUseLaundryApp(activeUser));
   });
+
+  // Badge on "Laundry App": new pickup requests + unread customer messages
+  const [laundryBadge, setLaundryBadge] = React.useState(0);
+  React.useEffect(() => {
+    if (!isLaundryBranch) return;
+    const load = () =>
+      fetch('/api/laundry-staff/summary')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => d && setLaundryBadge((d.newPickups || 0) + (d.unreadMessages || 0)))
+        .catch(() => {});
+    load();
+    const t = setInterval(load, 20000);
+    return () => clearInterval(t);
+  }, [isLaundryBranch]);
 
   if (isLoading) return <div className="w-52 bg-slate-900 h-screen"></div>;
 
@@ -147,6 +163,9 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
                 >
                   <Icon size={16} />
                   <span className="text-xs font-medium">{link.label}</span>
+                  {link.to === '/laundry-app' && laundryBadge > 0 && (
+                    <span className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">{laundryBadge}</span>
+                  )}
                 </Link>
                 {/* POS Terminals Sub-menu */}
                 {link.to === '/pos' && isActive && terminals.length > 0 && (
@@ -203,6 +222,15 @@ function Sidebar({ activeUser, onLogout, isOpen, setIsOpen }: { activeUser: any,
       </div>
     </>
   );
+}
+
+/** Staff who can use the POS or Orders page can also use the Laundry App page (no new permission needed). */
+function canUseLaundryApp(user: any) {
+  if (!user) return false;
+  if (user.role === 'admin' || !user.permissions) return true;
+  const perms = user.permissions;
+  if (Array.isArray(perms)) return perms.some((p: string) => ['/laundry-app', '/pos', '/orders'].includes(p));
+  return ['/laundry-app', '/pos', '/orders'].some(k => perms[k] && perms[k] !== 'none');
 }
 
 function ProtectedRoute({ children, activeUser, path }: { children: React.ReactNode, activeUser: any, path: string }) {
@@ -418,6 +446,7 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
           <Route path="/" element={<ProtectedRoute activeUser={activeUser} path="/"><Dashboard /></ProtectedRoute>} />
           <Route path="/pos" element={<ProtectedRoute activeUser={activeUser} path="/pos"><POS /></ProtectedRoute>} />
           <Route path="/orders" element={<ProtectedRoute activeUser={activeUser} path="/orders"><Orders /></ProtectedRoute>} />
+          <Route path="/laundry-app" element={canUseLaundryApp(activeUser) ? <LaundryApp /> : <Navigate to="/" replace />} />
           <Route path="/kitchen" element={<ProtectedRoute activeUser={activeUser} path="/kitchen"><Kitchen /></ProtectedRoute>} />
           <Route path="/tables" element={<ProtectedRoute activeUser={activeUser} path="/tables"><Tables /></ProtectedRoute>} />
           <Route path="/inventory" element={<ProtectedRoute activeUser={activeUser} path="/inventory"><Inventory /></ProtectedRoute>} />

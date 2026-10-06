@@ -31,29 +31,58 @@ export default function Dashboard() {
   const [payments, setPayments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Helper for Manila date string (YYYY-MM-DD)
+  const getManilaTodayStr = () => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  };
+
   // Date filters states
-  const [dateFilterType, setDateFilterType] = useState<'today' | 'week' | 'month' | 'custom'>('month');
+  const [dateFilterType, setDateFilterType] = useState<'today' | 'week' | 'month' | 'last30' | 'custom'>('month');
   const [startDateInput, setStartDateInput] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().split('T')[0];
+    const todayStr = getManilaTodayStr();
+    const [y, m] = todayStr.split('-');
+    return `${y}-${m}-01`;
   });
-  const [endDateInput, setEndDateInput] = useState(() => {
-    return new Date().toISOString().split('T')[0];
-  });
+  const [endDateInput, setEndDateInput] = useState(() => getManilaTodayStr());
 
   const getDateRangeParams = () => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getManilaTodayStr();
+    const [y, m, d] = todayStr.split('-').map(Number);
+    const todayDate = new Date(y, m - 1, d);
+
     if (dateFilterType === 'today') {
       return { start: todayStr, end: todayStr };
     } else if (dateFilterType === 'week') {
-      const d = new Date();
-      d.setDate(d.getDate() - 7);
-      return { start: d.toISOString().split('T')[0], end: todayStr };
+      // Monday of the current week to today
+      const dayOfWeek = todayDate.getDay(); // 0 = Sunday, 1 = Monday...
+      const diffToMon = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+      const monday = new Date(todayDate);
+      monday.setDate(todayDate.getDate() + diffToMon);
+      const startStr = [
+        monday.getFullYear(),
+        String(monday.getMonth() + 1).padStart(2, '0'),
+        String(monday.getDate()).padStart(2, '0')
+      ].join('-');
+      return { start: startStr, end: todayStr };
     } else if (dateFilterType === 'month') {
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      return { start: d.toISOString().split('T')[0], end: todayStr };
+      // Current calendar month: 1st of the month to today
+      const startStr = `${y}-${String(m).padStart(2, '0')}-01`;
+      return { start: startStr, end: todayStr };
+    } else if (dateFilterType === 'last30') {
+      // Rolling 30 days
+      const d30 = new Date(todayDate);
+      d30.setDate(todayDate.getDate() - 30);
+      const startStr = [
+        d30.getFullYear(),
+        String(d30.getMonth() + 1).padStart(2, '0'),
+        String(d30.getDate()).padStart(2, '0')
+      ].join('-');
+      return { start: startStr, end: todayStr };
     } else {
       return { start: startDateInput, end: endDateInput };
     }
@@ -171,25 +200,36 @@ export default function Dashboard() {
 
       {/* Date Range Selector Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 border border-slate-200 rounded-2xl shadow-xs mb-4 shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Sales Period:</span>
-          <div className="flex bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-            {(['today', 'week', 'month', 'custom'] as const).map(type => (
+          <div className="flex flex-wrap bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+            {([
+              { id: 'today', label: 'Today' },
+              { id: 'week', label: 'This Week' },
+              { id: 'month', label: 'This Month' },
+              { id: 'last30', label: 'Last 30 Days' },
+              { id: 'custom', label: 'Custom' }
+            ] as const).map(({ id, label }) => (
               <button
-                key={type}
+                key={id}
                 type="button"
-                onClick={() => setDateFilterType(type)}
+                onClick={() => setDateFilterType(id)}
                 className={cn(
                   "px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all active:scale-[0.98]",
-                  dateFilterType === type
+                  dateFilterType === id
                     ? "bg-slate-900 text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
                 )}
               >
-                {type === 'today' ? 'Today' : type === 'week' ? 'This Week' : type === 'month' ? 'This Month' : 'Custom'}
+                {label}
               </button>
             ))}
           </div>
+
+          {/* Active Date Range Tag indicator */}
+          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 ml-1">
+            {getDateRangeParams().start} to {getDateRangeParams().end}
+          </span>
         </div>
 
         {/* Custom date range inputs */}

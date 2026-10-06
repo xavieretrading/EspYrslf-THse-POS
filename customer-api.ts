@@ -8,9 +8,11 @@
  *
  * Login is by SMS code:
  *  - SEMAPHORE_API_KEY set     → a random 6-digit code is sent by SMS (Semaphore).
- *  - CUSTOMER_DEV_OTP=1         → no SMS; the code is always 123456. For testing only, never in production.
- *  - neither                    → login is refused.
- * Sessions are signed with CUSTOMER_TOKEN_SECRET (set it in production so logins survive restarts).
+ *  - CUSTOMER_TEST_PHONES       → comma-separated numbers (e.g. staff phones) that may log in with 123456
+ *                                 while SMS is not set up. Everyone else is refused.
+ *  - CUSTOMER_DEV_OTP=1         → any number may use 123456. Local testing only (customer-api-dev.ts), never in production.
+ * Production (Cloud Run) must set CUSTOMER_TOKEN_SECRET: it signs logins and protects the login codes stored in
+ * laundry_otp_codes, so every server copy accepts the same login and logins survive restarts.
  */
 import express from 'express';
 import crypto from 'crypto';
@@ -59,8 +61,49 @@ function verify(token: string): number | null {
   return Number(id) || null;
 }
 
-// In-memory OTP store (single server instance). phone -> code state
-const otps = new Map<string, { code: string; exp: number; tries: number; sentAt: number[] }>();
+// ---------- login codes ----------
+// Stored in laundry_otp_codes (hashed) so they work across Cloud Run copies; falls back to memory
+// when CUSTOMER_TOKEN_SECRET is not set or the table does not exist yet.
+interface OtpEntry {
+  codeHash: string;
+  exp: number;
+  tries: number;
+  sentAt: number[];
+}
+const memOtps = new Map<string, OtpEntry>();
+const hashCode = (phone: string, code: string) => crypto.createHmac('sha256', TOKEN_SECRET).update(`${phone}:${code}`).digest('hex');
+const useDbOtps = () => !!process.env.CUSTOMER_TOKEN_SECRET;
+
+async function getOtp(supabase: SupabaseClient, phone: string): Promise<OtpEntry | undefined> {
+  if (useDbOtps()) {
+    const { data, error } = await supabase.from('laundry_otp_codes').select('*').eq('phone', phone).maybeSingle();
+    if (!error) return data ? { codeHash: data.code_hash, exp: new Date(data.expires_at).getTime(), tries: data.tries || 0, sentAt: data.sent_at || [] } : undefined;
+  }
+  return memOtps.get(phone);
+}
+
+async function saveOtp(supabase: SupabaseClient, phone: string, e: OtpEntry) {
+  if (useDbOtps()) {
+    const { error } = await supabase
+      .from('laundry_otp_codes')
+      .upsert([{ phone, code_hash: e.codeHash, expires_at: new Date(e.exp).toISOString(), tries: e.tries, sent_at: e.sentAt }], { onConflict: 'phone' });
+    if (!error) return;
+  }
+  memOtps.set(phone, e);
+}
+
+async function deleteOtp(supabase: SupabaseClient, phone: string) {
+  memOtps.delete(phone);
+  if (useDbOtps()) await supabase.from('laundry_otp_codes').delete().eq('phone', phone);
+}
+
+const testPhones = () =>
+  new Set(
+    String(process.env.CUSTOMER_TEST_PHONES || '')
+      .split(',')
+      .map(p => normalizePhone(p))
+      .filter(Boolean) as string[]
+  );
 
 async function sendSms(phone: string, message: string) {
   const body = new URLSearchParams({
@@ -84,8 +127,17 @@ interface CatalogService {
   unit: Unit;
   promo5plus2: boolean;
 }
+interface ShopSettings {
+  contactPhone: string | null;
+  gcashNumber: string | null;
+  gcashName: string | null;
+  promoTitle: string | null;
+  promoText: string | null;
+  facebookUrl: string | null;
+}
 interface Catalog {
   branch: { id: number; name: string; address: string };
+  settings: ShopSettings;
   services: CatalogService[];
   addons: { id: string; name: string; price: number }[];
   rushPrice: number;
@@ -95,14 +147,16 @@ interface Catalog {
 let catalogCache: { at: number; data: Catalog } | null = null;
 
 async function loadCatalog(supabase: SupabaseClient): Promise<Catalog> {
-  if (catalogCache && Date.now() - catalogCache.at < 5 * 60 * 1000) return catalogCache.data;
+  if (catalogCache && Date.now() - catalogCache.at < 60 * 1000) return catalogCache.data;
 
-  const [{ data: branch }, { data: products, error }] = await Promise.all([
+  const [{ data: branch }, { data: products, error }, { data: settingsRow }] = await Promise.all([
     supabase.from('branches_espresso').select('id, name, address').eq('id', LAUNDRY_BRANCH_ID).single(),
     supabase
       .from('products_espresso')
       .select('id, name, price, unit, is_active, is_sellable, categories:categories_espresso(name, division)')
       .eq('branch_id', LAUNDRY_BRANCH_ID),
+    // Shop phone, GCash and promo are typed by the owner in laundry_app_settings (add-laundry-app-settings.sql)
+    supabase.from('laundry_app_settings').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).maybeSingle(),
   ]);
   if (error) throw error;
 
@@ -156,6 +210,14 @@ async function loadCatalog(supabase: SupabaseClient): Promise<Catalog> {
 
   const data: Catalog = {
     branch: { id: LAUNDRY_BRANCH_ID, name: branch?.name || 'S1p and Sp1n Laundry Shop', address: branch?.address || '' },
+    settings: {
+      contactPhone: settingsRow?.contact_phone || null,
+      gcashNumber: settingsRow?.gcash_number || null,
+      gcashName: settingsRow?.gcash_name || null,
+      promoTitle: settingsRow?.promo_title || null,
+      promoText: settingsRow?.promo_text || null,
+      facebookUrl: settingsRow?.facebook_url || null,
+    },
     services,
     addons,
     rushPrice: RUSH_PRICE,
@@ -183,7 +245,7 @@ function estimateTotal(catalog: Catalog, services: Record<string, number>, addon
 
 // ---------- order mapping ----------
 
-const ORDER_STATUS_MAP: Record<string, string> = {
+export const ORDER_STATUS_MAP: Record<string, string> = {
   received: 'weighed', // order exists in the POS = laundry was weighed and priced at the counter
   washing: 'washing',
   drying: 'drying',
@@ -195,7 +257,7 @@ const ORDER_STATUS_MAP: Record<string, string> = {
   cancelled: 'cancelled',
 };
 
-function parseNotes(notes: any): any {
+export function parseNotes(notes: any): any {
   if (!notes || typeof notes !== 'string' || !notes.trim().startsWith('{')) return null;
   try {
     return JSON.parse(notes);
@@ -204,7 +266,7 @@ function parseNotes(notes: any): any {
   }
 }
 
-function billFromOrder(order: any, notes: any) {
+export function billFromOrder(order: any, notes: any) {
   const lines = (notes?.services || []).map((s: any, i: number) => {
     const qty = Number(s.weight) || 0;
     const billed = s.billedWeight !== undefined ? Number(s.billedWeight) : qty;
@@ -252,15 +314,15 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     if (!phone) return res.status(400).json({ error: 'Enter a valid PH mobile number, e.g. 0917 123 4567.' });
 
     const smsReady = !!process.env.SEMAPHORE_API_KEY;
-    const devMode = process.env.CUSTOMER_DEV_OTP === '1';
-    if (!smsReady && !devMode) return res.status(503).json({ error: 'SMS login is not set up yet.' });
+    const testCode = !smsReady && (process.env.CUSTOMER_DEV_OTP === '1' || testPhones().has(phone));
+    if (!smsReady && !testCode) return res.status(503).json({ error: 'SMS login is not set up yet. Please try again soon.' });
 
-    const prev = otps.get(phone);
+    const prev = await getOtp(supabase, phone);
     const recent = (prev?.sentAt || []).filter(t => Date.now() - t < 3600 * 1000);
     if (recent.length >= 5) return res.status(429).json({ error: 'Too many codes requested. Try again in an hour.' });
 
     const code = smsReady ? String(crypto.randomInt(0, 1000000)).padStart(6, '0') : DEV_OTP;
-    otps.set(phone, { code, exp: Date.now() + 5 * 60 * 1000, tries: 0, sentAt: [...recent, Date.now()] });
+    await saveOtp(supabase, phone, { codeHash: hashCode(phone, code), exp: Date.now() + 5 * 60 * 1000, tries: 0, sentAt: [...recent, Date.now()] });
 
     if (smsReady) {
       try {
@@ -270,20 +332,22 @@ export function createCustomerRouter(supabase: SupabaseClient) {
         return res.status(502).json({ error: 'Could not send the SMS. Please try again.' });
       }
     }
-    res.json({ sent: true, devCode: !smsReady });
+    res.json({ sent: true, devCode: testCode });
   });
 
   router.post('/otp/verify', async (req, res) => {
     const phone = normalizePhone(req.body?.phone);
     const code = String(req.body?.code || '');
-    const entry = phone ? otps.get(phone) : undefined;
+    const entry = phone ? await getOtp(supabase, phone) : undefined;
     if (!phone || !entry || entry.exp < Date.now()) return res.status(400).json({ error: 'The code expired. Request a new one.' });
     if (entry.tries >= 5) return res.status(429).json({ error: 'Too many wrong codes. Request a new one.' });
-    if (code !== entry.code) {
-      entry.tries++;
+    const a = Buffer.from(hashCode(phone, code));
+    const b = Buffer.from(entry.codeHash);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      await saveOtp(supabase, phone, { ...entry, tries: entry.tries + 1 });
       return res.status(400).json({ error: 'Wrong code. Please check the SMS and try again.' });
     }
-    otps.delete(phone);
+    await deleteOtp(supabase, phone);
 
     let { data: customer } = await supabase.from('laundry_customers').select('*').eq('phone', phone).maybeSingle();
     if (!customer) {
@@ -302,8 +366,21 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     const updates: any = {};
     if (typeof req.body?.full_name === 'string') updates.full_name = req.body.full_name.trim().slice(0, 80);
     if (typeof req.body?.default_address === 'string') updates.default_address = req.body.default_address.trim().slice(0, 300);
+    const d = req.body?.address_details;
+    if (d && typeof d === 'object') {
+      const clean: Record<string, string> = {};
+      for (const k of ['province', 'city', 'barangay', 'zip', 'street', 'landmark']) clean[k] = String(d[k] || '').trim().slice(0, k === 'street' || k === 'landmark' ? 150 : 80);
+      if (!clean.province || !clean.city || !clean.barangay || clean.street.length < 2) return res.status(400).json({ error: 'Please complete your address.' });
+      updates.address_details = clean;
+      updates.default_address = [clean.street, `Brgy. ${clean.barangay}`, clean.city, clean.province, clean.zip].filter(Boolean).join(', ');
+    }
     if (!Object.keys(updates).length) return res.status(400).json({ error: 'Nothing to update.' });
-    const { data, error } = await supabase.from('laundry_customers').update(updates).eq('id', me.id).select().single();
+    let { data, error } = await supabase.from('laundry_customers').update(updates).eq('id', me.id).select().single();
+    if (error && error.message.includes('address_details')) {
+      // Column not added yet (add-laundry-app-settings.sql): keep the address as text only
+      delete updates.address_details;
+      ({ data, error } = await supabase.from('laundry_customers').update(updates).eq('id', me.id).select().single());
+    }
     if (error) return res.status(500).json({ error: error.message });
     res.json({ customer: data });
   });
@@ -340,7 +417,8 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     for (const [id, q] of Object.entries(b.addons || {})) {
       if (catalog.addons.some(a => a.id === id) && Number(q) > 0 && Number(q) <= 50) addons[id] = Math.round(Number(q));
     }
-    if (!Object.keys(services).length) return res.status(400).json({ error: 'Please add at least one service.' });
+    // Quick pickup: no services chosen; the staff choose them when they weigh the laundry at the shop
+    const quick = !Object.keys(services).length;
 
     const rush = !!b.rush;
     const returnMode = b.returnMode === 'claim' ? 'claim' : 'deliver';
@@ -357,7 +435,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
           preferred_date: date,
           preferred_time: slot,
           service_notes: String(b.notes || '').trim().slice(0, 500) || null,
-          preferences: { preferences, services, addons, rush, return_mode: returnMode, estimate, landmark },
+          preferences: { preferences, services, addons, rush, return_mode: returnMode, estimate, landmark, quick },
           source: 'app',
           status: 'requested',
         },
@@ -382,8 +460,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
   });
 
   // --- my orders: pickup requests + laundry orders made at the counter with my phone number ---
-  router.get('/orders', auth, async (req, res) => {
-    const me = (req as any).customer;
+  async function buildOrders(me: any): Promise<any[]> {
     const myLast10 = String(me.phone).slice(-10);
 
     const [{ data: requests }, { data: laundryOrders }] = await Promise.all([
@@ -442,7 +519,9 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     const mapOrder = (o: any) => {
       const n = parseNotes(o.notes);
       const t = trackMap.get(o.id);
-      const status = ORDER_STATUS_MAP[t?.laundry_status || 'received'] || 'weighed';
+      let status = ORDER_STATUS_MAP[t?.laundry_status || 'received'] || 'weighed';
+      // Staff use the POS "claimed" toggle (order notes); show that even before the status buttons exist
+      if (n?.is_claimed && status !== 'delivered') status = 'claimed';
       const timeline = [
         { status: 'weighed', at: o.created_at },
         ...(histOrd || []).filter(h => h.order_id === o.id && ORDER_STATUS_MAP[h.status] && h.status !== 'received').map(h => ({ status: ORDER_STATUS_MAP[h.status], at: h.created_at })),
@@ -471,6 +550,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
         pickup: { address: r.address, landmark: p.landmark || '', date: r.preferred_date, slot: r.preferred_time, notes: r.service_notes || '' },
         returnMode: p.return_mode === 'claim' ? 'claim' : 'deliver',
         request: { services: p.services || {}, addons: p.addons || {}, rush: !!p.rush },
+        quick: !!p.quick,
         preferences: p.preferences || [],
         estimate: Number(p.estimate) || 0,
         rider: r.assigned_rider || undefined,
@@ -509,7 +589,73 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     }
 
     result.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    res.json({ orders: result });
+    return result;
+  }
+
+  router.get('/orders', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const orders = await buildOrders(me);
+    // Attach this customer's reviews (table from add-laundry-reviews.sql; skipped if not created yet)
+    const { data: reviews } = await supabase.from('laundry_reviews').select('order_key, rating, tags, comment, created_at').eq('customer_id', me.id);
+    const byKey = new Map((reviews || []).map(r => [r.order_key, r]));
+    res.json({ orders: orders.map(o => ({ ...o, review: byKey.get(o.id) || null })) });
+  });
+
+  // --- reviews: one per finished (delivered / claimed) order ---
+  router.post('/reviews', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const orderKey = String(req.body?.orderKey || '');
+    const rating = Math.round(Number(req.body?.rating));
+    if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ error: 'Please choose 1 to 5 stars.' });
+    const tags = Array.isArray(req.body?.tags) ? req.body.tags.map((t: any) => String(t).slice(0, 40)).slice(0, 8) : [];
+    const comment = String(req.body?.comment || '').trim().slice(0, 1000);
+
+    const order = (await buildOrders(me)).find(o => o.id === orderKey);
+    if (!order) return res.status(404).json({ error: 'Order not found.' });
+    if (!['delivered', 'claimed'].includes(order.status)) return res.status(400).json({ error: 'You can review once your laundry is delivered or claimed.' });
+
+    const { data, error } = await supabase
+      .from('laundry_reviews')
+      .insert([
+        {
+          branch_id: LAUNDRY_BRANCH_ID,
+          customer_id: me.id,
+          order_key: orderKey,
+          order_code: order.code,
+          order_id: orderKey.startsWith('ord-') ? Number(orderKey.slice(4)) : null,
+          pickup_request_id: orderKey.startsWith('req-') ? Number(orderKey.slice(4)) : null,
+          rating,
+          tags,
+          comment: comment || null,
+        },
+      ])
+      .select('order_key, rating, tags, comment, created_at')
+      .single();
+    if (error) {
+      if (error.code === '23505') return res.status(400).json({ error: 'You already reviewed this order. Thank you!' });
+      return res.status(500).json({ error: error.message });
+    }
+    res.json({ review: data });
+  });
+
+  // --- push notifications: remember this phone for the logged-in customer ---
+  router.post('/push-token', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const token = String(req.body?.token || '').trim();
+    if (token.length < 20 || token.length > 4096) return res.status(400).json({ error: 'Invalid token.' });
+    const platform = req.body?.platform === 'ios' ? 'ios' : 'android';
+    const { error } = await supabase
+      .from('laundry_push_tokens')
+      .upsert([{ token, customer_id: me.id, platform, updated_at: new Date().toISOString() }], { onConflict: 'token' });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  });
+
+  // On log out: stop sending to this phone
+  router.post('/push-token/remove', auth, async (req, res) => {
+    const me = (req as any).customer;
+    await supabase.from('laundry_push_tokens').delete().eq('token', String(req.body?.token || '')).eq('customer_id', me.id);
+    res.json({ success: true });
   });
 
   // --- chat ---

@@ -423,6 +423,34 @@ export default function POS() {
   const [laundryServicesList, setLaundryServicesList] = useState<any[]>([]);
   const [laundryIsWalkIn, setLaundryIsWalkIn] = useState(false);
   const [laundryIsEmployeePromo, setLaundryIsEmployeePromo] = useState(false);
+  // Customer-app pickup being weighed ("Weigh now" on the Laundry App page → /pos?laundry_pickup=ID)
+  const [laundryPickupRequestId, setLaundryPickupRequestId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const pickupId = new URLSearchParams(location.search).get('laundry_pickup');
+    if (!pickupId) return;
+    fetch(`/api/laundry-staff/pickups/${pickupId}`)
+      .then(r => r.json())
+      .then(({ pickup }) => {
+        if (!pickup) return;
+        const prefs = pickup.preferences || {};
+        const list: string[] = prefs.preferences || [];
+        setSelectedDivision('laundry');
+        setLaundryPickupRequestId(pickup.id);
+        setLaundryIsWalkIn(false);
+        setLaundryCustomerName(pickup.customer?.full_name || '');
+        setLaundryPhone(String(pickup.customer?.phone || '').replace(/^\+63/, '0'));
+        setLaundryPrefWarmWater(list.includes('Warm water'));
+        setLaundryPrefColdWater(list.includes('Cold water'));
+        setLaundryPrefUnscented(list.includes('Unscented'));
+        setLaundryPrefSeparateWhite(list.includes('Separate whites'));
+        setLaundryPrefSeparateColored(list.includes('Separate colored'));
+        setLaundryPrefCustom(pickup.service_notes || '');
+        setLaundryAddonRush(!!prefs.rush);
+        swalAlert(`App pickup PR-${pickup.id}`, `${pickup.customer?.full_name || 'Customer'} is filled in. Weigh the laundry, choose the services, then save. The customer will see the bill in the app.`, 'info');
+      })
+      .catch(() => {});
+  }, [location.search]);
   const [selectedStoreCredit, setSelectedStoreCredit] = useState<any>(null);
   const [showComputationDetails, setShowComputationDetails] = useState(false);
   const [expandedCartItemId, setExpandedCartItemId] = useState<string | number | null>(null);
@@ -1519,6 +1547,21 @@ export default function POS() {
 
       const orderId = orderResult.id;
 
+      // Link the order to the customer's app pickup so they see services, weight and total in the app
+      if (laundryPickupRequestId) {
+        try {
+          await fetch(`/api/laundry-staff/pickups/${laundryPickupRequestId}/link-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: orderId, by: cashierName }),
+          });
+        } catch (e) {
+          console.error('Could not link app pickup to order', e);
+        }
+        setLaundryPickupRequestId(null);
+        navigate('/pos', { replace: true });
+      }
+
       if (payImmediately) {
         const payRes = await fetch(`/api/orders/${orderId}/pay`, {
           method: 'POST',
@@ -1839,13 +1882,32 @@ export default function POS() {
     }
   };
 
+  const getZReadingWindow = () => {
+    // For S1p and Sp1n branch (laundry), window is strictly 7:50 PM (19:50) to 9:00 PM (21:00)
+    if (isLaundryBranch) {
+      return {
+        startMinutes: 19 * 60 + 50, // 7:50 PM
+        endMinutes: 21 * 60,        // 9:00 PM
+        label: '7:50 PM – 9:00 PM',
+        shortLabel: '7:50 PM - 9:00 PM',
+      };
+    }
+    // For Espresso Yourself and other branches, window remains 8:45 PM (20:45) to 11:00 PM (23:00)
+    return {
+      startMinutes: 20 * 60 + 45, // 8:45 PM
+      endMinutes: 23 * 60,        // 11:00 PM
+      label: '8:45 PM – 11:00 PM',
+      shortLabel: '8:45 PM - 11:00 PM',
+    };
+  };
+
   const isZReadingTime = () => {
     const manilaDate = getManilaDate();
     const hours = manilaDate.getHours();
     const minutes = manilaDate.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
-    // 8:45 PM is 20:45 (1245 min), 11:00 PM is 23:00 (1380 min)
-    return timeInMinutes >= (20 * 60 + 45) && timeInMinutes <= (23 * 60);
+    const { startMinutes, endMinutes } = getZReadingWindow();
+    return timeInMinutes >= startMinutes && timeInMinutes <= endMinutes;
   };
 
   const isZReadingAlreadyPrinted = () => {
@@ -1861,14 +1923,12 @@ export default function POS() {
     const todayStr = format(manilaDate, 'yyyy-MM-dd');
     const timeFormatted = manilaDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-    // Store closing window is strictly 8:45 PM (20:45) to 11:00 PM (23:00)
-    const startTimeMinutes = 20 * 60 + 45; // 8:45 PM
-    const endTimeMinutes = 23 * 60;        // 11:00 PM
+    const { startMinutes, endMinutes, label } = getZReadingWindow();
 
-    if (timeInMinutes < startTimeMinutes || timeInMinutes > endTimeMinutes) {
+    if (timeInMinutes < startMinutes || timeInMinutes > endMinutes) {
       swalAlert(
         'Z-Reading Locked',
-        `Daily Z-Reading can only be printed once a day during store closing (8:45 PM – 11:00 PM Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}\n\nPlease generate and print this report between 8:45 PM and 11:00 PM.`,
+        `Daily Z-Reading can only be printed once a day during store closing (${label} Philippine Time).\n\nCurrent Philippine Time: ${timeFormatted}\n\nPlease generate and print this report between ${label}.`,
         'warning'
       );
       return;
@@ -3272,7 +3332,7 @@ export default function POS() {
                         isZReadingAlreadyPrinted()
                           ? "Daily Z-Reading for today has already been printed"
                           : !isZReadingTime()
-                            ? "Daily Z-Reading unlocks at 8:45 PM – 11:00 PM Philippine Time (Store Closing)"
+                            ? `Daily Z-Reading unlocks at ${getZReadingWindow().label} Philippine Time (Store Closing)`
                             : "Daily Z-Reading is ready to print"
                       }
                     >
@@ -3284,7 +3344,7 @@ export default function POS() {
                       ) : !isZReadingTime() ? (
                         <>
                           <Lock size={14} className="text-amber-700" />
-                          <span>Daily Z-Reading (8:45 PM - 11:00 PM)</span>
+                          <span>Daily Z-Reading ({getZReadingWindow().shortLabel})</span>
                         </>
                       ) : (
                         <>

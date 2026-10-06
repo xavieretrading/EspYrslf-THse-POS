@@ -4,7 +4,16 @@
     {
       "name": "laundry-app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "../S1P-Laundry-App", "run", "dev", "--", "--port", "5180", "--strictPort"],
+      "runtimeArgs": [
+        "--prefix",
+        "../S1P-Laundry-App",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
       "port": 5180
     }
   ]

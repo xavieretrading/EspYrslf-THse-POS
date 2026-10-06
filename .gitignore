@@ -14,3 +14,8 @@ xp-thermal-service/logs/
 xp-thermal-service/data/
 xp-thermal-service/*.db*
 
+
+# Secrets: Firebase / Google service-account keys must never be committed
+secretfile/
+*firebase-adminsdk*.json
+android/app/google-services.json

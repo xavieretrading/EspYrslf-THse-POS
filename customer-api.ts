@@ -77,8 +77,9 @@ const useDbOtps = () => !!process.env.CUSTOMER_TOKEN_SECRET;
 async function getOtp(supabase: SupabaseClient, phone: string): Promise<OtpEntry | undefined> {
   if (useDbOtps()) {
     const { data, error } = await supabase.from('laundry_otp_codes').select('*').eq('phone', phone).maybeSingle();
-    if (!error) return data ? { codeHash: data.code_hash, exp: new Date(data.expires_at).getTime(), tries: data.tries || 0, sentAt: data.sent_at || [] } : undefined;
+    if (!error && data) return { codeHash: data.code_hash, exp: new Date(data.expires_at).getTime(), tries: data.tries || 0, sentAt: data.sent_at || [] };
   }
+  // Not in the table (or the table can't be read/written): use the copy kept in memory
   return memOtps.get(phone);
 }
 
@@ -87,8 +88,9 @@ async function saveOtp(supabase: SupabaseClient, phone: string, e: OtpEntry) {
     const { error } = await supabase
       .from('laundry_otp_codes')
       .upsert([{ phone, code_hash: e.codeHash, expires_at: new Date(e.exp).toISOString(), tries: e.tries, sent_at: e.sentAt }], { onConflict: 'phone' });
-    if (!error) return;
+    if (error) console.error('[customer-api] Could not save login code to laundry_otp_codes:', error.message);
   }
+  // Always keep a copy in memory too, so login still works if the table write failed
   memOtps.set(phone, e);
 }
 

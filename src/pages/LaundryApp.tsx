@@ -104,7 +104,9 @@ export default function LaundryApp() {
   const [chatWith, setChatWith] = useState<number | null>(null);
 
   const loadSummary = useCallback(() => {
-    call('/summary').then(setSummary).catch(() => {});
+    call('/summary')
+      .then(d => setSummary({ newPickups: Number(d.newPickups) || 0, unreadMessages: Number(d.unreadMessages) || 0 }))
+      .catch(() => {});
   }, []);
   useEffect(() => {
     loadSummary();
@@ -171,9 +173,9 @@ function Pickups({ onChanged, onChat, onWeigh }: { onChanged: () => void; onChat
   const load = useCallback(async () => {
     try {
       const d = await call(`/pickups?view=${view}`);
-      setPickups(d.pickups);
+      setPickups(Array.isArray(d.pickups) ? d.pickups : []);
       if (view === 'active') {
-        const newCount = d.pickups.filter((p: any) => p.status === 'requested').length;
+        const newCount = (Array.isArray(d.pickups) ? d.pickups : []).filter((p: any) => p.status === 'requested').length;
         if (lastNew.current >= 0 && newCount > lastNew.current) beep();
         lastNew.current = newCount;
       }
@@ -341,7 +343,8 @@ function StatusBoard() {
 
   const load = useCallback(async () => {
     try {
-      setOrders((await call(`/orders?view=${view}`)).orders);
+      const d = await call(`/orders?view=${view}`);
+      setOrders(Array.isArray(d.orders) ? d.orders : []);
     } catch (e: any) {
       setOrders([]);
       swalAlert('Could not load laundry orders', e.message, 'error');
@@ -443,7 +446,8 @@ function Inbox({ selected, onSelect, onRead }: { selected: number | null; onSele
 
   const loadConvos = useCallback(async () => {
     try {
-      setConvos((await call('/conversations')).conversations);
+      const d = await call('/conversations');
+      setConvos(Array.isArray(d.conversations) ? d.conversations : []);
     } catch {
       setConvos([]);
     }
@@ -453,9 +457,10 @@ function Inbox({ selected, onSelect, onRead }: { selected: number | null; onSele
     if (!selected) return setThread(null);
     try {
       const d = await call(`/messages/${selected}`);
+      const next = { customer: d.customer || null, messages: Array.isArray(d.messages) ? d.messages : [] };
       setThread(prev => {
-        if (prev && prev.messages.length === d.messages.length && prev.customer?.id === d.customer?.id) return prev;
-        return d;
+        if (prev && prev.messages.length === next.messages.length && prev.customer?.id === next.customer?.id) return prev;
+        return next;
       });
       onRead();
     } catch {
@@ -618,7 +623,14 @@ function Announcements() {
 
   const load = useCallback(async () => {
     try {
-      setInfo(await call(`/announcements?audience=${audience}`));
+      const d = await call(`/announcements?audience=${audience}`);
+      // Normalise: an older server (without these routes) can answer with a different shape
+      setInfo({
+        announcements: Array.isArray(d.announcements) ? d.announcements : [],
+        audienceCount: Number(d.audienceCount) || 0,
+        pushReady: !!d.pushReady,
+        notReady: !!d.notReady || !Array.isArray(d.announcements),
+      });
     } catch {
       setInfo({ announcements: [], audienceCount: 0, pushReady: false });
     }
@@ -717,7 +729,7 @@ function Announcements() {
 
         <div className="bg-white rounded-2xl border border-slate-200">
           <div className="px-4 py-3 border-b border-slate-100 font-bold text-slate-700 text-sm">Sent notifications</div>
-          {!info?.announcements.length ? (
+          {!info?.announcements?.length ? (
             <div className="p-4 text-sm text-slate-400">Nothing sent yet.</div>
           ) : (
             info.announcements.map(a => (
@@ -762,7 +774,9 @@ function Announcements() {
 function Reviews() {
   const [data, setData] = useState<any>(null);
   useEffect(() => {
-    call('/reviews').then(setData).catch(() => setData({ reviews: [], average: null, count: 0 }));
+    call('/reviews')
+      .then(d => setData({ ...d, reviews: Array.isArray(d.reviews) ? d.reviews : [], notReady: !!d.notReady || !Array.isArray(d.reviews) }))
+      .catch(() => setData({ reviews: [], average: null, count: 0 }));
   }, []);
   if (!data) return <Empty text="Loading reviews…" />;
   if (data.notReady) return <Empty text="Reviews are not set up yet. Run add-laundry-reviews.sql in Supabase." />;

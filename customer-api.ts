@@ -425,6 +425,9 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     const rush = !!b.rush;
     const returnMode = b.returnMode === 'claim' ? 'claim' : 'deliver';
     const preferences = Array.isArray(b.preferences) ? b.preferences.map((p: any) => String(p).slice(0, 40)).slice(0, 10) : [];
+    // Simple booking: what the customer has (picture tiles) and how many bags; staff choose exact services when weighing
+    const items = Array.isArray(b.items) ? b.items.map((i: any) => String(i).slice(0, 40)).slice(0, 10) : [];
+    const bags = ['1', '2', '3+'].includes(String(b.bags)) ? String(b.bags) : null;
     const estimate = estimateTotal(catalog, services, addons, rush);
 
     const { data, error } = await supabase
@@ -437,7 +440,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
           preferred_date: date,
           preferred_time: slot,
           service_notes: String(b.notes || '').trim().slice(0, 500) || null,
-          preferences: { preferences, services, addons, rush, return_mode: returnMode, estimate, landmark, quick },
+          preferences: { preferences, services, addons, rush, return_mode: returnMode, estimate, landmark, quick, items, bags },
           source: 'app',
           status: 'requested',
         },
@@ -469,7 +472,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
       supabase.from('laundry_pickup_requests').select('*').eq('customer_id', me.id).eq('branch_id', LAUNDRY_BRANCH_ID).order('created_at', { ascending: false }).limit(50),
       supabase
         .from('orders_espresso')
-        .select('id, status, total, notes, created_at, updated_at, payment_method, receipt_number, order_number')
+        .select('id, status, total, notes, created_at, updated_at, payment_method, receipt_number, order_number, amount_tendered, change, reference_number')
         .eq('branch_id', LAUNDRY_BRANCH_ID)
         .in('status', ['paid', 'open'])
         .like('notes', '%"is_laundry":true%')
@@ -529,10 +532,27 @@ export function createCustomerRouter(supabase: SupabaseClient) {
         ...(histOrd || []).filter(h => h.order_id === o.id && ORDER_STATUS_MAP[h.status] && h.status !== 'received').map(h => ({ status: ORDER_STATUS_MAP[h.status], at: h.created_at })),
       ];
       if (status === 'claimed' && !timeline.some(x => x.status === 'claimed')) timeline.push({ status: 'claimed', at: n?.claimed_at || o.updated_at });
+      const bill = billFromOrder(o, n);
+      const paid = o.status === 'paid';
+      // Digital receipt (opened from the order screen)
+      const receipt = {
+        number: 'SP-' + String(o.receipt_number || o.order_number || o.id),
+        customerName: n?.customer_name || me.full_name || '',
+        customerPhone: n?.phone || me.phone || '',
+        date: o.created_at,
+        paidAt: paid ? o.updated_at : null,
+        weightKg: Math.round(bill.lines.reduce((t: number, l: any) => t + (Number(l.qty) || 0), 0) * 10) / 10,
+        paymentMethod: paid ? String(o.payment_method || 'cash') : null,
+        amountPaid: paid ? round2(Number(o.amount_tendered || 0) - Number(o.change || 0)) || bill.total : 0,
+        balance: paid ? 0 : bill.total,
+        pickupDate: n?.pickup_date || null,
+        pickupTime: n?.pickup_time || null,
+      };
       return {
         status,
         timeline,
-        final: billFromOrder(o, n),
+        receipt,
+        final: bill,
         payment: o.status === 'paid' ? { method: String(o.payment_method || 'cash').toLowerCase(), status: 'paid', at: o.updated_at } : undefined,
         orderCode: 'SP-' + String(o.receipt_number || o.order_number || o.id),
         pickupDate: n?.pickup_date,
@@ -553,6 +573,8 @@ export function createCustomerRouter(supabase: SupabaseClient) {
         returnMode: p.return_mode === 'claim' ? 'claim' : 'deliver',
         request: { services: p.services || {}, addons: p.addons || {}, rush: !!p.rush },
         quick: !!p.quick,
+        items: Array.isArray(p.items) ? p.items : [],
+        bags: p.bags || null,
         preferences: p.preferences || [],
         estimate: Number(p.estimate) || 0,
         rider: r.assigned_rider || undefined,
@@ -563,7 +585,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
       if (r.status === 'converted' && r.order_id && ordersById.has(r.order_id)) {
         const m = mapOrder(ordersById.get(r.order_id));
         ordersById.delete(r.order_id);
-        result.push({ ...base, code: m.orderCode, status: m.status, timeline: [...reqTimeline, ...m.timeline], final: m.final, payment: m.payment });
+        result.push({ ...base, code: m.orderCode, status: m.status, timeline: [...reqTimeline, ...m.timeline], final: m.final, payment: m.payment, receipt: m.receipt });
       } else {
         result.push({ ...base, status: r.status === 'converted' ? 'picked_up' : r.status, timeline: reqTimeline });
       }
@@ -587,6 +609,7 @@ export function createCustomerRouter(supabase: SupabaseClient) {
         estimate: m.final.total,
         final: m.final,
         payment: m.payment,
+        receipt: m.receipt,
       });
     }
 
@@ -657,6 +680,27 @@ export function createCustomerRouter(supabase: SupabaseClient) {
   router.post('/push-token/remove', auth, async (req, res) => {
     const me = (req as any).customer;
     await supabase.from('laundry_push_tokens').delete().eq('token', String(req.body?.token || '')).eq('customer_id', me.id);
+    res.json({ success: true });
+  });
+
+  // --- updates (order steps and promos), newest first ---
+  router.get('/notifications', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const { data, error } = await supabase
+      .from('laundry_notifications')
+      .select('id, title, body, data, read_at, created_at')
+      .eq('customer_id', me.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) return res.json({ notifications: [], unread: 0 });
+    res.json({ notifications: data || [], unread: (data || []).filter(n => !n.read_at).length });
+  });
+
+  router.post('/notifications/read', auth, async (req, res) => {
+    const me = (req as any).customer;
+    let q = supabase.from('laundry_notifications').update({ read_at: new Date().toISOString() }).eq('customer_id', me.id).is('read_at', null);
+    if (req.body?.id) q = q.eq('id', Number(req.body.id));
+    await q;
     res.json({ success: true });
   });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Briefcase, Lock, Mail } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { saveStaffSession } from '../lib/staffSession';
 import { logActivity } from '../lib/audit';
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
@@ -15,95 +15,18 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
     setError('');
 
     try {
-      // 1. Try to login with Supabase
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // The server checks the password (hashed) and returns a login token for this device
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: email.trim(), password }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.token) throw new Error(data.error || 'Failed to login');
 
-      if (authError) {
-        // Development bypass for rate limits and local dev users
-        const isRateLimit = authError.message.toLowerCase().includes('rate limit');
-
-        const usersRes = await fetch('/api/users');
-        if (usersRes.ok) {
-          const users = await usersRes.json();
-          const matchedUser = users.find((u: any) =>
-            (u.email === email || u.username === email.split('@')[0]) &&
-            (u.password === password || password === 'admin123') // allowing default password fallback for dev
-          );
-
-          if (matchedUser) {
-            // Bypass Supabase and login locally
-            localStorage.setItem('resto_active_user', JSON.stringify({ ...matchedUser, email }));
-            logActivity(matchedUser.full_name || matchedUser.username, 'Login', 'User logged in successfully (Local Auth)');
-            onLogin({ ...matchedUser, email });
-            return;
-          }
-        }
-
-        if (isRateLimit) {
-          throw new Error("Supabase rate limit exceeded. Can't login with this email currently unless it's registered in local Settings.");
-        }
-
-        // Auto-migrate or Auto-signup for default user for development convenience
-        if (authError.message.includes('Invalid login credentials') && email === 'junrel@allsetdigital.com') {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-          });
-
-          if (signUpError) {
-            if (signUpError.message.toLowerCase().includes('rate limit')) {
-              // Bypass email rate limit by mocking the login state for dev
-              console.warn('Bypassing Supabase signup rate limit for development.');
-            } else {
-              throw signUpError;
-            }
-          }
-
-          // Proceed if signup successful or bypassed (assuming no email confirmation required for dev)
-          const hackUser = {
-            id: 1,
-            email,
-            role: 'admin',
-            full_name: 'Junrel Ejurango',
-            permissions: {
-              '/': 'admin',
-              '/pos': 'admin',
-              '/orders': 'admin',
-              '/kitchen': 'admin',
-              '/tables': 'admin',
-              '/inventory': 'admin',
-              '/branches': 'admin',
-              '/reports': 'admin',
-              '/settings': 'admin',
-              '/audit': 'admin',
-              'can_pay': 'true'
-            }
-          };
-          localStorage.setItem('resto_active_user', JSON.stringify(hackUser));
-          logActivity(hackUser.full_name, 'Login', 'User logged in successfully (Auto-migrate)');
-          onLogin(hackUser);
-          return;
-        } else {
-          throw authError;
-        }
-      }
-
-      // 2. Fetch user permissions from our backend `/api/users` mapped by email
-      const usersRes = await fetch('/api/users');
-      let userData = { email, role: 'cashier', permissions: { '/pos': 'edit', 'can_pay': 'true' } as Record<string, string>, full_name: '', username: email.split('@')[0] };
-      if (usersRes.ok) {
-        const users = await usersRes.json();
-        const matchedUser = users.find((u: any) => u.email === email || u.username === email.split('@')[0]);
-        if (matchedUser) {
-          userData = { ...userData, ...matchedUser };
-        }
-      }
-
-      localStorage.setItem('resto_active_user', JSON.stringify(userData));
-      logActivity(userData.full_name || userData.username || userData.email, 'Login', 'User logged in successfully (Supabase Auth)');
+      const userData = { ...data.user, email: data.user.email || email.trim() };
+      saveStaffSession(data.token, userData);
+      logActivity(userData.full_name || userData.username || userData.email, 'Login', 'User logged in successfully');
       onLogin(userData);
     } catch (err: any) {
       setError(err.message || 'Failed to login');
@@ -151,7 +74,9 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
                   <Mail size={18} />
                 </div>
                 <input
-                  type="email"
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -171,6 +96,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
                 </div>
                 <input
                   type="password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

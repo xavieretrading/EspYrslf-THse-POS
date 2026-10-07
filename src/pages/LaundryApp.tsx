@@ -279,6 +279,16 @@ function Pickups({ onChanged, onChat, onWeigh }: { onChanged: () => void; onChat
                       <span className="font-bold text-slate-700">Customer's estimate:</span> {peso(prefs.estimate || 0)}
                     </div>
                   )}
+                  {(prefs.items?.length > 0 || prefs.bags) && (
+                    <div className="flex flex-wrap gap-1">
+                      {(prefs.items || []).map((it: string) => (
+                        <span key={it} className="px-2 py-0.5 rounded-full bg-white border border-slate-200 font-semibold text-slate-700">
+                          {it}
+                        </span>
+                      ))}
+                      {prefs.bags && <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 font-bold">{prefs.bags} bag(s)</span>}
+                    </div>
+                  )}
                   {prefs.rush && <div className="font-bold text-amber-600">Rush service</div>}
                   {prefs.preferences?.length > 0 && <div>Preferences: {prefs.preferences.join(', ')}</div>}
                   {p.service_notes && <div className="italic">“{p.service_notes}”</div>}
@@ -615,26 +625,65 @@ const TEMPLATES = [
 ];
 
 function Announcements() {
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [view, setView] = useState<'compose' | 'sent'>('compose');
+  const [draft, setDraft] = useState({ title: '', body: '' });
+  const [sentTotal, setSentTotal] = useState<number | null>(null);
+
+  return (
+    <div>
+      <div className="mb-3">
+        <Segmented
+          value={view}
+          onChange={setView}
+          options={[
+            ['compose', 'New notification'],
+            ['sent', `Sent${sentTotal !== null ? ` (${sentTotal})` : ''}`],
+          ]}
+        />
+      </div>
+      {view === 'compose' ? (
+        <ComposeNotification draft={draft} setDraft={setDraft} onSent={() => setView('sent')} onTotal={setSentTotal} />
+      ) : (
+        <SentNotifications
+          onTotal={setSentTotal}
+          onReuse={a => {
+            setDraft({ title: a.title, body: a.body });
+            setView('compose');
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ComposeNotification({
+  draft,
+  setDraft,
+  onSent,
+  onTotal,
+}: {
+  draft: { title: string; body: string };
+  setDraft: (d: { title: string; body: string }) => void;
+  onSent: () => void;
+  onTotal: (n: number) => void;
+}) {
+  const { title, body } = draft;
+  const setTitle = (v: string) => setDraft({ title: v, body });
+  const setBody = (v: string) => setDraft({ title, body: v });
   const [audience, setAudience] = useState<'all' | 'inactive'>('all');
-  const [info, setInfo] = useState<{ announcements: any[]; audienceCount: number; pushReady: boolean; notReady?: boolean } | null>(null);
+  const [info, setInfo] = useState<{ audienceCount: number; pushReady: boolean; notReady?: boolean } | null>(null);
   const [sending, setSending] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const d = await call(`/announcements?audience=${audience}`);
+      const d = await call(`/announcements?audience=${audience}&pageSize=1`);
       // Normalise: an older server (without these routes) can answer with a different shape
-      setInfo({
-        announcements: Array.isArray(d.announcements) ? d.announcements : [],
-        audienceCount: Number(d.audienceCount) || 0,
-        pushReady: !!d.pushReady,
-        notReady: !!d.notReady || !Array.isArray(d.announcements),
-      });
+      setInfo({ audienceCount: Number(d.audienceCount) || 0, pushReady: !!d.pushReady, notReady: !!d.notReady || !Array.isArray(d.announcements) });
+      onTotal(d.total !== undefined ? Number(d.total) || 0 : Array.isArray(d.announcements) ? d.announcements.length : 0);
     } catch {
-      setInfo({ announcements: [], audienceCount: 0, pushReady: false });
+      setInfo({ audienceCount: 0, pushReady: false });
     }
-  }, [audience]);
+  }, [audience, onTotal]);
   useEffect(() => {
     load();
   }, [load]);
@@ -647,9 +696,8 @@ function Announcements() {
     try {
       const r = await call('/announcements', { title, body, audience });
       swalAlert('Notification sent', `Delivered to ${r.delivered} phone(s) of ${r.recipients} customer(s).`, 'success');
-      setTitle('');
-      setBody('');
-      load();
+      setDraft({ title: '', body: '' });
+      onSent();
     } catch (e: any) {
       swalAlert('Not sent', e.message, 'error');
     } finally {
@@ -707,10 +755,7 @@ function Announcements() {
               {TEMPLATES.map(t => (
                 <button
                   key={t.title}
-                  onClick={() => {
-                    setTitle(t.title);
-                    setBody(t.body);
-                  }}
+                  onClick={() => setDraft({ title: t.title, body: t.body })}
                   className="px-2.5 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   {t.title}
@@ -725,26 +770,6 @@ function Announcements() {
           >
             <Bell size={17} /> {sending ? 'Sending…' : 'Send notification'}
           </button>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-200">
-          <div className="px-4 py-3 border-b border-slate-100 font-bold text-slate-700 text-sm">Sent notifications</div>
-          {!info?.announcements?.length ? (
-            <div className="p-4 text-sm text-slate-400">Nothing sent yet.</div>
-          ) : (
-            info.announcements.map(a => (
-              <div key={a.id} className="px-4 py-3 border-b border-slate-100 last:border-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-800 text-sm">{a.title}</span>
-                  <span className="ml-auto text-[11px] text-slate-400">{format(new Date(a.created_at), 'MMM d, h:mm a')}</span>
-                </div>
-                <div className="text-sm text-slate-600">{a.body}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">
-                  {a.audience === 'inactive' ? 'No order in 30 days' : 'All app customers'} · {a.delivered} phone(s) · by {a.sent_by || 'Staff'}
-                </div>
-              </div>
-            ))
-          )}
         </div>
       </div>
 
@@ -766,6 +791,95 @@ function Announcements() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+const SENT_PAGE_SIZE = 10;
+
+function SentNotifications({ onTotal, onReuse }: { onTotal: (n: number) => void; onReuse: (a: { title: string; body: string }) => void }) {
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState<{ list: any[]; total: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setData(null);
+    call(`/announcements?page=${page}&pageSize=${SENT_PAGE_SIZE}`)
+      .then(d => {
+        if (cancelled) return;
+        const list = Array.isArray(d.announcements) ? d.announcements : [];
+        // Older server: no total and no paging, it sends the whole list — page it here instead
+        const paged = d.total !== undefined;
+        const total = paged ? Number(d.total) || 0 : list.length;
+        setData({ list: paged ? list : list.slice((page - 1) * SENT_PAGE_SIZE, page * SENT_PAGE_SIZE), total });
+        onTotal(total);
+      })
+      .catch(() => !cancelled && setData({ list: [], total: 0 }));
+    return () => {
+      cancelled = true;
+    };
+  }, [page, onTotal]);
+
+  const pages = data ? Math.max(1, Math.ceil(data.total / SENT_PAGE_SIZE)) : 1;
+  const first = (page - 1) * SENT_PAGE_SIZE + 1;
+  const last = data ? Math.min(data.total, page * SENT_PAGE_SIZE) : 0;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200">
+      {data === null ? (
+        <div className="p-6 text-sm text-slate-400">Loading…</div>
+      ) : data.list.length === 0 ? (
+        <div className="p-6 text-sm text-slate-400">Nothing sent yet.</div>
+      ) : (
+        <>
+          <div className="divide-y divide-slate-100">
+            {data.list.map(a => (
+              <div key={a.id} className="px-4 py-3 flex gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 grid place-items-center shrink-0">
+                  <Bell size={17} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-slate-800 text-sm break-words">{a.title}</span>
+                    <span className="ml-auto text-[11px] text-slate-400 whitespace-nowrap">{format(new Date(a.created_at), 'MMM d, yyyy h:mm a')}</span>
+                  </div>
+                  <div className="text-sm text-slate-600 break-words">{a.body}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[11px] text-slate-400">
+                      {a.audience === 'inactive' ? 'No order in 30 days' : 'All app customers'} · {a.delivered} phone(s) · by {a.sent_by || 'Staff'}
+                    </span>
+                    <button onClick={() => onReuse(a)} className="ml-auto text-[11px] font-bold text-emerald-700 hover:underline">
+                      Send again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-2 text-sm">
+            <span className="text-slate-500 text-xs">
+              {first}–{last} of {data.total}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="ml-auto px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-slate-600 disabled:opacity-40 flex items-center gap-1"
+            >
+              <ChevronLeft size={15} /> Previous
+            </button>
+            <span className="text-xs font-bold text-slate-600 tabular-nums">
+              Page {page} of {pages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(pages, p + 1))}
+              disabled={page >= pages}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 font-semibold text-slate-600 disabled:opacity-40 flex items-center gap-1"
+            >
+              Next <ChevronLeft size={15} className="rotate-180" />
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

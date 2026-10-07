@@ -6,7 +6,7 @@ import { twMerge } from 'tailwind-merge';
 
 import { BranchProvider, useBranch } from './BranchContext';
 import { SettingsProvider, useSettings } from './SettingsContext';
-import { supabase } from './lib/supabase';
+import { clearStaffSession, getStaffToken } from './lib/staffSession';
 
 import Dashboard from './pages/Dashboard';
 import POS from './pages/POS';
@@ -326,64 +326,36 @@ function AppContent({ isSidebarOpen, setIsSidebarOpen }: { isSidebarOpen: boolea
   const isStandaloneKitchen = location.pathname.startsWith('/standalone-kitchen');
 
   React.useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-         fetchUserProfile(session.user.email);
-      } else {
-         const localUser = localStorage.getItem('resto_active_user');
-         if (localUser) {
-             setActiveUser(JSON.parse(localUser));
-         }
-         setIsAuthLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-         setActiveUser(null);
-         localStorage.removeItem('resto_active_user');
-         navigate('/');
-      } else if (session?.user) {
-         fetchUserProfile(session.user.email);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    // Check this device's staff login (token from the server, see src/lib/staffSession.ts)
+    if (!getStaffToken()) {
+      // Sessions from before the secure login have no token: sign in once more
+      clearStaffSession();
+      setIsAuthLoading(false);
+      return;
+    }
+    fetch('/api/auth/me')
+      .then(async res => {
+        if (!res.ok) throw new Error('expired');
+        const { user } = await res.json();
+        const stored = JSON.parse(localStorage.getItem('resto_active_user') || '{}');
+        const fresh = { ...stored, ...user };
+        localStorage.setItem('resto_active_user', JSON.stringify(fresh));
+        setActiveUser(fresh);
+      })
+      .catch(() => clearStaffSession())
+      .finally(() => setIsAuthLoading(false));
   }, []);
 
-  const fetchUserProfile = async (email: string | undefined) => {
-      if (!email) return;
-      try {
-          const res = await fetch('/api/users');
-          if (res.ok) {
-              const users = await res.json();
-              const matchedUser = users.find((u: any) => u.email === email || u.username === email.split('@')[0]);
-              let finalUser;
-              if (matchedUser) {
-                  finalUser = { ...matchedUser, email };
-                  if (matchedUser.branch_id) {
-                      const userBranch = branches.find(b => b.id.toString() === matchedUser.branch_id.toString());
-                      if (userBranch) {
-                          setActiveBranch(userBranch);
-                      }
-                  }
-              } else {
-                  finalUser = { email, role: 'cashier', permissions: ['/pos'] };
-              }
-              setActiveUser(finalUser);
-              localStorage.setItem('resto_active_user', JSON.stringify(finalUser));
-          }
-      } catch (err) {
-          console.error('Failed to fetch user profile', err);
-      } finally {
-          setIsAuthLoading(false);
-      }
-  };
+  // Cashiers and staff work in their assigned branch
+  React.useEffect(() => {
+    if (activeUser?.branch_id && activeUser.role !== 'admin' && branches.length) {
+      const userBranch = branches.find(b => b.id.toString() === activeUser.branch_id.toString());
+      if (userBranch && userBranch.id !== activeBranch?.id) setActiveBranch(userBranch);
+    }
+  }, [activeUser?.branch_id, activeUser?.role, branches]);
 
   const handleLogout = async () => {
-     await supabase.auth.signOut();
-     localStorage.removeItem('resto_active_user');
+     clearStaffSession();
      setActiveUser(null);
      navigate('/');
   };

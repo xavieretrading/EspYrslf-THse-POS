@@ -5,7 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { getPaymentSplits, getCashPortion, SPLIT_REF_PREFIX } from './src/lib/paymentSplits';
-import { supabase } from './supabaseClient';
+import { supabase, supabaseUrl, supabaseAnonKey } from './supabaseClient';
+import { staffAuthMiddleware, createStaffAuthRouter, requireAdmin, hashPassword, publicUser } from './staff-auth';
 import { createCustomerRouter } from './customer-api';
 import { createLaundryStaffRouter } from './laundry-staff-api';
 
@@ -282,6 +283,11 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Staff login: every /api route except the customer app and the login itself checks the POS token
+// (enforced when STAFF_AUTH_REQUIRED=1) — see staff-auth.ts
+app.use('/api', staffAuthMiddleware());
+app.use('/api/auth', createStaffAuthRouter(supabase, supabaseUrl, supabaseAnonKey));
 
 // S1p & Sp1n Laundry customer app (Davao laundry branch only) — see customer-api.ts
 app.use('/api/customer', createCustomerRouter(supabase));
@@ -685,7 +691,7 @@ app.get('/api/users', async (req, res) => {
     }
     
     const mapped = users.map((u: any) => ({
-      ...u,
+      ...publicUser(u), // never send passwords to the browser
       branch_name: branches.find(b => b.id === u.branch_id)?.name
     }));
     res.json(mapped);
@@ -694,9 +700,10 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-app.post('/api/users', async (req, res) => {
+app.post('/api/users', requireAdmin, async (req, res) => {
   try {
     const { username, email, password, role, full_name, branch_id, permissions } = req.body;
+    if (!password || String(password).length < 4) return res.status(400).json({ error: 'Password must be at least 4 characters.' });
     
     // Check if exists
     const users = await getSupabaseUsers();
@@ -707,7 +714,7 @@ app.post('/api/users', async (req, res) => {
     const userData = {
       username,
       email,
-      password,
+      password: await hashPassword(String(password)),
       role,
       permissions: permissions || (role === 'admin' ? 
         { '/': 'admin', '/pos': 'admin', '/orders': 'admin', '/kitchen': 'admin', '/tables': 'admin', '/inventory': 'admin', '/vouchers': 'admin', '/reports': 'admin', '/settings': 'admin' } : 
@@ -738,13 +745,13 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', async (req, res) => {
+app.put('/api/users/:id', requireAdmin, async (req, res) => {
   try {
     const { username, email, password, role, full_name, branch_id, permissions } = req.body;
     const updates: any = {};
     if (username !== undefined) updates.username = username;
     if (email !== undefined) updates.email = email;
-    if (password !== undefined && password.trim() !== '') updates.password = password; 
+    if (password !== undefined && password.trim() !== '') updates.password = await hashPassword(password.trim());
     if (role !== undefined) updates.role = role;
     if (permissions !== undefined) updates.permissions = permissions;
     if (full_name !== undefined) updates.full_name = full_name;
@@ -771,7 +778,7 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', async (req, res) => {
+app.delete('/api/users/:id', requireAdmin, async (req, res) => {
   try {
     const { error } = await supabase.from('users_espresso').update({ is_active: 0 }).eq('id', req.params.id);
     if (error) {
@@ -2007,7 +2014,9 @@ app.post('/api/orders/:id/pay', async (req, res) => {
       if (isNaN(backdate.getTime()) || backdate.getTime() > Date.now()) {
         return res.status(400).json({ error: 'Backdate cannot be in the future' });
       }
-      const { data: actingUser } = await supabase.from('users_espresso').select('role').eq('id', user_id).single();
+      // Prefer the logged-in staff token over the user id sent by the screen
+      const actingUserId = (req as any).staff?.uid || user_id;
+      const { data: actingUser } = await supabase.from('users_espresso').select('role').eq('id', actingUserId).single();
       if (!actingUser || !['admin', 'developer'].includes(actingUser.role)) {
         return res.status(403).json({ error: 'Only admin or developer can record a sale on a past date' });
       }

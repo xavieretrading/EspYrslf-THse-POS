@@ -7,7 +7,7 @@
 import express from 'express';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { LAUNDRY_BRANCH_ID, parseNotes, billFromOrder } from './customer-api';
-import { notifyCustomer, pushEnabled, pushToCustomers } from './push';
+import { notifyCustomer, pushEnabled, pushToCustomers, saveNotifications } from './push';
 
 const PICKUP_ACTIVE = ['requested', 'accepted', 'rider_on_the_way', 'picked_up'];
 const PICKUP_NEXT: Record<string, string[]> = {
@@ -66,19 +66,15 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
     const { error } = await supabase.from('laundry_pickup_requests').update(updates).eq('id', p.id);
     if (error) return res.status(500).json({ error: error.message });
     await history({ pickup_request_id: p.id, status, changed_by: staffName(req), note: req.body?.note ? String(req.body.note).slice(0, 300) : null });
-    // Tell the customer in chat when declined or missed, with the reason
-    if ((status === 'rejected' || status === 'not_picked_up') && p.customer_id) {
-      const reason = req.body?.note ? ` Reason: ${String(req.body.note).slice(0, 300)}` : '';
-      const text = status === 'rejected' ? `Sorry, we can't accept your pickup request PR-${p.id}.${reason}` : `Our rider couldn't pick up your laundry for PR-${p.id}.${reason} Please message us to reschedule.`;
-      await supabase.from('laundry_messages').insert([{ customer_id: p.customer_id, sender: 'staff', sender_name: staffName(req), body: text }]);
-    }
-    // Phone notification for each pickup step
+    // Update (Updates list + phone notification) for each pickup step; declines include the reason
+    const reason = req.body?.note ? ` Reason: ${String(req.body.note).slice(0, 300)}` : '';
     const pickupPush: Record<string, { title: string; body: string }> = {
       accepted: { title: 'Pickup accepted ✅', body: `We'll pick up your laundry ${p.preferred_time ? `at ${p.preferred_time}` : 'soon'}.` },
       rider_on_the_way: { title: 'Rider on the way 🛵', body: `${updates.assigned_rider || p.assigned_rider || 'Our rider'} is coming. Please prepare your laundry.` },
       picked_up: { title: 'Laundry picked up', body: "Your laundry is on its way to the shop. We'll send the price after weighing." },
-      rejected: { title: 'Pickup not accepted', body: 'Sorry, we could not accept your pickup. Open the app for details.' },
-      not_picked_up: { title: 'Pickup missed', body: "Our rider couldn't pick up your laundry. Open the app to reschedule." },
+      rejected: { title: 'Pickup not accepted', body: `Sorry, we could not accept your pickup PR-${p.id}.${reason}` },
+      not_picked_up: { title: 'Pickup missed', body: `Our rider couldn't pick up your laundry.${reason} Message us to reschedule.` },
+      cancelled: { title: 'Pickup cancelled', body: `Your pickup PR-${p.id} was cancelled.${reason}` },
     };
     if (pickupPush[status]) notifyCustomer(supabase, p.customer_id, { ...pickupPush[status], data: { type: 'order', orderKey: `req-${p.id}` } });
     res.json({ success: true });
@@ -109,17 +105,9 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
         ...(bill.discount ? [`• Discount = -${peso(bill.discount)}`] : []),
       ];
       const code = 'SP-' + String(order.receipt_number || order.order_number || order.id);
-      await supabase.from('laundry_messages').insert([
-        {
-          customer_id: p.customer_id,
-          sender: 'staff',
-          sender_name: staffName(req),
-          body: [`Your laundry (PR-${p.id}) has been weighed. Order ${code}:`, ...lines, `Total: ${peso(bill.total)}`].join('\n'),
-        },
-      ]);
       notifyCustomer(supabase, p.customer_id, {
         title: 'Your laundry has been weighed ⚖️',
-        body: `Total: ${peso(bill.total)}. Tap to see the services and pay.`,
+        body: [`Order ${code}:`, ...lines, `Total: ${peso(bill.total)}`].join('\n'),
         data: { type: 'order', orderKey: `req-${p.id}` },
       });
     }
@@ -260,7 +248,10 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
       .select()
       .single();
     if (error) return res.status(500).json({ error: error.message });
-    notifyCustomer(supabase, Number(req.params.customerId), { title: 'S1p & Sp1n Laundry', body: body.length > 140 ? body.slice(0, 137) + '…' : body, data: { type: 'chat' } });
+    if (pushEnabled())
+      pushToCustomers(supabase, [Number(req.params.customerId)], { title: 'New message from S1p & Sp1n', body: body.length > 140 ? body.slice(0, 137) + '…' : body, data: { type: 'chat' } }).catch(
+        e => console.error('[push]', e.message)
+      );
     res.json({ message: data });
   });
 
@@ -283,11 +274,27 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
 
   router.get('/announcements', async (req, res) => {
     const audience = req.query.audience === 'inactive' ? 'inactive' : 'all';
-    const [{ data, error }, ids] = await Promise.all([
-      supabase.from('laundry_announcements').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).order('created_at', { ascending: false }).limit(50),
+    const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || 10));
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const from = (page - 1) * pageSize;
+    const [{ data, error, count }, ids] = await Promise.all([
+      supabase
+        .from('laundry_announcements')
+        .select('*', { count: 'exact' })
+        .eq('branch_id', LAUNDRY_BRANCH_ID)
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1),
       audienceIds(audience),
     ]);
-    res.json({ announcements: error ? [] : data || [], audienceCount: ids.length, pushReady: pushEnabled(), notReady: !!error });
+    res.json({
+      announcements: error ? [] : data || [],
+      total: error ? 0 : count || 0,
+      page,
+      pageSize,
+      audienceCount: ids.length,
+      pushReady: pushEnabled(),
+      notReady: !!error,
+    });
   });
 
   router.post('/announcements', async (req, res) => {
@@ -298,6 +305,7 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
     if (!pushEnabled()) return res.status(503).json({ error: 'Push notifications are not set up on the server yet (FIREBASE_SERVICE_ACCOUNT).' });
     const ids = await audienceIds(audience);
     if (!ids.length) return res.status(400).json({ error: 'No customers can receive notifications yet. They need the app with notifications allowed.' });
+    await saveNotifications(supabase, ids, { title, body, data: { type: 'promo' } });
     const delivered = await pushToCustomers(supabase, ids, { title, body, data: { type: 'promo' } });
     await supabase.from('laundry_announcements').insert([{ branch_id: LAUNDRY_BRANCH_ID, title, body, audience, recipients: ids.length, delivered, sent_by: staffName(req) }]);
     res.json({ recipients: ids.length, delivered });

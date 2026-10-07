@@ -104,6 +104,19 @@ export async function sendPush(tokens: string[], msg: PushMessage): Promise<{ se
   return { sent, invalid };
 }
 
+/** Saves the update in each customer's in-app "Updates" list (laundry_notifications). */
+export async function saveNotifications(supabase: SupabaseClient, customerIds: number[], msg: PushMessage) {
+  if (!customerIds.length) return;
+  const rows = customerIds.map(id => ({ customer_id: id, title: msg.title, body: msg.body, data: msg.data || {} }));
+  for (let i = 0; i < rows.length; i += 500) {
+    const { error } = await supabase.from('laundry_notifications').insert(rows.slice(i, i + 500));
+    if (error) {
+      console.error('[notifications] could not save:', error.message);
+      return;
+    }
+  }
+}
+
 /** Sends to all phones of the given customers and forgets phones that uninstalled the app. */
 export async function pushToCustomers(supabase: SupabaseClient, customerIds: number[], msg: PushMessage): Promise<number> {
   if (!pushEnabled() || customerIds.length === 0) return 0;
@@ -114,8 +127,9 @@ export async function pushToCustomers(supabase: SupabaseClient, customerIds: num
   return sent;
 }
 
-/** Fire-and-forget helper for status updates: never blocks or breaks the staff action. */
+/** Fire-and-forget helper for status updates: saves it to the customer's Updates list and sends a phone notification. */
 export function notifyCustomer(supabase: SupabaseClient, customerId: number | null | undefined, msg: PushMessage) {
-  if (!customerId || !pushEnabled()) return;
-  pushToCustomers(supabase, [customerId], msg).catch(e => console.error('[push]', e.message));
+  if (!customerId) return;
+  saveNotifications(supabase, [customerId], msg).catch(e => console.error('[notifications]', e.message));
+  if (pushEnabled()) pushToCustomers(supabase, [customerId], msg).catch(e => console.error('[push]', e.message));
 }

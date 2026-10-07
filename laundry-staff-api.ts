@@ -311,6 +311,91 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
     res.json({ recipients: ids.length, delivered });
   });
 
+  // ---------- promotions: promo slides, highlight photos, pictures ----------
+  const PROMO_COLORS = ['sun', 'blue', 'green', 'pink', 'purple', 'dark'];
+
+  router.post('/media', express.json({ limit: '3mb' }), async (req, res) => {
+    const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(req.body?.dataUrl || ''));
+    if (!m) return res.status(400).json({ error: 'Please choose a JPG, PNG or WEBP picture.' });
+    if (m[2].length > 2_800_000) return res.status(400).json({ error: 'The picture is too large.' });
+    const { data, error } = await supabase.from('laundry_media').insert([{ mime: m[1], data: m[2] }]).select('id').single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ id: data.id });
+  });
+
+  router.get('/promos', async (_req, res) => {
+    const [promos, highlights] = await Promise.all([
+      supabase.from('laundry_promos').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).order('sort').order('id'),
+      supabase.from('laundry_highlights').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).order('sort').order('id', { ascending: false }),
+    ]);
+    res.json({ promos: promos.data || [], highlights: highlights.data || [], notReady: !!(promos.error || highlights.error) });
+  });
+
+  const promoFields = (b: any) => ({
+    title: String(b.title || '').trim().slice(0, 60),
+    body: String(b.body || '').trim().slice(0, 200) || null,
+    color: PROMO_COLORS.includes(b.color) ? b.color : 'sun',
+    image_id: b.image_id ? Number(b.image_id) : null,
+    starts_on: /^\d{4}-\d{2}-\d{2}$/.test(String(b.starts_on || '')) ? b.starts_on : null,
+    ends_on: /^\d{4}-\d{2}-\d{2}$/.test(String(b.ends_on || '')) ? b.ends_on : null,
+    active: b.active !== false,
+  });
+
+  router.post('/promos', async (req, res) => {
+    const f = promoFields(req.body || {});
+    if (!f.title) return res.status(400).json({ error: 'Please type a promo title.' });
+    const { data: last } = await supabase.from('laundry_promos').select('sort').eq('branch_id', LAUNDRY_BRANCH_ID).order('sort', { ascending: false }).limit(1).maybeSingle();
+    const { data, error } = await supabase.from('laundry_promos').insert([{ ...f, branch_id: LAUNDRY_BRANCH_ID, sort: (last?.sort ?? -1) + 1 }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ promo: data });
+  });
+
+  router.post('/promos/:id', async (req, res) => {
+    const f = promoFields(req.body || {});
+    if (!f.title) return res.status(400).json({ error: 'Please type a promo title.' });
+    const { error } = await supabase.from('laundry_promos').update(f).eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  });
+
+  router.post('/promos/:id/delete', async (req, res) => {
+    await supabase.from('laundry_promos').delete().eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    res.json({ success: true });
+  });
+
+  // New order of slides: { ids: [3, 1, 2] }
+  router.post('/promos-order', async (req, res) => {
+    const ids: number[] = Array.isArray(req.body?.ids) ? req.body.ids.map(Number) : [];
+    await Promise.all(ids.map((id, i) => supabase.from('laundry_promos').update({ sort: i }).eq('id', id).eq('branch_id', LAUNDRY_BRANCH_ID)));
+    res.json({ success: true });
+  });
+
+  router.post('/highlights', async (req, res) => {
+    const imageId = Number(req.body?.image_id);
+    if (!imageId) return res.status(400).json({ error: 'Please choose a photo.' });
+    const { data, error } = await supabase
+      .from('laundry_highlights')
+      .insert([{ branch_id: LAUNDRY_BRANCH_ID, image_id: imageId, caption: String(req.body?.caption || '').trim().slice(0, 120) || null, active: true }])
+      .select()
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ highlight: data });
+  });
+
+  router.post('/highlights/:id', async (req, res) => {
+    const updates: any = {};
+    if (typeof req.body?.caption === 'string') updates.caption = req.body.caption.trim().slice(0, 120) || null;
+    if (typeof req.body?.active === 'boolean') updates.active = req.body.active;
+    const { error } = await supabase.from('laundry_highlights').update(updates).eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  });
+
+  router.post('/highlights/:id/delete', async (req, res) => {
+    await supabase.from('laundry_highlights').delete().eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    res.json({ success: true });
+  });
+
   // ---------- reviews ----------
   router.get('/reviews', async (_req, res) => {
     const { data, error } = await supabase

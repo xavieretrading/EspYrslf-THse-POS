@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Bike, CheckCircle2, ChevronLeft, Clock, Lock, MapPin, MessageCircle, Phone, RefreshCw, Scale, Send, Smartphone, Star, Store, Truck, XCircle } from 'lucide-react';
+import { ArrowDown, ArrowUp, Bell, Bike, Eye, EyeOff, ImagePlus, Pencil, Trash2, Megaphone, CheckCircle2, ChevronLeft, Clock, Lock, MapPin, MessageCircle, Phone, RefreshCw, Scale, Send, Smartphone, Star, Store, Truck, XCircle } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '../App';
 import Swal, { swalAlert, swalConfirm } from '../lib/swal';
 
 // Staff side of the S1p & Sp1n customer app (Davao laundry branch). Data: /api/laundry-staff (laundry-staff-api.ts)
 
-type Tab = 'pickups' | 'status' | 'chat' | 'reviews' | 'notify';
+type Tab = 'pickups' | 'status' | 'chat' | 'reviews' | 'notify' | 'promos';
 
 const PICKUP_LABEL: Record<string, string> = {
   requested: 'New request',
@@ -125,6 +125,7 @@ export default function LaundryApp() {
     { id: 'chat', label: 'Chat', badge: summary.unreadMessages },
     { id: 'reviews', label: 'Reviews' },
     { id: 'notify', label: 'Send notification' },
+    { id: 'promos', label: 'Promotions' },
   ];
 
   return (
@@ -159,6 +160,7 @@ export default function LaundryApp() {
       {tab === 'chat' && <Inbox selected={chatWith} onSelect={setChatWith} onRead={loadSummary} />}
       {tab === 'reviews' && <Reviews />}
       {tab === 'notify' && <Announcements />}
+      {tab === 'promos' && <Promotions />}
     </div>
   );
 }
@@ -879,6 +881,369 @@ function SentNotifications({ onTotal, onReuse }: { onTotal: (n: number) => void;
             </button>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// ---------------- Promotions: promo slides + customer photos (shown on the app's Home) ----------------
+const PROMO_COLOR_CHOICES: { id: string; label: string; cls: string }[] = [
+  { id: 'sun', label: 'Yellow', cls: 'bg-gradient-to-br from-amber-300 to-amber-500 text-amber-950' },
+  { id: 'blue', label: 'Blue', cls: 'bg-gradient-to-br from-sky-400 to-blue-700 text-white' },
+  { id: 'green', label: 'Green', cls: 'bg-gradient-to-br from-emerald-400 to-emerald-700 text-white' },
+  { id: 'pink', label: 'Pink', cls: 'bg-gradient-to-br from-pink-400 to-rose-600 text-white' },
+  { id: 'purple', label: 'Purple', cls: 'bg-gradient-to-br from-violet-400 to-purple-700 text-white' },
+  { id: 'dark', label: 'Dark', cls: 'bg-gradient-to-br from-slate-600 to-slate-900 text-white' },
+];
+const mediaSrc = (id: number) => `/api/customer/media/${id}`;
+
+/** Shrinks a photo in the browser (max 1280 px, JPEG) and uploads it. Returns the picture id. */
+async function uploadPicture(file: File): Promise<number> {
+  const dataUrl: string = await new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => reject(new Error('This file is not a picture.'));
+    img.src = url;
+  });
+  const r = await call('/media', { dataUrl });
+  return r.id;
+}
+
+function Promotions() {
+  const [view, setView] = useState<'slides' | 'photos'>('slides');
+  const [data, setData] = useState<{ promos: any[]; highlights: any[]; notReady?: boolean } | null>(null);
+  const load = useCallback(async () => {
+    try {
+      const d = await call('/promos');
+      setData({ promos: Array.isArray(d.promos) ? d.promos : [], highlights: Array.isArray(d.highlights) ? d.highlights : [], notReady: !!d.notReady });
+    } catch {
+      setData({ promos: [], highlights: [], notReady: true });
+    }
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <Segmented
+          value={view}
+          onChange={setView}
+          options={[
+            ['slides', `Promo slides${data ? ` (${data.promos.length})` : ''}`],
+            ['photos', `Customer photos${data ? ` (${data.highlights.length})` : ''}`],
+          ]}
+        />
+        <span className="text-xs text-slate-500">Changes show in the customers' app within a minute. No app update needed.</span>
+      </div>
+      {data?.notReady && (
+        <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">Run add-laundry-promotions.sql in Supabase to enable promotions.</div>
+      )}
+      {!data ? <Empty text="Loading…" /> : view === 'slides' ? <PromoSlides promos={data.promos} reload={load} /> : <CustomerPhotos items={data.highlights} reload={load} />}
+    </div>
+  );
+}
+
+const EMPTY_PROMO = { title: '', body: '', color: 'sun', image_id: null as number | null, starts_on: '', ends_on: '', active: true };
+
+function PromoSlides({ promos, reload }: { promos: any[]; reload: () => void }) {
+  const [form, setForm] = useState<typeof EMPTY_PROMO & { id?: number }>(EMPTY_PROMO);
+  const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const statusOf = (p: any) =>
+    !p.active ? 'Hidden' : p.ends_on && p.ends_on < today ? 'Ended' : p.starts_on && p.starts_on > today ? `Starts ${format(new Date(p.starts_on + 'T00:00'), 'MMM d')}` : 'Showing';
+
+  const save = async () => {
+    if (!form.title.trim()) return;
+    setBusy(true);
+    try {
+      if (form.id) await call(`/promos/${form.id}`, form);
+      else await call('/promos', form);
+      setForm(EMPTY_PROMO);
+      reload();
+    } catch (e: any) {
+      swalAlert('Not saved', e.message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const move = async (i: number, dir: -1 | 1) => {
+    const ids = promos.map(p => p.id);
+    const j = i + dir;
+    if (j < 0 || j >= ids.length) return;
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    await call('/promos-order', { ids });
+    reload();
+  };
+
+  const toggle = async (p: any) => {
+    await call(`/promos/${p.id}`, { ...p, active: !p.active });
+    reload();
+  };
+
+  const remove = async (p: any) => {
+    if (!(await swalConfirm(`Delete "${p.title}"?`, 'It disappears from the app.'))) return;
+    await call(`/promos/${p.id}/delete`, {});
+    if (form.id === p.id) setForm(EMPTY_PROMO);
+    reload();
+  };
+
+  const tone = PROMO_COLOR_CHOICES.find(c => c.id === form.color) || PROMO_COLOR_CHOICES[0];
+
+  return (
+    <div className="grid lg:grid-cols-[1fr_360px] gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200">
+        {promos.length === 0 ? (
+          <div className="p-6 text-sm text-slate-400">No promo slides yet. Add one with the form.</div>
+        ) : (
+          promos.map((p, i) => (
+            <div key={p.id} className={cn('flex items-center gap-3 p-3 border-b border-slate-100 last:border-0', form.id === p.id && 'bg-emerald-50')}>
+              <div className="flex flex-col">
+                <button aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)} className="p-1 text-slate-400 disabled:opacity-25 hover:text-slate-700">
+                  <ArrowUp size={15} />
+                </button>
+                <button aria-label="Move down" disabled={i === promos.length - 1} onClick={() => move(i, 1)} className="p-1 text-slate-400 disabled:opacity-25 hover:text-slate-700">
+                  <ArrowDown size={15} />
+                </button>
+              </div>
+              <div className={cn('w-20 h-14 rounded-xl shrink-0 overflow-hidden relative', (PROMO_COLOR_CHOICES.find(c => c.id === p.color) || PROMO_COLOR_CHOICES[0]).cls)}>
+                {p.image_id && <img src={mediaSrc(p.image_id)} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-bold text-slate-800 text-sm truncate">{p.title}</div>
+                <div className="text-xs text-slate-500 truncate">{p.body}</div>
+                <div className="text-[11px] mt-0.5">
+                  <span className={cn('font-bold', statusOf(p) === 'Showing' ? 'text-emerald-600' : 'text-slate-400')}>{statusOf(p)}</span>
+                  {(p.starts_on || p.ends_on) && (
+                    <span className="text-slate-400">
+                      {' · '}
+                      {p.starts_on ? format(new Date(p.starts_on + 'T00:00'), 'MMM d') : 'now'} – {p.ends_on ? format(new Date(p.ends_on + 'T00:00'), 'MMM d') : 'no end'}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button title={p.active ? 'Hide' : 'Show'} onClick={() => toggle(p)} className="p-2 rounded-lg text-slate-500 hover:bg-slate-100">
+                {p.active ? <Eye size={16} /> : <EyeOff size={16} />}
+              </button>
+              <button
+                title="Edit"
+                onClick={() => setForm({ id: p.id, title: p.title, body: p.body || '', color: p.color || 'sun', image_id: p.image_id, starts_on: p.starts_on || '', ends_on: p.ends_on || '', active: p.active })}
+                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+              >
+                <Pencil size={16} />
+              </button>
+              <button title="Delete" onClick={() => remove(p)} className="p-2 rounded-lg text-rose-500 hover:bg-rose-50">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 h-fit">
+        <div className="font-bold text-slate-800 flex items-center gap-2">
+          <Megaphone size={17} /> {form.id ? 'Edit promo slide' : 'New promo slide'}
+        </div>
+        {/* live preview, like on the phone */}
+        <div className={cn('relative rounded-2xl overflow-hidden min-h-[110px] p-4', tone.cls)}>
+          {form.image_id && (
+            <>
+              <img src={mediaSrc(form.image_id)} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent" />
+            </>
+          )}
+          <div className={cn('relative', form.image_id && 'text-white')}>
+            <div className="text-[10px] font-extrabold uppercase tracking-wider opacity-80">🎁 Promo</div>
+            <div className="text-lg font-extrabold leading-tight mt-0.5">{form.title || 'Promo title'}</div>
+            <div className="text-xs font-semibold mt-0.5">{form.body || 'Short promo text for customers.'}</div>
+          </div>
+        </div>
+        <input
+          id="promo-title"
+          value={form.title}
+          maxLength={60}
+          onChange={e => setForm({ ...form, title: e.target.value })}
+          placeholder="Title, e.g. Free coffee every Sunday ☕"
+          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none font-semibold"
+        />
+        <textarea
+          id="promo-body"
+          value={form.body}
+          maxLength={200}
+          rows={2}
+          onChange={e => setForm({ ...form, body: e.target.value })}
+          placeholder="Text, e.g. Every laundry order on Sunday gets a free iced coffee."
+          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none resize-none text-sm"
+        />
+        <div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Color</div>
+          <div className="flex flex-wrap gap-1.5">
+            {PROMO_COLOR_CHOICES.map(c => (
+              <button
+                key={c.id}
+                title={c.label}
+                onClick={() => setForm({ ...form, color: c.id })}
+                className={cn('w-9 h-9 rounded-xl border-2', c.cls, form.color === c.id ? 'border-slate-900 scale-110' : 'border-transparent')}
+              />
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Picture (optional)</div>
+          <div className="flex items-center gap-2">
+            <label className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer flex items-center gap-1.5">
+              <ImagePlus size={16} /> {uploading ? 'Uploading…' : form.image_id ? 'Change picture' : 'Add picture'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async e => {
+                  const f = e.target.files?.[0];
+                  e.target.value = '';
+                  if (!f) return;
+                  setUploading(true);
+                  try {
+                    const id = await uploadPicture(f);
+                    setForm(cur => ({ ...cur, image_id: id }));
+                  } catch (err: any) {
+                    swalAlert('Picture not uploaded', err.message, 'error');
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+            </label>
+            {form.image_id && (
+              <button onClick={() => setForm({ ...form, image_id: null })} className="text-sm text-rose-600 font-semibold">
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Starts
+            <input type="date" value={form.starts_on} onChange={e => setForm({ ...form, starts_on: e.target.value })} className="mt-1 w-full px-2 py-2 rounded-xl border border-slate-200 text-sm font-normal normal-case" />
+          </label>
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Ends
+            <input type="date" value={form.ends_on} onChange={e => setForm({ ...form, ends_on: e.target.value })} className="mt-1 w-full px-2 py-2 rounded-xl border border-slate-200 text-sm font-normal normal-case" />
+          </label>
+        </div>
+        <div className="text-[11px] text-slate-400">Leave the dates empty to show it right away and keep it until you hide it.</div>
+        <div className="flex gap-2">
+          {form.id && (
+            <button onClick={() => setForm(EMPTY_PROMO)} className="flex-1 py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600">
+              Cancel
+            </button>
+          )}
+          <button onClick={save} disabled={busy || uploading || !form.title.trim()} className="flex-[2] py-2.5 rounded-xl bg-emerald-600 text-white font-bold disabled:opacity-40">
+            {busy ? 'Saving…' : form.id ? 'Save changes' : 'Add promo slide'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CustomerPhotos({ items, reload }: { items: any[]; reload: () => void }) {
+  const [caption, setCaption] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const add = async (f: File) => {
+    setUploading(true);
+    try {
+      const id = await uploadPicture(f);
+      await call('/highlights', { image_id: id, caption });
+      setCaption('');
+      reload();
+    } catch (e: any) {
+      swalAlert('Photo not added', e.message, 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label htmlFor="photo-caption" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Caption (optional)
+          </label>
+          <input
+            id="photo-caption"
+            value={caption}
+            maxLength={120}
+            onChange={e => setCaption(e.target.value)}
+            placeholder="e.g. Thank you Ate Liza for always choosing S1p & Sp1n!"
+            className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 outline-none"
+          />
+        </div>
+        <label className={cn('px-4 py-2.5 rounded-xl bg-emerald-600 text-white font-bold flex items-center gap-2 cursor-pointer', uploading && 'opacity-50 pointer-events-none')}>
+          <ImagePlus size={17} /> {uploading ? 'Uploading…' : 'Add photo'}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => {
+              const f = e.target.files?.[0];
+              e.target.value = '';
+              if (f) add(f);
+            }}
+          />
+        </label>
+      </div>
+
+      {items.length === 0 ? (
+        <Empty text="No customer photos yet. Add one above; it appears under “Happy customers” in the app." />
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {items.map(h => (
+            <div key={h.id} className={cn('bg-white rounded-2xl border overflow-hidden', h.active ? 'border-slate-200' : 'border-dashed border-slate-300 opacity-60')}>
+              <div className="aspect-[3/4] bg-slate-100">
+                <img src={mediaSrc(h.image_id)} alt={h.caption || 'Customer photo'} className="w-full h-full object-cover" loading="lazy" />
+              </div>
+              <div className="p-2">
+                <div className="text-xs text-slate-600 line-clamp-2 min-h-[2rem]">{h.caption || <span className="text-slate-400">No caption</span>}</div>
+                <div className="flex gap-1 mt-1.5">
+                  <button
+                    onClick={async () => {
+                      await call(`/highlights/${h.id}`, { active: !h.active });
+                      reload();
+                    }}
+                    className="flex-1 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 flex items-center justify-center gap-1"
+                  >
+                    {h.active ? <EyeOff size={13} /> : <Eye size={13} />} {h.active ? 'Hide' : 'Show'}
+                  </button>
+                  <button
+                    title="Delete"
+                    onClick={async () => {
+                      if (!(await swalConfirm('Delete this photo?'))) return;
+                      await call(`/highlights/${h.id}/delete`, {});
+                      reload();
+                    }}
+                    className="px-2 rounded-lg text-rose-500 hover:bg-rose-50"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

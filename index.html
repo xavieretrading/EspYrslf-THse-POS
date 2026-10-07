@@ -15,6 +15,33 @@
   <link rel="apple-touch-icon" href="/logo.png" />
   <meta name="theme-color" content="#0f172a" />
 
+  <!-- Self-healing error recovery for stale Service Worker script loading failures -->
+  <script>
+    window.addEventListener('error', function (e) {
+      const isModuleFail = (e && e.message && e.message.includes('Failed to load module script')) ||
+                           (e && e.target && e.target.tagName === 'SCRIPT');
+      if (isModuleFail && !sessionStorage.getItem('sw_reload_recovered')) {
+        sessionStorage.setItem('sw_reload_recovered', 'true');
+        console.warn('Script loading failed. Evicting stale cache and updating Service Worker...');
+        if ('caches' in window) {
+          caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          }).then(function () {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }));
+              }).then(function () {
+                window.location.reload();
+              });
+            } else {
+              window.location.reload();
+            }
+          });
+        }
+      }
+    }, true);
+  </script>
+
   <!-- PWA Service Worker & Capacitor API Redirect -->
   <script>
     const API_BASE = 'https://lr-groupofcompanies-pos-system-794666981380.europe-west1.run.app';
@@ -35,7 +62,11 @@
     if ('serviceWorker' in navigator && window.location.protocol !== 'capacitor:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then((reg) => console.log('Service Worker registered:', reg.scope))
+          .then((reg) => {
+            console.log('Service Worker registered:', reg.scope);
+            // Proactively check for updates
+            if (reg && reg.update) reg.update();
+          })
           .catch((err) => console.error('Service Worker registration failed:', err));
       });
     } else if ('serviceWorker' in navigator && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {

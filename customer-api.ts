@@ -683,6 +683,52 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     res.json({ success: true });
   });
 
+  // --- Home content: promo slides, customer highlights, rating summary (public, no login needed) ---
+  router.get('/home', async (_req, res) => {
+    const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10); // Manila date
+    const [promos, highlights, reviews] = await Promise.all([
+      supabase
+        .from('laundry_promos')
+        .select('id, title, body, color, image_id, starts_on, ends_on, sort')
+        .eq('branch_id', LAUNDRY_BRANCH_ID)
+        .eq('active', true)
+        .order('sort')
+        .order('id'),
+      supabase.from('laundry_highlights').select('id, image_id, caption, sort').eq('branch_id', LAUNDRY_BRANCH_ID).eq('active', true).order('sort').order('id', { ascending: false }).limit(30),
+      supabase
+        .from('laundry_reviews')
+        .select('rating, comment, tags, created_at, customer:laundry_customers(full_name)')
+        .eq('branch_id', LAUNDRY_BRANCH_ID)
+        .order('created_at', { ascending: false })
+        .limit(500),
+    ]);
+    const visible = (promos.data || []).filter(p => (!p.starts_on || p.starts_on <= today) && (!p.ends_on || p.ends_on >= today));
+    const list = reviews.data || [];
+    const average = list.length ? Math.round((list.reduce((t, r) => t + r.rating, 0) / list.length) * 10) / 10 : null;
+    // Only first names, and only reviews with a comment and 4+ stars are shown publicly
+    const recent = list
+      .filter(r => r.rating >= 4 && r.comment)
+      .slice(0, 5)
+      .map(r => {
+        const c: any = Array.isArray(r.customer) ? r.customer[0] : r.customer;
+        return { rating: r.rating, comment: r.comment, tags: r.tags || [], name: String(c?.full_name || 'Customer').split(' ')[0], date: r.created_at };
+      });
+    res.json({
+      promos: visible.map(({ starts_on, ends_on, sort, ...p }) => p),
+      highlights: (highlights.data || []).map(({ sort, ...h }) => h),
+      rating: { average, count: list.length, recent },
+    });
+  });
+
+  // Pictures for promos and highlights (public; ids are only shown for active items)
+  router.get('/media/:id', async (req, res) => {
+    const { data } = await supabase.from('laundry_media').select('mime, data').eq('id', Number(req.params.id)).maybeSingle();
+    if (!data) return res.status(404).end();
+    res.setHeader('Content-Type', data.mime || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable'); // a picture never changes; edits upload a new one
+    res.end(Buffer.from(data.data, 'base64'));
+  });
+
   // --- updates (order steps and promos), newest first ---
   router.get('/notifications', auth, async (req, res) => {
     const me = (req as any).customer;

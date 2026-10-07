@@ -4407,8 +4407,28 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        } else if (filePath.includes(path.sep + 'assets' + path.sep)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      }
+    }));
+
+    // Prevent SPA wildcard fallback from returning index.html (MIME text/html) for missing JS/CSS/static files
+    app.all('/assets/*', (req, res) => {
+      res.status(404).type('text/plain').send('Asset not found');
+    });
+    app.all(/\.(js|css|mjs|wasm|map|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/, (req, res) => {
+      res.status(404).type('text/plain').send('File not found');
+    });
+
     app.get('*', (req, res) => {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

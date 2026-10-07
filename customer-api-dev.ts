@@ -12,6 +12,7 @@ process.env.TZ = 'Asia/Manila';
 process.env.CUSTOMER_DEV_OTP = process.env.CUSTOMER_DEV_OTP ?? '1';
 
 const app = express();
+app.use(express.json({ limit: '10mb' })); // same as server.ts (photo uploads)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');

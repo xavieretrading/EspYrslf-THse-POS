@@ -10,9 +10,12 @@ export function getStaffToken(): string | null {
   }
 }
 
+export const LOGIN_EVENT = 'pos-staff-login';
+
 export function saveStaffSession(token: string, user: any) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
+  window.dispatchEvent(new Event(LOGIN_EVENT)); // branch list and settings load after login
 }
 
 export function clearStaffSession() {

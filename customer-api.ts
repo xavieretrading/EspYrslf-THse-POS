@@ -17,6 +17,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { saveNotifications } from './push';
 
 export const LAUNDRY_BRANCH_ID = 27;
 
@@ -227,6 +228,25 @@ async function loadCatalog(supabase: SupabaseClient): Promise<Catalog> {
   };
   catalogCache = { at: Date.now(), data };
   return data;
+}
+
+/** Coffee & pastries sold at the laundry branch (POS products in "coffee" categories), grouped by category. */
+export async function loadCoffeeMenu(supabase: SupabaseClient) {
+  const { data } = await supabase
+    .from('products_espresso')
+    .select('id, name, price, image_url, is_active, is_sellable, categories:categories_espresso(name, division)')
+    .eq('branch_id', LAUNDRY_BRANCH_ID);
+  const groups = new Map<string, { id: string; name: string; price: number; image: string | null }[]>();
+  for (const p of data || []) {
+    const cat: any = Array.isArray((p as any).categories) ? (p as any).categories[0] : (p as any).categories;
+    if (!cat || cat.division === 'laundry' || (p as any).is_active === 0 || (p as any).is_sellable === 0) continue;
+    const list = groups.get(cat.name) || [];
+    list.push({ id: String(p.id), name: String(p.name).trim(), price: Number(p.price) || 0, image: (p as any).image_url || null });
+    groups.set(cat.name, list);
+  }
+  return [...groups.entries()]
+    .map(([name, items]) => ({ name, items: items.sort((a, b) => a.name.localeCompare(b.name)) }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function estimateTotal(catalog: Catalog, services: Record<string, number>, addons: Record<string, number>, rush: boolean): number {
@@ -681,6 +701,132 @@ export function createCustomerRouter(supabase: SupabaseClient) {
     const me = (req as any).customer;
     await supabase.from('laundry_push_tokens').delete().eq('token', String(req.body?.token || '')).eq('customer_id', me.id);
     res.json({ success: true });
+  });
+
+  // --- Loyalty rewards: kilos from paid laundry orders; vouchers are issued automatically ---
+  const rewardCode = () => 'SR-' + Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[crypto.randomInt(0, 32)]).join('');
+
+  async function syncRewards(me: any) {
+    const { data: programs, error } = await supabase
+      .from('laundry_reward_programs')
+      .select('*')
+      .eq('branch_id', LAUNDRY_BRANCH_ID)
+      .eq('active', true)
+      .order('id');
+    if (error) return { programs: [], rewards: [], notReady: true };
+
+    const catalog = await loadCatalog(supabase);
+    const kgIds = new Set(catalog.services.filter(s => s.unit === 'kg').map(s => s.id));
+    const kgNames = new Set(catalog.services.filter(s => s.unit === 'kg').map(s => s.name.toLowerCase()));
+    const orders = (await buildOrders(me)).filter(o => o.final && o.payment?.status === 'paid');
+    const kgOf = (o: any) =>
+      (o.final.lines || [])
+        .filter((l: any) => kgIds.has(String(l.serviceId)) || kgNames.has(String(l.name || '').toLowerCase().replace(/:$/, '')))
+        .reduce((t: number, l: any) => t + (Number(l.qty) || 0), 0);
+
+    const { data: existing } = await supabase.from('laundry_rewards').select('*').eq('customer_id', me.id);
+    const out: any[] = [];
+    for (const p of programs || []) {
+      const from = p.count_from || String(p.created_at).slice(0, 10);
+      const kg = round2(orders.filter(o => String(o.receipt?.date || o.createdAt).slice(0, 10) >= from).reduce((t, o) => t + kgOf(o), 0));
+      const threshold = Number(p.threshold_kg) || 1;
+      const earned = Math.floor(kg / threshold);
+      const issued = (existing || []).filter(r => r.program_id === p.id).length;
+      const missing = Math.min(20, Math.max(0, earned - issued));
+      for (let i = 0; i < missing; i++) {
+        const row = {
+          customer_id: me.id,
+          program_id: p.id,
+          code: rewardCode(),
+          title: p.reward_title,
+          reward_type: p.reward_type,
+          reward_value: p.reward_value || 0,
+          expires_at: p.valid_days ? new Date(Date.now() + Number(p.valid_days) * 86400000).toISOString() : null,
+        };
+        const { data: created } = await supabase.from('laundry_rewards').insert([row]).select().single();
+        if (created) {
+          (existing || []).push(created);
+          saveNotifications(supabase, [me.id], { title: 'You earned a reward 🎁', body: `${p.reward_title}. Show code ${created.code} at the counter.`, data: { type: 'reward' } }).catch(() => {});
+        }
+      }
+      out.push({
+        id: p.id,
+        name: p.name,
+        thresholdKg: threshold,
+        totalKg: kg,
+        progressKg: round2(kg - earned * threshold),
+        toNextKg: round2(threshold - (kg - earned * threshold)),
+        rewardTitle: p.reward_title,
+        rewardType: p.reward_type,
+        rewardValue: Number(p.reward_value) || 0,
+        note: p.reward_note || null,
+        countFrom: from,
+      });
+    }
+    const now = Date.now();
+    const rewards = (existing || [])
+      .map(r => ({ ...r, status: r.status === 'available' && r.expires_at && new Date(r.expires_at).getTime() < now ? 'expired' : r.status }))
+      .sort((a, b) => (a.earned_at < b.earned_at ? 1 : -1));
+    return { programs: out, rewards };
+  }
+
+  // One check at a time per customer, so the same voucher is never issued twice
+  const syncing = new Map<number, Promise<any>>();
+  const syncOnce = (me: any) => {
+    if (!syncing.has(me.id)) syncing.set(me.id, syncRewards(me).finally(() => syncing.delete(me.id)));
+    return syncing.get(me.id)!;
+  };
+
+  router.get('/rewards', auth, async (req, res) => {
+    try {
+      res.json(await syncOnce((req as any).customer));
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Could not load rewards.' });
+    }
+  });
+
+  // --- Coffee menu: "Coming soon" for customers until the owner switches it on; test phones always see it ---
+  router.get('/coffee-menu', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const { data: settingsRow } = await supabase.from('laundry_app_settings').select('coffee_menu_live').eq('branch_id', LAUNDRY_BRANCH_ID).maybeSingle();
+    const live = !!settingsRow?.coffee_menu_live;
+    // Only the numbers in CUSTOMER_TEST_PHONES (owner/staff) see the menu before it goes live
+    const preview = testPhones().has(me.phone);
+    if (!live && !preview) return res.json({ live: false, canSee: false, categories: [] });
+    res.json({ live, canSee: true, preview: !live, categories: await loadCoffeeMenu(supabase) });
+  });
+
+  // --- News feed: posts from the shop (photos, posters, videos, quotes) with likes ---
+  const POST_COLUMNS = 'id, kind, tag, caption, image_ids, video_url, quote_text, quote_author, color, pinned, created_at';
+
+  router.get('/feed', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 30));
+    let q = supabase.from('laundry_posts').select(POST_COLUMNS).eq('branch_id', LAUNDRY_BRANCH_ID).eq('active', true);
+    if (typeof req.query.tag === 'string' && req.query.tag) q = q.eq('tag', req.query.tag);
+    const { data: posts, error } = await q.order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(limit);
+    if (error) return res.json({ posts: [], notReady: true });
+    const ids = (posts || []).map(p => p.id);
+    const { data: likes } = ids.length ? await supabase.from('laundry_post_likes').select('post_id, customer_id').in('post_id', ids) : { data: [] as any[] };
+    res.json({
+      posts: (posts || []).map(p => ({
+        ...p,
+        image_ids: p.image_ids || [],
+        likes: (likes || []).filter(l => l.post_id === p.id).length,
+        liked: (likes || []).some(l => l.post_id === p.id && l.customer_id === me.id),
+      })),
+    });
+  });
+
+  router.post('/feed/:id/like', auth, async (req, res) => {
+    const me = (req as any).customer;
+    const postId = Number(req.params.id);
+    const { data: post } = await supabase.from('laundry_posts').select('id').eq('id', postId).eq('branch_id', LAUNDRY_BRANCH_ID).eq('active', true).maybeSingle();
+    if (!post) return res.status(404).json({ error: 'Post not found.' });
+    if (req.body?.like === false) await supabase.from('laundry_post_likes').delete().eq('post_id', postId).eq('customer_id', me.id);
+    else await supabase.from('laundry_post_likes').upsert([{ post_id: postId, customer_id: me.id }], { onConflict: 'post_id,customer_id', ignoreDuplicates: true });
+    const { count } = await supabase.from('laundry_post_likes').select('post_id', { count: 'exact', head: true }).eq('post_id', postId);
+    res.json({ likes: count || 0, liked: req.body?.like !== false });
   });
 
   // --- Home content: promo slides, customer highlights, rating summary (public, no login needed) ---

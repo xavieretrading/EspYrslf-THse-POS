@@ -52,6 +52,19 @@ export function verifyStaffToken(token: string): { uid: number; role: string } |
   }
 }
 
+/** Which kind of key is set (never the key itself). Must be "service_role" or "secret" for the database lock to work. */
+function describeServiceKey(key?: string): string {
+  if (!key) return 'none';
+  if (key.startsWith('sb_secret_')) return 'secret (correct)';
+  if (key.startsWith('sb_publishable_')) return 'publishable (WRONG: use the secret key)';
+  try {
+    const role = JSON.parse(Buffer.from(key.split('.')[1] || '', 'base64url').toString()).role;
+    return role === 'service_role' ? 'service_role (correct)' : `${role || 'unknown'} (WRONG: use the service_role key)`;
+  } catch {
+    return 'unknown';
+  }
+}
+
 export const hashPassword = (plain: string) => bcrypt.hash(plain, 10);
 const isHash = (s: string) => /^\$2[aby]\$/.test(s || '');
 
@@ -134,6 +147,7 @@ export function createStaffAuthRouter(supabase: SupabaseClient, supabaseUrl: str
   router.get('/status', (_req, res) => {
     res.json({
       serviceKeyInUse: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      serviceKeyType: describeServiceKey(process.env.SUPABASE_SERVICE_ROLE_KEY),
       staffLoginRequired: staffAuthRequired(),
       tokenSecretSet: !!(process.env.STAFF_TOKEN_SECRET || process.env.CUSTOMER_TOKEN_SECRET),
     });

@@ -5,8 +5,9 @@
  * updates the notes "claimed" flag, exactly like the existing Claimed button on the Orders page.
  */
 import express from 'express';
+import crypto from 'crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { LAUNDRY_BRANCH_ID, parseNotes, billFromOrder } from './customer-api';
+import { LAUNDRY_BRANCH_ID, parseNotes, billFromOrder, loadCoffeeMenu, normalizePhone } from './customer-api';
 import { notifyCustomer, pushEnabled, pushToCustomers, saveNotifications } from './push';
 
 const PICKUP_ACTIVE = ['requested', 'accepted', 'rider_on_the_way', 'picked_up'];
@@ -394,6 +395,203 @@ export function createLaundryStaffRouter(supabase: SupabaseClient) {
   router.post('/highlights/:id/delete', async (req, res) => {
     await supabase.from('laundry_highlights').delete().eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
     res.json({ success: true });
+  });
+
+  // ---------- news feed (POS: Laundry App → News feed) ----------
+  const POST_KINDS = ['photo', 'video', 'quote'];
+  const POST_TAGS = ['news', 'laundry', 'coffee', 'customers', 'promo'];
+  const VIDEO_BUCKET = 'laundry-videos';
+  const postFields = (b: any) => {
+    const f: any = {};
+    if (POST_KINDS.includes(b.kind)) f.kind = b.kind;
+    if (POST_TAGS.includes(b.tag)) f.tag = b.tag;
+    if (b.caption !== undefined) f.caption = String(b.caption || '').trim().slice(0, 2000) || null;
+    if (Array.isArray(b.image_ids)) f.image_ids = b.image_ids.map(Number).filter(Boolean).slice(0, 6);
+    if (b.quote_text !== undefined) f.quote_text = String(b.quote_text || '').trim().slice(0, 300) || null;
+    if (b.quote_author !== undefined) f.quote_author = String(b.quote_author || '').trim().slice(0, 60) || null;
+    if (PROMO_COLORS.includes(b.color)) f.color = b.color;
+    if (typeof b.pinned === 'boolean') f.pinned = b.pinned;
+    if (typeof b.active === 'boolean') f.active = b.active;
+    return f;
+  };
+
+  router.get('/feed', async (_req, res) => {
+    const { data, error } = await supabase.from('laundry_posts').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(200);
+    if (error) return res.json({ posts: [], notReady: true });
+    const ids = (data || []).map(p => p.id);
+    const { data: likes } = ids.length ? await supabase.from('laundry_post_likes').select('post_id').in('post_id', ids) : { data: [] as any[] };
+    res.json({ posts: (data || []).map(p => ({ ...p, likes: (likes || []).filter(l => l.post_id === p.id).length })) });
+  });
+
+  // Step 1 of a video post: a one-time upload link, so the video goes straight to storage (not through this server)
+  router.post('/feed/video-upload', async (req, res) => {
+    const mime = String(req.body?.mime || '');
+    const ext = ({ 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' } as Record<string, string>)[mime];
+    if (!ext) return res.status(400).json({ error: 'Please choose an MP4, MOV or WEBM video.' });
+    if (Number(req.body?.size) > 50 * 1024 * 1024) return res.status(400).json({ error: 'The video is larger than 50 MB. Please trim or compress it.' });
+    const path = `${LAUNDRY_BRANCH_ID}/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+    const { data, error } = await supabase.storage.from(VIDEO_BUCKET).createSignedUploadUrl(path);
+    if (error || !data) {
+      return res.status(500).json({
+        error: `Video upload is not ready: ${error?.message || 'no upload link'}. Run add-laundry-feed.sql and make sure the server uses the Supabase secret key.`,
+      });
+    }
+    const publicUrl = supabase.storage.from(VIDEO_BUCKET).getPublicUrl(path).data.publicUrl;
+    res.json({ uploadUrl: data.signedUrl, path, publicUrl });
+  });
+
+  router.post('/feed', async (req, res) => {
+    const f = postFields(req.body || {});
+    f.kind = f.kind || 'photo';
+    if (f.kind === 'photo' && !f.image_ids?.length) return res.status(400).json({ error: 'Please add at least one picture.' });
+    if (f.kind === 'quote' && !f.quote_text) return res.status(400).json({ error: 'Please type the quote.' });
+    if (f.kind === 'video') {
+      const path = String(req.body?.video_path || '');
+      if (!path.startsWith(`${LAUNDRY_BRANCH_ID}/`)) return res.status(400).json({ error: 'Please upload the video first.' });
+      f.video_path = path;
+      f.video_url = supabase.storage.from(VIDEO_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
+    const { data, error } = await supabase.from('laundry_posts').insert([{ ...f, branch_id: LAUNDRY_BRANCH_ID, created_by: staffName(req) }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+
+    // Optional: tell customers about the new post
+    let notified = 0;
+    if (req.body?.notify) {
+      const { data: tokens } = await supabase.from('laundry_push_tokens').select('customer_id');
+      const ids = [...new Set((tokens || []).map(t => t.customer_id).filter(Boolean))] as number[];
+      const preview = (f.caption || f.quote_text || 'Tap to see it.').replace(/\s+/g, ' ');
+      const msg = { title: f.tag === 'coffee' ? 'New from our café ☕' : 'New post from S1p & Sp1n 💙', body: preview.length > 120 ? preview.slice(0, 117) + '…' : preview, data: { type: 'post' } };
+      if (ids.length) {
+        await saveNotifications(supabase, ids, msg);
+        if (pushEnabled()) notified = await pushToCustomers(supabase, ids, msg).catch(() => 0);
+      }
+    }
+    res.json({ post: data, notified });
+  });
+
+  router.post('/feed/:id', async (req, res) => {
+    const f = postFields(req.body || {});
+    delete f.kind;
+    const { error } = await supabase.from('laundry_posts').update(f).eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  });
+
+  router.post('/feed/:id/delete', async (req, res) => {
+    const { data: post } = await supabase.from('laundry_posts').select('video_path').eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID).maybeSingle();
+    await supabase.from('laundry_posts').delete().eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    if (post?.video_path) await supabase.storage.from(VIDEO_BUCKET).remove([post.video_path]).catch(() => {});
+    res.json({ success: true });
+  });
+
+  // ---------- loyalty rewards (POS: Laundry App → Rewards) ----------
+  const REWARD_TYPES = ['item', 'discount_amount', 'discount_percent'];
+  const programFields = (b: any) => ({
+    name: String(b.name || '').trim().slice(0, 60),
+    threshold_kg: Math.max(0.5, Math.min(1000, Number(b.threshold_kg) || 0)),
+    reward_title: String(b.reward_title || '').trim().slice(0, 80),
+    reward_type: REWARD_TYPES.includes(b.reward_type) ? b.reward_type : 'item',
+    reward_value: Math.max(0, Number(b.reward_value) || 0),
+    reward_note: String(b.reward_note || '').trim().slice(0, 200) || null,
+    count_from: /^\d{4}-\d{2}-\d{2}$/.test(String(b.count_from || '')) ? b.count_from : null,
+    valid_days: b.valid_days === '' || b.valid_days === null || b.valid_days === undefined ? null : Math.max(1, Math.min(3650, Number(b.valid_days) || 60)),
+    active: b.active !== false,
+  });
+
+  router.get('/reward-programs', async (_req, res) => {
+    const { data, error } = await supabase.from('laundry_reward_programs').select('*').eq('branch_id', LAUNDRY_BRANCH_ID).order('id');
+    if (error) return res.json({ programs: [], notReady: true });
+    // How many vouchers each program has given and how many were used
+    const ids = (data || []).map(p => p.id);
+    const { data: vouchers } = ids.length ? await supabase.from('laundry_rewards').select('program_id, status').in('program_id', ids) : { data: [] as any[] };
+    res.json({
+      programs: (data || []).map(p => ({
+        ...p,
+        issued: (vouchers || []).filter(v => v.program_id === p.id).length,
+        redeemed: (vouchers || []).filter(v => v.program_id === p.id && v.status === 'redeemed').length,
+      })),
+    });
+  });
+
+  router.post('/reward-programs', async (req, res) => {
+    const f = programFields(req.body || {});
+    if (!f.name || !f.reward_title || !f.threshold_kg) return res.status(400).json({ error: 'Please fill in the name, kilos and reward.' });
+    const { data, error } = await supabase.from('laundry_reward_programs').insert([{ ...f, branch_id: LAUNDRY_BRANCH_ID }]).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ program: data });
+  });
+
+  router.post('/reward-programs/:id', async (req, res) => {
+    const f = programFields(req.body || {});
+    if (!f.name || !f.reward_title || !f.threshold_kg) return res.status(400).json({ error: 'Please fill in the name, kilos and reward.' });
+    const { error } = await supabase.from('laundry_reward_programs').update(f).eq('id', Number(req.params.id)).eq('branch_id', LAUNDRY_BRANCH_ID);
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ success: true });
+  });
+
+  // Find vouchers by code (SR-XXXXX) or the customer's mobile number
+  router.get('/rewards/lookup', async (req, res) => {
+    const q = String(req.query.q || '').trim();
+    if (!q) return res.json({ rewards: [] });
+    let query = supabase.from('laundry_rewards').select('*, customer:laundry_customers(id, full_name, phone)').order('earned_at', { ascending: false }).limit(30);
+    const phone = normalizePhone(q);
+    if (phone) {
+      const { data: c } = await supabase.from('laundry_customers').select('id').eq('phone', phone).maybeSingle();
+      if (!c) return res.json({ rewards: [] });
+      query = query.eq('customer_id', c.id);
+    } else {
+      query = query.eq('code', q.toUpperCase());
+    }
+    const { data, error } = await query;
+    if (error) return res.json({ rewards: [], notReady: true });
+    const now = Date.now();
+    res.json({
+      rewards: (data || []).map(r => ({ ...r, status: r.status === 'available' && r.expires_at && new Date(r.expires_at).getTime() < now ? 'expired' : r.status })),
+    });
+  });
+
+  router.post('/rewards/:id/redeem', async (req, res) => {
+    const { data: r } = await supabase.from('laundry_rewards').select('*').eq('id', Number(req.params.id)).maybeSingle();
+    if (!r) return res.status(404).json({ error: 'Voucher not found.' });
+    if (r.status !== 'available') return res.status(400).json({ error: 'This voucher was already used.' });
+    if (r.expires_at && new Date(r.expires_at).getTime() < Date.now()) return res.status(400).json({ error: 'This voucher has expired.' });
+    // Only redeem if still available (no double use from two terminals)
+    const { data: done, error } = await supabase
+      .from('laundry_rewards')
+      .update({ status: 'redeemed', redeemed_at: new Date().toISOString(), redeemed_by: staffName(req) })
+      .eq('id', r.id)
+      .eq('status', 'available')
+      .select('id');
+    if (error) return res.status(500).json({ error: error.message });
+    if (!done?.length) return res.status(400).json({ error: 'This voucher was already used.' });
+    notifyCustomer(supabase, r.customer_id, { title: 'Reward used ✅', body: `${r.title} (${r.code}). Enjoy! 💙`, data: { type: 'reward' } });
+    res.json({ success: true });
+  });
+
+  router.get('/rewards/recent', async (_req, res) => {
+    const { data, error } = await supabase
+      .from('laundry_rewards')
+      .select('*, customer:laundry_customers(full_name, phone)')
+      .eq('status', 'redeemed')
+      .order('redeemed_at', { ascending: false })
+      .limit(30);
+    res.json({ rewards: error ? [] : data || [] });
+  });
+
+  // ---------- coffee menu (POS: Laundry App → Coffee menu) ----------
+  router.get('/coffee-menu', async (_req, res) => {
+    const [{ data: row }, categories] = await Promise.all([
+      supabase.from('laundry_app_settings').select('coffee_menu_live').eq('branch_id', LAUNDRY_BRANCH_ID).maybeSingle(),
+      loadCoffeeMenu(supabase),
+    ]);
+    res.json({ live: !!row?.coffee_menu_live, categories, testPhones: String(process.env.CUSTOMER_TEST_PHONES || '').split(',').filter(Boolean).length });
+  });
+
+  router.post('/coffee-menu', async (req, res) => {
+    const live = !!req.body?.live;
+    const { error } = await supabase.from('laundry_app_settings').upsert([{ branch_id: LAUNDRY_BRANCH_ID, coffee_menu_live: live }], { onConflict: 'branch_id' });
+    if (error) return res.status(500).json({ error: error.message });
+    res.json({ live });
   });
 
   // ---------- reviews ----------

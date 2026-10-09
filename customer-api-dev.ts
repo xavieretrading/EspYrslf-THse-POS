@@ -10,6 +10,7 @@ import { createLaundryStaffRouter } from './laundry-staff-api';
 
 process.env.TZ = 'Asia/Manila';
 process.env.CUSTOMER_DEV_OTP = process.env.CUSTOMER_DEV_OTP ?? '1';
+process.env.CUSTOMER_TEST_PHONES = process.env.CUSTOMER_TEST_PHONES ?? '09990000001'; // local test phone (coffee menu preview)
 
 const app = express();
 app.use(express.json({ limit: '10mb' })); // same as server.ts (photo uploads)

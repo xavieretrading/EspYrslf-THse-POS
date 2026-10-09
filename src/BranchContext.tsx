@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getStaffToken, LOGIN_EVENT } from './lib/staffSession';
 
 export type Branch = { id: number; name: string; address: string; is_bir_compliant: boolean };
 
@@ -17,14 +18,25 @@ export const BranchProvider = ({ children }: { children: React.ReactNode }) => {
   const [activeBranch, setActiveBranch] = useState<Branch | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchBranches = async () => {
-    const res = await fetch('/api/branches');
-    const data = await res.json();
-    setBranches(data);
-    return data;
+  const fetchBranches = async (): Promise<Branch[]> => {
+    // Branches need a staff login; before login (or on an error reply) use an empty list
+    if (!getStaffToken()) {
+      setBranches([]);
+      return [];
+    }
+    try {
+      const res = await fetch('/api/branches');
+      const data = res.ok ? await res.json() : [];
+      const list: Branch[] = Array.isArray(data) ? data : [];
+      setBranches(list);
+      return list;
+    } catch {
+      setBranches([]);
+      return [];
+    }
   };
 
-  useEffect(() => {
+  const loadBranches = () =>
     fetchBranches().then(data => {
       if (data.length > 0) {
         // Try to restore from localStorage
@@ -43,6 +55,12 @@ export const BranchProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setIsLoading(false);
     });
+
+  useEffect(() => {
+    loadBranches();
+    // Load again as soon as someone logs in on this device
+    window.addEventListener(LOGIN_EVENT, loadBranches);
+    return () => window.removeEventListener(LOGIN_EVENT, loadBranches);
   }, []);
 
   const refreshBranches = async () => {

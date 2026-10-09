@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useBranch } from './BranchContext';
+import { getStaffToken, LOGIN_EVENT } from './lib/staffSession';
 
 export type BusinessSettings = {
   company_name: string;
@@ -30,14 +31,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSettings = () => {
     const url = activeBranch ? `/api/settings?branch_id=${activeBranch.id}` : '/api/settings';
+    if (!getStaffToken()) return; // settings need a staff login
     fetch(url)
-      .then(res => res.json())
-      .then(setSettings)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (data && typeof data === 'object' && !Array.isArray(data) && !data.error) setSettings(data);
+      })
       .catch(console.error);
   };
 
   useEffect(() => {
     fetchSettings();
+    window.addEventListener(LOGIN_EVENT, fetchSettings);
+    return () => window.removeEventListener(LOGIN_EVENT, fetchSettings);
   }, [activeBranch]);
 
   return (
